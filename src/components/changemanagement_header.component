@@ -1,0 +1,580 @@
+<!--
+v1.0     Qualityze Inc(PR)          Initial Version.
+This page includes Document Type Header belonging to the Document Type.
+
+v1.1.0      Qualityze Inc(ST)       10-AUG-2016     Created methods for Reopen Tasks
+
+v1.1.1      Qualityze Inc(ST)       19-AUG-2016     For Audit Trail
+
+v1.1.2		Qualityze Inc(PRG)		19-SEP-2016		Created Model and method for Void
+
+-->
+<apex:component controller="Component_Handler"
+                extensions="QC_custom_settings">
+    <apex:attribute name="recordid" type="string" description="CHMG Record"
+                    assignto="{!CHMG_Id}" />
+    <script>
+    $( document ).ready(function() {                    
+        var followers ='{!JSENCODE(CHMG.Followers__c)}';
+        console.log('followers  '+followers);
+        if(followers.indexOf('{!$User.Id}') == -1){
+            console.log('Not a follower');
+            $('.followBtn').attr('title','Follow');
+            $('.followBtn').html('<span class="fa fa-plus-circle"></span>');
+            $(".followBtn").click(function() {
+                console.log('inside click');
+                followChangemanagement();
+            });
+            
+        }
+        else{
+            console.log('Follower');
+            $('.followBtn').attr('title','Un Follow');
+            $('.followBtn').html('<span class="fa fa-minus-circle"></span>');
+            $(".followBtn" ).click(function() {
+                unfollowChangemanagement();
+            });
+        } 
+    });
+    
+    function followChangemanagement(){
+        console.log('follow chmgmt function '+ '   {!$User.Id}'+ '    {!CHMG_Id}');
+        Visualforce.remoting.Manager.invokeAction(
+            // @RemoteAction
+            '{!$RemoteAction.Component_Handler.followChangemanagement}',                                 
+            '{!CHMG_Id}','{!$User.Id}',
+            
+            // Callback
+            function(result, event){
+                console.log('chmgmt   result  '+result);
+                if(result=='0'){
+                    location.reload();
+                }
+                
+            },
+            // Don't know, couldn't find docs
+            {escape: true}
+        );
+    }
+    function unfollowChangemanagement(){
+        console.log('from unfollow changemgmt');
+        console.log('unFollowCAPA function ');
+        Visualforce.remoting.Manager.invokeAction(
+            // @RemoteAction
+            '{!$RemoteAction.Component_Handler.unfollowChangemanagement}',
+            
+            '{!CHMG_Id}','{!$User.Id}',
+            
+            // Callback
+            function(result, event){
+                console.log('unfollowChangemanagement   result  '+result);
+                if(result=='0'){
+                    location.reload();
+                }
+                
+            },
+            // Don't know, couldn't find docs
+            {escape: true}
+        );
+    }
+    //v1.1.0 start
+    function clearDesErrors(opentasks,actionType,reasondesc){
+        console.log('opentasks: '+opentasks+' actionType: '+actionType +'   reasondesc: '+reasondesc);
+        var erroractionid = '#'+reasondesc+'_error'
+        $(erroractionid).empty();
+        $('#'+reasondesc).val('');
+        $("#unameFrtask_"+actionType+"_error").empty();
+        $("#unameFrtask_"+actionType).val('');
+        $("#pwdFrtask_"+actionType+"_error").empty();
+        $("#pwdFrtask_"+actionType).val('');
+    }
+    
+    function verifyReopenTaskData(opentasks,actionType,reasondesc){
+        console.log('opentasks: '+opentasks+' actionType: '+actionType +'   reasondesc: '+reasondesc);
+        var erroractionid = '#'+reasondesc+'_error';
+        var actionid ='#'+reasondesc;
+        $(erroractionid).empty();
+        $("#unameFrtask_"+actionType+"_error").empty();
+        $("#pwdFrtask_"+actionType+"_error").empty();
+        var tskdescription = $(actionid).val();
+        // alert(tskdescription);
+        console.log("after errorempty = " +tskdescription);
+        console.log("Before validation ="+tskdescription);
+        if(tskdescription =='' && !{!DigitalSignatureNeeded}){
+            console.log("tskdescription is empty");
+            $(erroractionid).html( "<p>This Field is Required</p>");
+            return false;
+        }
+        $(opentasks).attr('disabled', true);
+        $("#resettskBtn_"+actionType).attr('disabled',true);
+        if({!DigitalSignatureNeeded}){
+            console.log('digital signature needed');
+            var uname=$("#unameFrtask_"+actionType).val();
+            console.log(uname);
+            var isValid = true
+            if(tskdescription ==''){
+                console.log("tskdescription is empty");
+                $(erroractionid).html( "<p>This Field is Required</p>");
+                //return false;
+                $(opentasks).attr('disabled', false);
+                isValid = false;
+            }
+            
+            if(uname!= '{!JSENCODE($User.Username)}'){
+                //alert('Invalid Username')
+                $("#unameFrtask_"+actionType+"_error").html( "<p>Invalid Username</p>");
+                $(opentasks).attr('disabled', false);
+                $("#resettskBtn_"+actionType).attr('disabled',false);
+                //return false;
+                isValid = false;
+                
+            }
+            
+            if(!uname){
+                //alert('Please enter username');
+                $("#unameFrtask_"+actionType+"_error").html( "<p>Please enter username</p>");
+                $(opentasks).attr('disabled', false);
+                $("#resettskBtn_"+actionType).attr('disabled',false);
+                isValid = false;
+            }
+            
+            var pwd=$("#pwdFrtask_"+actionType).val();
+            if(!pwd){
+                // alert('Please enter password..')
+                $("#pwdFrtask_"+actionType+"_error").html( "<p>Please enter password..</p>");
+                $(opentasks).attr('disabled', false);
+                $("#resettskBtn_"+actionType).attr('disabled',false);
+                isValid = false;
+            }
+            if(!isValid){
+                return isValid;
+            }else{
+                Visualforce.remoting.Manager.invokeAction(
+                    // @RemoteAction
+                    '{!$RemoteAction.Component_Handler.doVerify}',pwd,function(result, event){
+                        //console.log('Inside verifypassword remote function');
+                        if(event.status){
+                            if(result){
+                               // alert(actionType);
+                                if(actionType =='Void')
+                                    {
+                                        voidChangeMngmt();
+                                    }else{
+                                        reOpenChangeMngmtTasks();
+                                    }
+                 	                 
+                            }
+                            else{
+                                $(opentasks).attr('disabled',false);
+                                // alert('Unable to verify password!');
+                                $("#pwdFrtask_"+actionType+"_error").html( "<p>Unable to verify password!</p>");
+                            }
+                        }
+                        else{
+                            $(opentasks).attr('disabled',false);
+                            // alert('Unable to verify password!');
+                            $("#pwdFrtask_"+actionType+"_error").html( "<p>Unable to verify password!</p>");
+                        }
+                        
+                    });           
+            }
+        }else{
+            // alert(actionType);
+            if(actionType =='Void')
+            {
+                voidChangeMngmt();
+            }else{
+                reOpenChangeMngmtTasks();
+            }
+        }
+    }
+    
+    //<!--Void CR-->
+     function voidChangeMngmt(){
+         // alert('go void');
+        //voidChngMngmnt
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.Component_Handler.voidChngMngmnt}','{!JSENCODE(CHMG.Id)}',$('#voidreason').val(),function(result, event){
+            console.log('Inside reopen Change Management Tasks remote function');
+            // alert($('#voidreason').val()+'  -- {!JSENCODE(CHMG.Id)}' );
+            if(event.status){
+                if(result){
+                    //window.location.href = '/apex/CAPA?id={!JSENCODE($CurrentPage.parameters.id)}&pg={!JSENCODE($CurrentPage.parameters.pg)}';
+                    location.reload();  
+                }else{ 
+                    console.log('!Error');
+                }
+            }   
+        }); 
+    }
+    //<!--Void CR-->     
+    
+    function reOpenChangeMngmtTasks(){
+        //alert('hai');
+        var tasks={};
+        console.log('$("#DocumentChange_parent").checked 1  '+$("#DocumentChange_parent").is(':checked'));
+        if($("#DocumentChange_parent").is(':checked')){
+            var subTasks=[],taskId='DocumentChange@'+$('#DocumentChange_parent_task').val();
+            tasks[taskId]=subTasks;
+            console.log('tasks '+tasks[taskId]);
+        }
+        console.log('$("#DocumentChange_parent").checked 2  '+$("#DocumentChange_parent").is(':checked')); 
+        console.log('adhoc  {!adhocTskIds}'); 
+        <apex:repeat value="{!adhocTskIds}" var="ad">
+            if($('#{!adhocTskIds[ad]}_parent').is(':checked')){
+                var subTasks=[],taskId='AdhocTask@'+$('#{!adhocTskIds[ad]}_parent_task').val();
+                console.log(taskId);
+                tasks[taskId]=subTasks;
+            }
+        </apex:repeat>
+        
+        var chngMgmtDetails={chngMgmtid:"{!JSENCODE(CHMG.Id)}", Status__c:"{!JSENCODE(CHMG.Status__c)}" , Resolution_Code__c:"{!JSENCODE(CHMG.Resolution_Code__c)}"};
+        
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.Component_Handler.reopenChngMngmntTasks}',tasks,chngMgmtDetails,$('#resonforreopen').val(),function(result, event){
+            console.log('Inside reopen Change Management Tasks remote function');
+            if(event.status){
+                if(result){
+                    //window.location.href = '/apex/CAPA?id={!JSENCODE($CurrentPage.parameters.id)}&pg={!JSENCODE($CurrentPage.parameters.pg)}';
+                    location.reload();  
+                }else{ 
+                    console.log('!Error');
+                }
+            }   
+        }); 
+    }
+    //v1.1.0 End
+    </script>
+    
+    
+    <!-- New Asset  -->
+    <div class="row nc-header" style="height: auto;">
+        
+        <!-- Mini header visivle when scroll -->
+        <!-- <div class="col-md-12 mini-header hidden">Change Request Initiation</div> -->
+        <!-- Mini header visivle when scroll -->
+        
+        <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1 expand-menu visible-xs visible-sm hidden-md hidden-lg" role="button" onclick="headerExpand();">
+            <div class="dropdn-btn"><span class="fa fa-2x fa-angle-double-up"></span></div>
+        </div>
+        <div class="col-lg-1 col-md-2 col-sm-4 col-xs-4 cell ">
+            <label>{!JSENCODE($ObjectType.Change_Management__c.Fields.Name.Label)}</label>
+            <div class="text-nowrap header-val">{!JSENCODE(CHMG.Name)}</div>
+        </div>
+        
+        
+        
+        
+        <div class="col-lg-2 col-md-1 col-sm-3 col-xs-3 cell">
+            <label>{!JSENCODE($ObjectType.Change_Management__c.Fields.Status__c.Label)}:</label>
+            <div class="text-nowrap header-val">{!JSENCODE(CHMG.Status__c)}</div>
+        </div>
+        
+                 
+        <div class="col-lg-2 col-md-2 col-sm-5 col-xs-5 cell">
+            <label>Owner:</label>
+            <div class="text-nowrap header-val">{!JSENCODE(CHMG.Owner.Name)}</div>
+        </div>
+        
+        <!-- Split for mobile phone -->
+      <!--  <div class="col-lg-1 col-md-1 col-sm-2 col-xs-6 cell">
+            <label>{!JSENCODE($ObjectType.Change_Management__c.Fields.Phase__c.Label)}:</label>
+            <div class="text-nowrap header-val">{!JSENCODE(CHMG.Phase__c)}</div>
+        </div> -->
+        <div class="col-lg-1 col-md-1 col-sm-3 col-xs-6 cell">
+            <label>{!JSENCODE($ObjectType.Change_Management__c.Fields.Age__c.Label)}:</label>
+            <div class="text-nowrap header-val">{! IF(ISBLANK(JSENCODE(CHMG.Id)), 0, CHMG.Age__c) } Day{!IF(CHMG.Age__c!=1,'s','') }</div>
+        </div>
+        <!-- Split for mobile phone -->
+        <div class="col-lg-1 col-md-1 col-sm-3 col-xs-6 cell">
+            <label>CR Type:</label>
+            <div class="text-nowrap header-val">{!JSENCODE(CHMG.Change_Request_Type__c)}</div>
+        </div>
+        <div class="col-lg-1 col-md-1 col-sm-4 col-xs-6 cell">
+            <label>{!JSENCODE($ObjectType.Change_Management__c.Fields.Source__c.Label)}:</label>
+            <div class="text-nowrap header-val">{!JSENCODE(CHMG.Source__c)}</div>
+        </div>
+        <div class="col-lg-1 col-md-2 col-sm-4 col-xs-4 cell ">
+            <label>{!JSENCODE($ObjectType.Change_Management__c.Fields.CreatedDate.Label)}</label>
+            <div class="text-nowrap header-val"> 
+                <apex:outputText value="{0,date,dd'/'MM'/'yyyy}" >
+                    <apex:param value="{!CHMG.CreatedDate}"/>
+                </apex:outputText>
+            </div>
+        </div>
+        <!-- Split for mobile phone -->
+        
+        <div class="mobile-menu visible-xs visible-sm hidden-md hidden-lg">
+            <div class="clearfix"></div>
+            <ul class="nav nav-pills nav-stacked">
+                <apex:outputPanel layout="none" rendered="{!AND(CHMG.Status__c !='Void',CHMG.Status__c !='Pending Approval')}">
+                    <li><a href="#" onclick="$('#voidcr').modal('show');"><apex:outputtext value="{!$Label.Void}"/></a></li>
+                </apex:outputPanel>
+                <apex:outputPanel layout="none" rendered="{!AND(CHMG.Ownerid ==$User.Id,NOT(AND(ischildobjsEmpty,isadhocTskIdsEmpty)),CHMG.Status__c !='Pending Approval')}">
+                    <li><a href="#" onclick="$('#reopentask').modal('show');"><apex:outputtext value="{!$Label.Reopen_Tasks}"></apex:outputtext></a></li>
+                </apex:outputPanel>
+            </ul>
+            <div class="menu-item text-right">
+                <button class="btn btn-default ">
+                    <span class="glyphicon glyphicon-print" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 text-right cell hidden-sm hidden-xs">
+            <!-- Dropdown Menu for NC Actions -->
+            <div class="dropdown pull-right">
+                <button class="btn btn-default" id="dLabel" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dLabel">
+                     <!--v1.1.0 start  -->
+                    <apex:outputPanel layout="none" >
+                        <apex:outputPanel layout="none" rendered="{!AND(CHMG.Status__c !='Void',CHMG.Status__c !='Pending Approval')}">
+                            <li><a href="#" onclick="$('#voidcr').modal('show');"><apex:outputtext value="{!$Label.Void}"/></a></li>
+                      </apex:outputPanel>
+                        <apex:outputPanel layout="none" rendered="{!AND(CHMG.Ownerid ==$User.Id,NOT(AND(ischildobjsEmpty,isadhocTskIdsEmpty)),CHMG.Status__c !='Pending Approval')}">
+                            <li><a href="#" onclick="$('#reopentask').modal('show');"><apex:outputtext value="{!$Label.Reopen_Tasks}"></apex:outputtext></a></li>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                    <!--v1.1.0 end -->
+                    <li class="hidden-lg">
+                        <div class="collapsed-btns">
+                            
+                            <button class="btn btn-primary" data-placement="top" data-target="#audit_trail" data-toggle="modal" href="#" id="auditTrialBtn" title="Audit Trial">
+                                <span class="fa fa-history"></span>                           
+                            </button>
+                            
+                            <button id="followBtn" class="btn btn-success pull-right followBtn"
+                                    data-toggle="tooltip" data-placement="top" title="Follow">
+                            </button>
+                            
+                            <button class="btn btn-default">
+                                <span class="glyphicon glyphicon-print" aria-hidden="true"></span>
+                            </button>
+                            
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <!-- Print Button -->
+            
+            <button
+				onClick="window.open('/apex/ChangeManagement?id={!$CurrentPage.parameters.id}&pg=cr_details_print');"
+				class="btn btn-pills pull-right">
+				<span class="glyphicon glyphicon-print" aria-hidden="true"></span>
+			</button>
+            
+            <button id="followBtn" class="btn btn-success pull-right followBtn"
+                    data-toggle="tooltip" data-placement="top" title="Follow">
+            </button>
+            
+            
+            
+            <!---v1.1.1 start ---> 
+            <apex:outputPanel id="auditTrail">
+                <c:changemanagement_audit rendered="{!$Setup.QC_settings__c.Enable_Audit_Trail__c}" cId="{!recordid}" cm="{!CHMG}"/>
+            </apex:outputPanel>
+            <!--v1.1.1  end--->
+            
+            <div class="clearfix"></div>
+            
+        </div>
+    </div>
+    
+    <!-- New Asset End -->
+    <!--v1.1.0 For Reopen Tasks start-->
+    <div class="modal fade" id="reopentask" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close"
+                            onClick="clearDesErrors(this,'Reopen','resonforreopen');">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">Reopen Tasks</h4>
+                </div>
+                
+                
+                <div class="modal-body" style="overflow: auto;">
+                    <input type="hidden" value="{!CHMG}" />
+                    <div id="signature-section-adding-fields">
+                        <apex:repeat value="{!childobjs}" var="type">
+                            <div class="col-md-12 reopen-widget-holder" style="height: auto;">
+                                <div class="panel-group" id="act_plan_accordion" role="tablist"
+                                     aria-multiselectable="true">
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading" role="tab" id="headingOne">
+                                            <h4 class="panel-title">
+                                                
+                                                <div class="checkbox pull-left">
+                                                    <label> <!--<c:wiz_checkbox FieldId="{!type}_parent"  FieldName="{!type}" initvalue=" " disabled="false"></c:wiz_checkbox>-->
+                                                        <input type="checkbox" class="parentCheckBox"
+                                                               id="{!type}_parent"
+                                                               onchange="" />{!type}
+                                                        <input type="hidden" id="{!type}_parent_task"
+                                                               class="taskId" name="tId" value="{!gtaskIds[type]}" />
+                                                    </label>
+                                                </div>
+                                            </h4>
+                                            <div class="clearfix"></div>
+                                        </div>
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-------task fielda------------------------->
+                        </apex:repeat>
+                        
+                        <apex:repeat value="{!adhocTskIds}" var="adh">
+                            <div class="col-md-12 reopen-widget-holder" style="height: auto;">
+                                <div class="panel-group" id="act_plan_accordion" role="tablist"
+                                     aria-multiselectable="true">
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading" role="tab" id="headingOne">
+                                            <h4 class="panel-title">
+                                                <div class="checkbox pull-left">
+                                                    <label> <!-- <c:wiz_checkbox FieldId="{!adhocTskIds[adh]}_parent"  FieldName="{!adhocTskIds[adh]}" initvalue=" " disabled="false"></c:wiz_checkbox>-->
+                                                        <input type="checkbox" class="parentCheckBox"
+                                                               id="{!adhocTskIds[adh]}_parent"
+                                                               onchange="" />{!adh}
+                                                        <input type="hidden" id="{!adhocTskIds[adh]}_parent_task"
+                                                               class="taskId" name="tId" value="{!adhocTskIds[adh]}" />
+                                                    </label>
+                                                </div>
+                                                <div class="clearfix"></div>
+                                            </h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </apex:repeat>
+                        
+                        <!-------task fielda------------------------->
+                        <!-------task fielda------------------------->
+                        <!--     screen content -->
+                        <apex:outputPanel layout="none"
+                                          rendered="{!DigitalSignatureNeeded}">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="UserName"><span class="mandatory">*</span>
+                                        User Name:</label> <br /> <input class="form-control" type="text"
+                                                                         id="unameFrtask_Reopen" />
+                                    <div class="help-block with-errors"
+                                         id="unameFrtask_Reopen_error" style="color: red;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="exampleInputEmail1"><span class="mandatory">*</span>
+                                        Password:</label> <input class="form-control" type="password"
+                                                                 id="pwdFrtask_Reopen" />
+                                    <div class="help-block with-errors" id="pwdFrtask_Reopen_error"
+                                         style="color: red;"></div>
+                                </div>
+                            </div>
+                        </apex:outputPanel>
+                        
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="exampleInputEmail1"><span class="mandatory">*</span>
+                                    Description:</label>
+                                <textarea class="form-control" name="resonforreopen"
+                                          id="resonforreopen" rows="5"></textarea>
+                                <div class="help-block with-errors" id="resonforreopen_error"
+                                     style="color: red;"></div>
+                            </div>
+                        </div> 
+                        <!--     screen content -->
+                    </div>
+                    <!--signature-section-adding-fields-->
+                    <div class="clearfix"></div>
+                    <div class="modal-footer">
+                        
+                        <button type="button" id="resettskBtn_Reopen"
+                                class="btn btn-default" data-dismiss="modal"
+                                onClick="clearDesErrors(this,'Reopen','resonforreopen');">Cancel</button>
+                        <!--<a href="#" class="btn btn-primary" onClick="reOpencapaTasks();">Ok</a>-->
+                        <button id="reopentaks" type="button" class="btn btn-primary"
+                                onClick="verifyReopenTaskData(this,'Reopen','resonforreopen');">OK</button>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--v1.1.0 For Reopen Tasks end-->
+     <!--v1.1.2 For Void Tasks Start-->
+        <div class="modal fade" id="voidcr" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close"
+                            onClick="clearErrors(this,'Void','voidreason');">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">Void Change Request</h4>
+                </div>
+                <div class="modal-body" style="overflow: auto;">
+                    <div id="signature-section-adding-fields">
+                        <apex:outputPanel layout="none"
+                                          rendered="{!DigitalSignatureNeeded}">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="UserName"><span class="mandatory">*</span>
+                                        User Name:</label> <br /> <input class="form-control" type="text"
+                                                                         id="unameFrtask_Void" />
+                                    <div class="help-block with-errors" id="unameFrtask_Void_error"
+                                         style="color: red;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="exampleInputEmail1"><span class="mandatory">*</span>
+                                        Password:</label> <input class="form-control" type="password"
+                                                                 id="pwdFrtask_Void" />
+                                    <div class="help-block with-errors" id="pwdFrtask_Void_error"
+                                         style="color: red;"></div>
+                                </div>
+                            </div>
+                        </apex:outputPanel>
+                        
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="exampleInputEmail1"><span class="mandatory">*</span>
+                                    Description:</label>
+                                <textarea id='voidreason' class="form-control" rows="5"></textarea>
+                                <div class="help-block with-errors" id="voidreason_error"
+                                     style="color: red;"></div>
+                            </div>
+                        </div>
+                        <!--     screen content -->
+                        
+                    </div>
+                    <!--signature-section-adding-fields-->
+                    
+                    <div class="clearfix"></div>
+                    <div class="modal-footer">
+                        <button type="button" id="resettskBtn_Void"
+                                class="btn btn-default" data-dismiss="modal"
+                                onClick="clearErrors(this,'Void','voidreason');">Cancel</button>
+                        <!--<a href="#" class="btn btn-primary" onClick="VoidCAPA();">Ok</a>-->
+                        <button id="reopentaks" type="button" class="btn btn-primary"
+                                onClick="verifyReopenTaskData(this,'Void','voidreason');">OK</button>
+                    </div>
+                    
+                </div>
+                <!-- modal-body -->
+            </div>
+            <!-- model-content -->
+        </div>
+        <!--modal-dialog modal-lg-->
+    </div>
+    <!--modal fade-->
+      <!--v1.1.2 For Void Tasks End-->
+</apex:component>

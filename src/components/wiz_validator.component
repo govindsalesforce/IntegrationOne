@@ -1,0 +1,89 @@
+<apex:component >
+    <apex:attribute name="onValid" type="string" required="true" description="js to execute on valid" />
+    <apex:attribute name="ignorehidden" type="boolean" default="false" description="ignore hidden fields"/>
+
+    <script>
+       $(document).ready(function() {
+            $('form.validate').each(function(i, r) {
+                                   //console.log('form.validate   ');
+                                   //console.log(r);
+                                        $(r).validate({
+                                    ignore: "{!IF(ignorehidden, ':hidden', '')}",
+                                    highlight: function(element) {
+                                        //console.log(element);
+                                        $(element).closest('.form-group').removeClass('success').addClass('error');
+                                    },
+                                    success: function(element) {
+                                        $(element)
+                                            .addClass('valid')
+                                            .closest('.form-group').removeClass('error').addClass('success');
+                                    },
+                                    errorPlacement: function(error, element) {
+                                        $( error ).css( "position","absolute" );
+                                        error.insertAfter($('#' + element.attr('Id') + '_error'));
+                                    }
+                                });
+                    
+                                jQuery.validator.addMethod("hval", function(value, element) {
+                                    return $('#' + $(element).data('hiddenid')).val() != '';
+                                }, "Field Required");
+                 });
+                                    
+        });
+
+        function validate(validateParams) { // The validateParams object can be used by the caller to make available to the code passed via the onValid component attribute
+            //alert("in validatemethod");
+            var isValid = true;
+            //alert(arguments[2]);
+            if(arguments[2]==undefined)
+            $('form.validate').each(function(i, r) {
+                console.log('validate   ');
+                console.log(r);
+                
+                var v = $(r).valid();
+                if (v == false)
+                    isValid = false;
+            });
+            else{
+                //alert("77");
+            var frms=arguments[2].split('@');
+            $.each(frms,function(index,frm){
+               $('#'+frm).each(function(i, r) {
+                   
+	                var v = $(r).valid();
+                   // alert(v);
+	                if (v == false)
+	                    isValid = false;
+	            });
+            })
+            }
+
+
+            if (isValid) {
+                $('.dont-allow-multiple-clicks').removeAttr('disabled');
+                console.log('valid in validate'+isValid);
+                if(arguments[1]==undefined){
+                    console.log('onvalid custom function');
+                     {!onValid}
+                    }
+                else{
+                arguments[1]();
+                }
+            }
+            return isValid;
+        }
+        
+        function clearerrors(){
+            if(arguments[0]==undefined){
+                validator = $("form.validate").each(function(i, r){
+                    $(r).validate().resetForm();
+                });
+            }
+            else{                
+                validator = $("form."+arguments[0]).each(function(i, r){
+                    $(r).validate().resetForm();
+                });
+            }
+        }
+    </script>
+</apex:component>

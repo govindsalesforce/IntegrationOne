@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Disposition Section</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Dispositions Section</value>
+    </caseValues>
+    <fields>
+        <label><!-- Assigned Disposition Qty --></label>
+        <name>Assigned_Disposition_Qty__c</name>
+    </fields>
+    <fields>
+        <label><!-- Assigned Role --></label>
+        <name>Assigned_Role__c</name>
+    </fields>
+    <fields>
+        <label><!-- Assigned User --></label>
+        <name>Assigned_User__c</name>
+        <relationshipLabel><!-- Dispositions Section (Assigned User) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Complete? --></label>
+        <name>Complete__c</name>
+        <picklistValues>
+            <masterLabel>No</masterLabel>
+            <translation><!-- No --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Yes</masterLabel>
+            <translation><!-- Yes --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Completed By --></label>
+        <name>Completed_By__c</name>
+        <relationshipLabel><!-- Dispositions Section (Completed By) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Completed Date --></label>
+        <name>Completed_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Completion Comment --></label>
+        <name>Completion_Comment__c</name>
+    </fields>
+    <fields>
+        <label><!-- Disposition Instruction --></label>
+        <name>Disposition_Instruction__c</name>
+    </fields>
+    <fields>
+        <label><!-- Disposition Type Status --></label>
+        <name>Disposition_Type_Status__c</name>
+        <picklistValues>
+            <masterLabel>Closed</masterLabel>
+            <translation><!-- Closed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Completed</masterLabel>
+            <translation><!-- Completed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Open</masterLabel>
+            <translation><!-- Open --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pending</masterLabel>
+            <translation><!-- Pending --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Disposition Type --></label>
+        <name>Disposition_Type__c</name>
+        <picklistValues>
+            <masterLabel>REWORK</masterLabel>
+            <translation><!-- REWORK --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>RTV</masterLabel>
+            <translation><!-- RTV --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>SCRAP</masterLabel>
+            <translation><!-- SCRAP --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>USE AS IS</masterLabel>
+            <translation><!-- USE AS IS --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Due Date --></label>
+        <name>Due_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- General Task --></label>
+        <name>General_Task__c</name>
+        <relationshipLabel><!-- Dispositions Section --></relationshipLabel>
+    </fields>
+    <startsWith>Consonant</startsWith>
+</CustomObjectTranslation>

@@ -1,0 +1,612 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Change Management</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Change Management</value>
+    </caseValues>
+    <fields>
+        <label><!-- Age --></label>
+        <name>Age__c</name>
+    </fields>
+    <fields>
+        <label><!-- Allowed Days --></label>
+        <name>Allowed_Days__c</name>
+    </fields>
+    <fields>
+        <label><!-- ApprovalProcess --></label>
+        <name>ApprovalProcess__c</name>
+        <picklistValues>
+            <masterLabel>Change DueDate</masterLabel>
+            <translation><!-- Change DueDate --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Change Owner</masterLabel>
+            <translation><!-- Change Owner --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- ApprovalStatus --></label>
+        <name>ApprovalStatus__c</name>
+        <picklistValues>
+            <masterLabel>Approved</masterLabel>
+            <translation><!-- Approved --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Recall</masterLabel>
+            <translation><!-- Recall --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>pending</masterLabel>
+            <translation><!-- pending --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>rejected</masterLabel>
+            <translation><!-- rejected --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Approval Required --></label>
+        <name>Approval_Required__c</name>
+        <picklistValues>
+            <masterLabel>No</masterLabel>
+            <translation><!-- No --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Yes</masterLabel>
+            <translation><!-- Yes --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Approver 1 --></label>
+        <name>Approver_1__c</name>
+        <relationshipLabel><!-- Change Management (Approver 1) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 2 --></label>
+        <name>Approver_2__c</name>
+        <relationshipLabel><!-- Change Management (Approver 2) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 3 --></label>
+        <name>Approver_3__c</name>
+        <relationshipLabel><!-- Change Management (Approver 3) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 4 --></label>
+        <name>Approver_4__c</name>
+        <relationshipLabel><!-- Change Management (Approver 4) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 5 --></label>
+        <name>Approver_5__c</name>
+        <relationshipLabel><!-- Change Management (Approver 5) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 6 --></label>
+        <name>Approver_6__c</name>
+        <relationshipLabel><!-- Change Management (Approver 6) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 7 --></label>
+        <name>Approver_7__c</name>
+        <relationshipLabel><!-- Change Management (Approver 7) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 8 --></label>
+        <name>Approver_8__c</name>
+        <relationshipLabel><!-- Change Management (Approver 8) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 9 --></label>
+        <name>Approver_9__c</name>
+        <relationshipLabel><!-- Change Management (Approver 9) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver Comments --></label>
+        <name>Approver_Comments__c</name>
+    </fields>
+    <fields>
+        <label><!-- Approver --></label>
+        <name>Approver__c</name>
+        <relationshipLabel><!-- Change Management (Approver) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver process complete --></label>
+        <name>Approver_process_complete__c</name>
+    </fields>
+    <fields>
+        <label><!-- Audit Number --></label>
+        <name>Audit_Number__c</name>
+    </fields>
+    <fields>
+        <label><!-- Business Unit --></label>
+        <name>Business_Unit__c</name>
+        <picklistValues>
+            <masterLabel>Unit1</masterLabel>
+            <translation><!-- Unit1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Unit2</masterLabel>
+            <translation><!-- Unit2 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Unit3</masterLabel>
+            <translation><!-- Unit3 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Unit4</masterLabel>
+            <translation><!-- Unit4 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Unit5</masterLabel>
+            <translation><!-- Unit5 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- CAPA Number --></label>
+        <name>CAPA_Number__c</name>
+        <relationshipLabel><!-- Change Management --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- CR Approval Required --></label>
+        <name>CR_Approval_Required__c</name>
+        <picklistValues>
+            <masterLabel>No</masterLabel>
+            <translation><!-- No --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Yes</masterLabel>
+            <translation><!-- Yes --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- ChangeFieldApprovalStatus --></label>
+        <name>ChangeFieldApprovalStatus__c</name>
+        <picklistValues>
+            <masterLabel>Approved</masterLabel>
+            <translation><!-- Approved --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pending Approval</masterLabel>
+            <translation><!-- Pending Approval --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Recall</masterLabel>
+            <translation><!-- Recall --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Rejected</masterLabel>
+            <translation><!-- Rejected --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Change Justification --></label>
+        <name>Change_Justification__c</name>
+    </fields>
+    <fields>
+        <label><!-- Change Request Scope --></label>
+        <name>Change_Request_Scope__c</name>
+    </fields>
+    <fields>
+        <label><!-- Change Request Type --></label>
+        <name>Change_Request_Type__c</name>
+        <picklistValues>
+            <masterLabel>Document</masterLabel>
+            <translation><!-- Document --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Process</masterLabel>
+            <translation><!-- Process --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Product</masterLabel>
+            <translation><!-- Product --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Change Type --></label>
+        <name>Change_Type__c</name>
+        <picklistValues>
+            <masterLabel>New</masterLabel>
+            <translation><!-- New --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Revise</masterLabel>
+            <translation><!-- Revise --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Temp</masterLabel>
+            <translation><!-- Temp --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Closed --></label>
+        <name>Closed__c</name>
+    </fields>
+    <fields>
+        <label><!-- CurrentApprovalSequenceNumber --></label>
+        <name>CurrentApprovalSequenceNumber__c</name>
+    </fields>
+    <fields>
+        <label><!-- Current Revision --></label>
+        <name>Current_Revision__c</name>
+    </fields>
+    <fields>
+        <label><!-- Doc Change --></label>
+        <name>Doc_Change__c</name>
+    </fields>
+    <fields>
+        <label><!-- Document Name --></label>
+        <name>Document_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Document Number --></label>
+        <name>Document_Number__c</name>
+    </fields>
+    <fields>
+        <label><!-- Document Profile --></label>
+        <name>Document_Profile__c</name>
+        <relationshipLabel><!-- Change Management --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Due Date --></label>
+        <name>Due_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Followers --></label>
+        <name>Followers__c</name>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Impacted Sites --></label>
+        <name>Impacted_Sites__c</name>
+    </fields>
+    <fields>
+        <label><!-- Initial Submitter --></label>
+        <name>Initial_Submitter__c</name>
+        <relationshipLabel><!-- Change Management (Initial Submitter) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Initiating Site --></label>
+        <name>Initiating_Site_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Initiating Site --></label>
+        <name>Initiating_Site__c</name>
+        <relationshipLabel><!-- Change Management --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- IsRejected__c --></label>
+        <name>IsRejected_c__c</name>
+    </fields>
+    <fields>
+        <label><!-- NC Number --></label>
+        <name>NC_Number__c</name>
+        <relationshipLabel><!-- Change Management --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- New Due Date --></label>
+        <name>New_Due_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- New Owner --></label>
+        <name>New_Owner__c</name>
+        <relationshipLabel><!-- Change Management (New Owner) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Note To Approver Owner/DueDate --></label>
+        <name>Note_To_Approver_Owner_DueDate__c</name>
+    </fields>
+    <fields>
+        <label><!-- Note To Approver --></label>
+        <name>Note_To_Approver__c</name>
+    </fields>
+    <fields>
+        <label><!-- Owner --></label>
+        <name>Owner_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- ParentOwner --></label>
+        <name>ParentOwner__c</name>
+        <relationshipLabel><!-- Change Management (ParentOwner) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Phase --></label>
+        <name>Phase__c</name>
+        <picklistValues>
+            <masterLabel>Closed</masterLabel>
+            <translation><!-- Closed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Draft</masterLabel>
+            <translation><!-- Draft --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Review</masterLabel>
+            <translation><!-- Review --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Workflow</masterLabel>
+            <translation><!-- Workflow --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Priority --></label>
+        <name>Priority__c</name>
+        <relationshipLabel><!-- Change Management --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Process --></label>
+        <name>Process_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Process --></label>
+        <name>Process__c</name>
+        <relationshipLabel><!-- Change Management --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Product --></label>
+        <name>Product_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Product --></label>
+        <name>Product__c</name>
+        <relationshipLabel><!-- Change Management --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- RecordTypeName --></label>
+        <name>RecordTypeName__c</name>
+    </fields>
+    <fields>
+        <label><!-- Rejection Comments --></label>
+        <name>Rejection_Comments__c</name>
+    </fields>
+    <fields>
+        <label><!-- Resolution Closed Comment --></label>
+        <name>Resolution_Closed_Comment__c</name>
+    </fields>
+    <fields>
+        <label><!-- Resolution Code --></label>
+        <name>Resolution_Code__c</name>
+        <picklistValues>
+            <masterLabel>Document Change Order</masterLabel>
+            <translation><!-- Document Change Order --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>No Action Required</masterLabel>
+            <translation><!-- No Action Required --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Sequence Position --></label>
+        <name>Sequence_Position__c</name>
+    </fields>
+    <fields>
+        <label><!-- Sequence --></label>
+        <name>Sequence__c</name>
+        <picklistValues>
+            <masterLabel>10</masterLabel>
+            <translation><!-- 10 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>100</masterLabel>
+            <translation><!-- 100 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>20</masterLabel>
+            <translation><!-- 20 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>30</masterLabel>
+            <translation><!-- 30 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>40</masterLabel>
+            <translation><!-- 40 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>50</masterLabel>
+            <translation><!-- 50 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>60</masterLabel>
+            <translation><!-- 60 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>70</masterLabel>
+            <translation><!-- 70 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>80</masterLabel>
+            <translation><!-- 80 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>90</masterLabel>
+            <translation><!-- 90 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Severity --></label>
+        <name>Severity__c</name>
+        <relationshipLabel><!-- Change Management --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Source --></label>
+        <name>Source__c</name>
+        <picklistValues>
+            <masterLabel>Audit</masterLabel>
+            <translation><!-- Audit --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>CAPA</masterLabel>
+            <translation><!-- CAPA --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Document</masterLabel>
+            <translation><!-- Document --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>NC</masterLabel>
+            <translation><!-- NC --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Process</masterLabel>
+            <translation><!-- Process --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Product</masterLabel>
+            <translation><!-- Product --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Status --></label>
+        <name>Status__c</name>
+        <picklistValues>
+            <masterLabel>Closed</masterLabel>
+            <translation><!-- Closed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Document Change Order</masterLabel>
+            <translation><!-- Document Change Order --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>In Review</masterLabel>
+            <translation><!-- In Review --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Open</masterLabel>
+            <translation><!-- Open --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pending Approval</masterLabel>
+            <translation><!-- Pending Approval --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Void</masterLabel>
+            <translation><!-- Void --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Title --></label>
+        <name>Title__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD_Date --></label>
+        <name>UD_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD RichText --></label>
+        <name>UD_RichText__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD Text11 --></label>
+        <name>UD_Text11__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD_Text --></label>
+        <name>UD_Text__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD_RichText --></label>
+        <name>UD__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD_picklist11 --></label>
+        <name>UD_picklist11__c</name>
+        <picklistValues>
+            <masterLabel>1bk</masterLabel>
+            <translation><!-- 1bk --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>2bk</masterLabel>
+            <translation><!-- 2bk --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>3bk</masterLabel>
+            <translation><!-- 3bk --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>No</masterLabel>
+            <translation><!-- No --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pick1</masterLabel>
+            <translation><!-- Pick1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pick2</masterLabel>
+            <translation><!-- Pick2 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pick3</masterLabel>
+            <translation><!-- Pick3 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Yes</masterLabel>
+            <translation><!-- Yes --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- UD_picklist --></label>
+        <name>UD_picklist__c</name>
+        <picklistValues>
+            <masterLabel>chairs</masterLabel>
+            <translation><!-- chairs --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>ladders</masterLabel>
+            <translation><!-- ladders --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>tables</masterLabel>
+            <translation><!-- tables --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- UD_textarea --></label>
+        <name>UD_textarea__c</name>
+    </fields>
+    <fields>
+        <label><!-- currenappSequenceNumber --></label>
+        <name>currenappSequenceNumber__c</name>
+    </fields>
+    <fields>
+        <label><!-- isLocked --></label>
+        <name>isLocked__c</name>
+    </fields>
+    <layouts>
+        <layout>Change Management Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <recordTypes>
+        <label><!-- Document --></label>
+        <name>Document</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- Process --></label>
+        <name>Process</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- Product --></label>
+        <name>Product</name>
+    </recordTypes>
+    <startsWith>Consonant</startsWith>
+    <validationRules>
+        <errorMessage><!-- Allowed days is required --></errorMessage>
+        <name>Allowed_days_is_required</name>
+    </validationRules>
+</CustomObjectTranslation>

@@ -1,0 +1,327 @@
+<apex:page sidebar="false" standardcontroller="CAPA__c" extensions="FileAttachmentController,CAPA" showHeader="false" standardStylesheets="false" docType="html-5.0">
+    
+    <html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/app.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/bootstrap-datepicker.min.css')}" />
+    <title>CAPA Report</title>
+
+  </head>
+        <body style="background-color: #FFF;">
+            <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/app.css')}" />
+            <script>
+            window.onload =function() { window.print(); };
+            </script>
+            <div class="" id="app_warpper">
+                <div class="report-holder">
+                    <div class="wiz-form-holder" style="padding: 20px;">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <img src ="{! URLFOR($Resource.bt_static,'/static/images/report-logo.png') }" class="report-logo"/>
+                            </div>
+                            
+                            <div class="col-md-12">
+                                <h1>CAPA Header</h1>
+                                <table class="table table-responsive table-bordered">
+                                    <tbody>
+                                        <tr>
+                                            <th>{!$ObjectType.CAPA__c.Fields.Name.Label}</th>
+                                            <th>{!$ObjectType.CAPA__c.Fields.CAPA_Status__c.Label}</th>
+                                            <th> CAPA Owner:</th>
+                                            <th>{!$ObjectType.CAPA__c.Fields.CAPA_Age__c.Label}</th>
+                                            <th>CAPA Effectiveness:</th>
+                                            <th>{!$ObjectType.CAPA__c.Fields.Reported_Date__c.Label}</th>
+                                        </tr>
+                                        
+                                        <tr>
+                                            <td>{!JSENCODE(CAPA.Name)}</td>
+                                            <td>{!JSENCODE(CAPA.CAPA_Status__c)}</td>
+                                            <td>{!JSENCODE(CAPA.Owner.Name)}</td>
+                                            <td>{! IF(ISBLANK(JSENCODE(CAPA.Id)), 0, CAPA.CAPA_Age__c) } Day{! IF(CAPA.CAPA_Age__c!=1,'s','') }</td><!--{!CAPA.CAPA_Age__c} Day{!if(VALUE(CAPA.CAPA_Age__c)!=1,'s','')}-->
+                                            <td> Pending Review </td>
+                                            <td>
+                                                <apex:outputText value="{0,date, dd MMM yyyy}"> 
+                                                    <apex:param value="{!CAPA.Reported_Date__c}"/>
+                                                </apex:outputText> 
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>  
+                        </div>
+                        <h1>CAPA Initiation</h1>
+                        
+                        <table class="table table-responsive table-bordered">
+                            <tbody>
+                                
+                                <tr>
+                                    <td class="title-col">
+                                        {!$ObjectType.CAPA__c.Fields.Title__c.Label}
+                                    </td>
+                                    <td>
+                                        {!JSENCODE(CAPA.Title__c)}
+                                    </td>
+                                    
+                                    <td class="title-col">
+                                        {!$ObjectType.CAPA__c.Fields.CAPA_Source__c.Label}
+                                    </td>
+                                    <td>
+                                        {!JSENCODE(CAPA.CAPA_Source__c)}
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td class="title-col">
+                                        {!$ObjectType.CAPA__c.Fields.Department__c.Label}
+                                    </td>
+                                    <td>
+                                        {!JSENCODE(CAPA.Department__r.Name)}
+                                    </td>
+                                    
+                                    <td class="title-col">
+                                        {!$ObjectType.CAPA__c.Fields.Occurance_Date__c.Label}
+                                    </td>
+                                    <td>
+                                        <apex:outputText value="{0,date, dd MMM yyyy}"> <!-- TODO: Make this dependent on Org settings so that date format can be updated from a central location -->
+                                            <apex:param value="{!CAPA.Occurance_Date__c}"/>
+                                        </apex:outputText>
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td class="title-col">
+                                        {!$ObjectType.CAPA__c.Fields.Reported_By__c.Label}
+                                    </td>
+                                    <td>
+                                        {!JSENCODE(CAPA.Reported_By__r.Name)}
+                                    </td>
+                                    
+                                    <td class="title-col">
+                                        {!$ObjectType.CAPA__c.Fields.Reported_Date__c.Label}
+                                    </td>
+                                    <td>
+                                        <apex:outputText value="{0,date, dd MMM yyyy}"> <!-- TODO: Make this dependent on Org settings so that date format can be updated from a central location -->
+                                            <apex:param value="{!CAPA.Reported_Date__c}"/>
+                                        </apex:outputText>
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td class="title-col">
+                                        {!$ObjectType.CAPA__c.Fields.Criticality__c.Label}
+                                    </td>
+                                    <td> 
+                                        {!JSENCODE(CAPA.Criticality__c)}
+                                    </td>
+                                    
+                                    <td class="title-col">
+                                        CAPA Owner
+                                    </td>
+                                    <td>
+                                        {!IF(ISBLANK(CAPA.CreatedById), $User.FirstName + ' ' + $User.LastName, CAPA.CreatedBy.FirstName + ' ' + CAPA.CreatedBy.LastName)}
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td class="title-col">
+                                        {!$ObjectType.CAPA__c.Fields.Sites_Impacted__c.Label}
+                                    </td>
+                                    <td> 
+                                        {!JSENCODE(CAPA.Sites_Impacted__c)}
+                                    </td>
+                                    
+                                    <td class="title-col">
+                                        {!$ObjectType.CAPA__c.Fields.Source_Number__c.Label}
+                                    </td>
+                                    <td>
+                                        {!JSENCODE(CAPA.Source_Number__c)}
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td class="title-col">
+                                        {!$ObjectType.CAPA__c.Fields.Problem_Statement__c.Label}
+                                    </td>
+                                    <td colspan="3">
+                                        <!--{!JSENCODE(CAPA.Problem_Statement__c)}-->
+                                        <div class="alert alert-info">
+                                            <apex:outputField value="{!CAPA.Problem_Statement__c}" />
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                
+                            </tbody>
+                        </table> 
+                        
+                        
+                        
+                        <h1>CAPA Resolution</h1>
+                        
+                        <table class="table table-responsive table-bordered">
+                            <tbody>
+                                <tr>
+                                    <td class="title-col" style="width: 20%">
+                                        {!$ObjectType.CAPA__c.Fields.Immidiate_Action_Taken__c.Label}
+                                    </td>
+                                    <td>
+                                        <div class="alert alert-info">
+                                            <apex:outputField value="{!CAPA.Immidiate_Action_Taken__c}" />
+                                            <!--{!JSENCODE(CAPA.Immidiate_Action_Taken__c)}-->
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <apex:outputpanel rendered="{!OR(NOT(CAPA.Resolution_Code__c=='CAPA Workflow'),NOT($ObjectType.CAPA__c.Fields.Resolution_Closed_Comment__c.updateable))}">
+                                        <td class="title-col">
+                                            {!$ObjectType.CAPA__c.Fields.Resolution_Closed_Comment__c.Label}
+                                        </td>
+                                        <td>
+                                            <div class="alert alert-info">
+                                                <apex:outputField value="{!CAPA.Resolution_Closed_Comment__c}" />
+                                                <!--{!JSENCODE(CAPA.Resolution_Closed_Comment__c)}-->
+                                            </div>
+                                        </td>
+                                    </apex:outputpanel>
+                                    
+                                </tr>
+                                
+                                
+                            </tbody>
+                        </table>
+                        
+                        <!---Begin Print Only-->
+
+                        <!--<div class="page-break"></div>-->
+                        <div class="print-only">
+                            <div class="panel panel-default">
+                                <div class="panel-heading" role="tab" id="headingCAPAResolutionCode">
+                                    <h1 class="panel-title">
+                                        
+                                        Resolution ({!JSENCODE(CAPA.Resolution_Code__c)})
+                                        
+                                    </h1> 
+                                </div>            
+                                
+                                <div class="panel-collapse collapse in print-only">
+                                    <div class="panel-body print-only">                        
+                                        <apex:outputPanel rendered="{!if(CAPA.Resolution_Code__c=='CAPA Workflow',true,false)}">
+                                            
+                                            <table class="table table-responsive table-bordered">
+                                                <tbody>
+                                                    <tr>
+                                                        <th>Task Name</th>
+                                                        <th>Sequence</th>
+                                                        <th>Owner</th>
+                                                        <th>Allowed Days</th>
+                                                        <th>Due Date</th>
+                                                    </tr>
+                                                    <apex:repeat value="{!allCAPAGnrlTasks}"  var="General_Task">                                              
+                                                        <tr>
+                                                            <td>{!JSENCODE(General_Task.RecordType.Name)}</td>
+                                                            <td>{!if(General_Task.RecordType.Name=='Closure','',General_Task.Sequence_Position__c)}</td>
+                                                            <td>{!JSENCODE(General_Task.Owner.Name)}</td>
+                                                            <td>{!General_Task.Allowed_Days__c}</td>
+                                                            <td>  
+                                                                <apex:outputText value="{0,date,dd MMM yyyy}">
+                                                                    <apex:param value="{!General_Task.Due_Date__c}" /> 
+                                                                </apex:outputText>
+                                                            </td>
+                                                        </tr>
+                                                    </apex:repeat>
+                                                    
+                                                </tbody>
+                                            </table> 
+                                        </apex:outputPanel>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                        
+                        <!--End Print Only-->
+                        <apex:outputPanel rendered="{!if(AND($ObjectType.CAPA__c.Fields.Resolution_Code__c.Accessible,CAPA.Resolution_Code__c=='CAPA Workflow'),true,false)}">
+                            <c:wiz_task_details investigationTask="{!invTask}" implementationTask="{!implTask}" effectivenessReviewTask="{!erTask}" adhocTasks="{!adhocTasks}" closureTask="{!closTask}" module="CAPA"></c:wiz_task_details>
+                        </apex:outputPanel>
+                        
+                        
+                        
+                        <div class="print-only">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading" role="tab" id="headingOne">
+                                        <div> <h4 class="panel-title"><h1>  Reference &nbsp; </h1>
+                                            </h4></div>
+                                        <div class="panel-body">
+                                                <h2>NC</h2>
+                                                
+                                                <table class="table table-hover table-condensed">
+                                                    
+                                                    <tbody id="ncbody">
+                                                        
+                                                        <tr>
+                                                            <th>Number</th>
+                                                            <th>Type</th>
+                                                            <th>Owner</th>
+                                                            <th>Source</th>
+                                                            <th>Status</th>
+                                                            
+                                                        </tr>
+                                                        <apex:repeat value="{!nonConf}" var="ncon">
+                                                            <tr id="{!JSENCODE(ncon.Id)}">
+                                                                <td>{!JSENCODE(ncon.Name)}</td>
+                                                                <td>{!JSENCODE(ncon.NC_Type__c)}</td>
+                                                                <td>{!JSENCODE(ncon.NC_Owner_Name__c)}</td>
+                                                                <td>{!JSENCODE(ncon.NC_Source__c)}</td>
+                                                                <td>{!JSENCODE(ncon.NC_Status__c)}</td>
+                                                            </tr>
+                                                        
+                                                        </apex:repeat>
+                                                    </tbody>
+                                                </table>
+                                                
+                                                <h2>CAPA</h2>
+                                                
+                                                <table class="table table-hover table-condensed">
+                                                    <tbody id="capabody">
+                                                        
+                                                        <tr>
+                                                            <th>Number</th>
+                                                            <th>Title</th>
+                                                            <th>Owner</th>
+                                                            <th>Source</th>
+                                                            <th>Status</th>
+                                                        </tr>
+                                                        <apex:repeat value="{!capaList}" var="capa">
+                                                            <tr id="{!JSENCODE(capa.Id)}">
+                                                                <td>{!JSENCODE(capa.Name)}</td>
+                                                                <td>{!JSENCODE(capa.Title__c)}</td>
+                                                                <td>{!JSENCODE(capa.Owner.Name)}</td>
+                                                                <td>{!JSENCODE(capa.CAPA_Source__c)}</td>
+                                                                <td>{!JSENCODE(capa.CAPA_Status__c)}</td>
+                                                                
+                                                            </tr>
+                                                        
+                                                       </apex:repeat> 
+                                                    </tbody>
+                                                </table>
+                                                
+                                   
+                                            </div>
+                                    </div>
+                                </div>
+                            </div>
+                         
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12">
+                &copy; Copyright 2015 | Qualityze | All rights reserved
+            </div>   
+        </body>
+    </html>
+</apex:page>

@@ -1,0 +1,382 @@
+<!--
+        v1.0    Qualityze_Inc(GPR)                 Initial Version.
+                                                This page includes adhoc tasks. 
+        v1.0.1   Qualityze_Inc(SB)     26-JUL-2016        To prevent user from entering invalid data to allowdays field.
+
+-->
+<apex:component controller="NonConformance" extensions="QC_custom_settings">
+<apex:attribute name="divId"  description="Holds the id value for approval div" type="String" required="true"  />
+<apex:attribute name="seqFieldId"  description="Holds Id value for the sequences" type="String" required="true"  />
+<apex:attribute name="userFieldId" description="Holds Id value for the users"  type="String" required="true"/>
+<apex:attribute name="allowDaysFieldId" description="Holds Id value for the allow days"  type="String" required="true"/>
+<apex:attribute name="dueDateFieldId" description="Holds Id value for the duedate" type="String" required="true"/>
+<apex:attribute name="disabled" type="boolean" default="false" description="flag for disabling the controls"></apex:attribute>
+<apex:attribute name="initjs" type="string" default="false" description=" java script to be run onload"></apex:attribute> 
+<apex:attribute name="taskTitle" description="Holds Task title"  type="String" required="true"/>
+<apex:attribute name="funcprefix" description="Holdes functionprefix " type="String" default="genTask"/>
+<apex:attribute name="divfrom" description="holdes name of div from" type="String"/>
+<apex:attribute name="adhocTaskList" type="General_Task__c[]" description="adhoc task list"></apex:attribute>
+<apex:attribute name="status" type="String" description="Status of the NC/CAPA"/>			<!-- Modified By Sarath From New Int Org-->
+<apex:attribute name="isFieldRequired" description=" Specific to Resolution Page To Bypass wiz_form validation"  type="Boolean" default="true"/>
+<apex:attribute name="typeOfUser" description="Type of user to be filtered based on groups" type="String"/>
+<apex:attribute name="currentpagetaskseq" type="string" description="generic task sequence"/>
+    <input type="hidden" value="{!currentpagetaskseq}" id="currentpagetaskseq" default='0'/>
+ <script>
+    var currentpagetskseq = $('#currentpagetaskseq').val(); 
+    // alert(currentpagetskseq);
+     
+    function {!funcprefix}_add_genAdhocTask(divToAdd,divId){
+         console.log(divToAdd.attr('id')+'  '+divId);
+         {!funcprefix}_cloneAdhocTask(divId, divToAdd.attr('id'));
+        }
+    function {!funcprefix}_cloneAdhocTask(divid,divToAdd){
+        console.log(divid+' '+divToAdd+' gfdgdf '+'{!seqFieldId}'+' '+'{!userFieldId}'+' '+'{!allowDaysFieldId}'+' '+'{!dueDateFieldId}'+' '+'{!taskTitle}');
+         console.log("#"+divid+"_cont");
+        console.log("#"+divid+"_cont");
+       $("#"+divid+"_cont:last").clone().appendTo( "#"+divToAdd).removeClass("hidden"); 
+          var id_start = 0;
+         $("#"+divToAdd+ ">#"+divid+"_cont > div").each(function() {
+                            var tempId='';
+                            var dvid= 'tsk_'+(id_start++);
+                            $(this).attr('id',dvid);
+                            var tbl=$(this).find('table');
+                            tbl.attr('id','table_'+dvid);
+                            var tby=tbl.find('tbody');
+                            var trs=tby.find('tr');
+                            var tds=trs.find('td');
+                            var adsq = tds.eq(0).find('select');
+                console.log(adsq);
+                            adsq.attr('id','{!seqFieldId}_'+dvid);
+                            var adusr = tds.eq(1).find('select');
+                            adusr.attr('id','{!userFieldId}_'+dvid);
+             //adusr.attr('name','{!userFieldId}_'+dvid);
+                            var userDiv=tds.eq(1).find('div');
+                            userDiv.attr('id','{!userFieldId}_'+dvid+'_error');
+             // 
+                            var allowDays=tds.eq(2).find('input');
+                            allowDays.attr('id','{!allowDaysFieldId}'+dvid);
+                            allowDays.attr('id','{!allowDaysFieldId}'+dvid);
+                            tempId=$(allowDays).attr('id');
+                            var allowDaysDiv=tds.eq(2).find('div');
+                            allowDaysDiv.attr('id',tempId+'_error');
+                            
+             //Duedate Change
+                            var duedateDiv=tds.eq(3).find('div');
+                             $(duedateDiv).each(function(){
+                                                     if($(this).hasClass('datepicker')){
+                                                         $(this).attr('id','{!dueDateFieldId}'+dvid); 
+                                                         tempId=$(this).attr('id');
+                                                     }
+                                                     else if(this.id.indexOf('hidden_error')>0){
+                                                         $(this).attr('id',tempId+'_hidden_error');
+                                                     }
+                                                     else if(this.id.indexOf('error')>0){
+                                                         $(this).attr('id',tempId+'_error');
+                                                      }
+                                                 }
+                                               )                
+                         var dueDateinput=tds.eq(3).find('input');
+                         $(dueDateinput).each(function(){
+                                                 if(this.type=='hidden'){
+                                                     $(this).attr('name',tempId);
+                                                     $(this).attr('id',tempId+'_hidden');
+                                                 }
+                                                 else if(this.type=='text'){
+                                                     // onClick="$('#FieldId .glyphicon').click()"
+                                                     $(this).attr('onClick', '$(#'+tempId+' .glyphicon).click()');
+                                                     $(this).attr('data-api',tempId) 
+                                                     $(this).attr('data-hiddenId',tempId+'_hidden'); 
+                                                     $(this).attr('id',tempId+'_GRDATE'); 
+                                                 } 
+                                             })
+                         var tskt = $(this).find('.tsktitle input');
+                         tskt.attr('id','{!taskTitle}_'+dvid);             
+                         tempId = $(tskt).attr('id');
+                        console.log('temp');
+                         console.log(tempId);
+                         var titlDiv=$(this).find('.tsktitle  div');
+                         console.log('titlDiv');
+                         console.log(titlDiv);
+                         titlDiv.attr('id', tempId+'_error');
+                         var adtskId = $(this).find('.adhoctaskId input');
+             			 adtskId.attr('id','adhoctaskId_'+dvid);
+         });    
+        
+        {!funcprefix}_autoPopulateadhocAllowDays(divToAdd); 
+    }
+   function {!funcprefix}_autoCalculateAdhocDueDate(allowDays){
+       
+        //v1.0.1 start
+         var allwDys=$(allowDays).val();
+         var allowDaysErrorId=allowDays.id+'_error';
+         //console.log('allowDays.id prop   '+allowDays.id);
+         if(!allwDys){
+           $('#'+allowDaysErrorId).html("<p><font color='red'>This field is required</font></p>");
+           return false
+         }
+         if(allwDys<0){
+           $('#'+allowDaysErrorId).html("<p><font color='red'>Invalid value for this field</font></p>");
+           return false;
+         }
+         if(allwDys>9999999){
+           $('#'+allowDaysErrorId).html("<p><font color='red'>Invalid value for this field</font></p>");
+           return false;
+         }
+         $('#'+allowDaysErrorId).html("");
+        //v1.0.1 end
+       
+       //alert(allowDays); 
+       var oldDate = new Date();
+       //alert(oldDate);
+       var newDate=(!$(allowDays).val())?new Date():new Date(oldDate.getTime()+(parseInt($(allowDays).val())*24*60*60*1000));
+       newDate=newDate.getDate()+' '+months[newDate.getMonth()]+' '+newDate.getFullYear();   
+       //alert(newDate);
+       dueDate=allowDays.id.replace('Allowed_Days__c','Due_Date__c');
+       // alert(dueDate+ " "  +$("#"+dueDate).length);
+       $('#'+dueDate).data({date: newDate}).datetimepicker('update').children("input").val(newDate);
+       $('#'+dueDate+'_hidden').val(newDate);
+     }
+    
+        function {!funcprefix}_autoPopulateadhocAllowDays(divToAdd){
+       $("#"+divToAdd).find('.datepicker').each(function(i, r) {
+           console.log(i);
+           console.log(r);
+           $(r).datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY", minDate:new Date()}).on('dp.change', function(selected){
+               //console.log('datetime picker change');
+               var difMS=selected.date-new Date();
+               var difDays=Math.round(difMS/(1000*60*60*24));
+               $("#"+this.id+"_hidden").val(selected.date);
+               $("#"+this.id.replace('Due_Date__c','Allowed_Days__c')).val(difDays);
+ 
+            });
+           $(r).find('input[type="text"]').click(function() {
+            $(r).find('.glyphicon')[0].click();
+          });
+           
+        });
+     }
+  
+    function {!funcprefix}_removeAdhoc(current_row,divId){
+       console.log(current_row);
+       var divlen = divId+'_task';
+       console.log(divlen);
+       var task_len = $('.'+divlen).length;
+        console.log(task_len);
+        if(task_len>1){
+            $(current_row).remove();
+        }
+        else {
+          $(".{!divId}_task").addClass('hidden');  
+        }
+        }
+    
+     var months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    $( document ).ready(function() {
+        {!initjs}
+    });
+     
+    $(document).ready(function() {
+          $('#{!dueDateFieldId}_hidden').val(new Date());
+          Visualforce.remoting.Manager.invokeAction(
+              '{!$RemoteAction.NonConformance.getAdhocData}','{!typeOfUser}',
+              function(result, event){
+                  console.log(result);
+                  if(result){
+                    users=result['usrs'];
+                    all_seqns = result['seqs'];
+                    //console.log(users);
+                       $(".adhocusr").html('');
+                       $(".adhocusr").append($("<option />").val('').text(''));
+                       $.each(users,function(usr) {
+                        var userPrts = users[usr].split('@');
+                        console.log('adhoc user  '+userPrts[0]+'  '+userPrts[1]);
+                        $(".adhocusr").append($("<option />").val(userPrts[0]).text(userPrts[1]));
+                     
+                       });
+                      $(".adhocseq").html('');
+                      $.each(all_seqns,function(indx,val) {
+                        console.log('adhoc seq indx  '+indx+' val  '+val);
+                        currentpagetskseq=currentpagetskseq?currentpagetskseq:0;
+                        console.log('YEt to append   currentpagetskseq  '+currentpagetskseq);
+                        if(parseInt(val) > parseInt(currentpagetskseq)){
+                            console.log('appending ...');
+                            $(".adhocseq").append($("<option />").val(val).text(val));
+                        }
+                      });
+                      if('{!status}' =='Open'){
+					            var adh_data =[];
+					            <apex:repeat value="{!adhocTaskList}" var="tsk" rendered="true">
+					                adh_data.push('{!JSENCODE(tsk.AdhocTask_Title__c)}@{!tsk.Sequence_Position__c}@{!JSENCODE(tsk.Owner.Name)}@{!tsk.Allowed_Days__c}@{!tsk.Due_Date__c}@{!tsk.Id}@{!tsk.OwnerId}');
+					            </apex:repeat>
+					            
+					            for(var i=0;i<adh_data.length;i++){
+					                 resAdhoc_add_genAdhocTask($('.pageAdhoc'),'adhocDiv');
+					                }
+					               var tskdata;
+					               var duedate;
+					               $.each(adh_data, function(tsk) {
+					                   console.log('split adhoc task data');
+					                   tskdata=adh_data[tsk].split('@');
+					                   console.log('tskdata    ');
+					                   console.log(tskdata);
+					                   $("#adhocTitle_tsk_"+tsk).prop('value',tskdata[0]);
+					                   $("#adhocseq_tsk_"+tsk+" option[value='"+tskdata[1]+"']").attr("selected",true);
+					                   //console.log($("'#adhocseq_tsk_"+tsk+" option[value='"+tskdata[1]+"']'"));
+					                   console.log('tskdata[6]    '+tskdata[6]);
+					                   console.log('user drop down');
+					                   $("#adhocusr_tsk_"+tsk+" option").each(function(){
+					                       console.log('drop down values '+$(this).val());
+					                   });
+					                   console.log('tsk   '+tsk+'   '+$("#adhocusr_tsk_"+tsk).length);
+					                   $("#adhocusr_tsk_"+tsk+" option[value='"+tskdata[6]+"']").attr("selected",true);
+					                   //$("#adhocusr_tsk_"+tsk).val(tskdata[6]);
+					                   $("#adhocAllowed_Days__ctsk_"+tsk).prop('value',tskdata[3]);
+					                   duedate =new Date(tskdata[4]);
+					                   duedate=duedate.getDate()+' '+months[duedate.getMonth()]+' '+duedate.getFullYear();
+					                   console.log(duedate);
+					                   $("#adhocDue_Date__ctsk_"+tsk).find('input[type="text"]').prop('value',duedate);
+					                    $("#adhocDue_Date__ctsk_"+tsk+"_hidden").find('input[type="hidden"]').prop('value',duedate);
+					                   $("#adhoctaskId_tsk_"+tsk).prop('value',tskdata[5]);
+					                   //$("#adhocseq_tsk_0 option[value = '25']").attr("selected",true);
+					               });
+                      }
+                      }else{
+                        console.log("error");
+                      }
+              }
+          
+        );//ending of outer most remote invocation
+        // }
+    });
+    var isValid=true;
+    function {!funcprefix}_gentaskValidate(){
+        var newtsklen = $(".{!divfrom} #{!divid}_cont").length-1;
+          for(var i = 0; i<newtsklen ; i++ ){
+              var seqId =$("#{!seqFieldId}_tsk_"+i).val(); 
+               if(seqId==null || seqId==''){
+                isValid=false;
+                }
+              var adhocDueDate= new Date($(".{!divfrom} #{!dueDateFieldId}tsk_"+i).find("select,input").val());
+                if(adhocDueDate==0 || adhocDueDate== ''){
+                    isValid=false;
+                    $('#{!dueDateFieldId}tsk_'+i+'_error').html( "<p><font color='red'>This field is required</font></p>");
+                    }
+              var usrId = $("#{!userFieldId}_tsk_"+i).val()
+                if(usrId == null || usrId==''){
+                    isValid=false;
+                    console.log('{!userFieldId}_tsk_'+i+'_error');
+                   $('#{!userFieldId}_tsk_'+i+'_error').html("<p><font color='red'>This field is required</font></p>");
+                   } 
+                    
+              var allowedDays=$("#{!allowDaysFieldId}tsk_"+i).val()
+              if(!allowedDays){
+                  isValid=false;
+              $('#{!allowDaysFieldId}tsk_'+i+'_error').html( "<p><font color='red'>This field is required</font></p>");
+             }
+              var taskTitle =$("#{!taskTitle}_tsk_"+i).val()
+             if(taskTitle==null || taskTitle ==''){
+                 isValid=false;
+                 $('#{!taskTitle}_tsk_'+i+'_error').html( "<p><font color='red'>This field is required</font></p>");
+              }
+              }
+        }
+    
+      //Get all Adhoc taks and add to tasks{}
+    function {!funcprefix}_{!divfrom}_getAllAdhoctasks(){
+        {!funcprefix}_resetgenform();
+        {!funcprefix}_gentaskValidate();
+         console.log('isvalid-->'+isValid);
+        if(!isValid){
+        console.log('required fields are missing');
+            return [];
+        }
+       console.log("from {!divfrom}__getAllAdhoctasks function");
+       var newtsklen = $(".{!divfrom} #{!divid}_cont").length-1;
+       var adhoctasks=[];
+        for(var i = 0; i<newtsklen ; i++ ){
+            console.log("#{!seqFieldId}_tsk_"+i);
+          var adhocDueDate= new Date($(".{!divfrom} #{!dueDateFieldId}tsk_"+i).find("select,input").val());
+            console.log(adhocDueDate);
+            //console.log("#{!seqFieldId}_tsk_"+i +": :.{!divfrom} #{!userFieldId}_tsk_"+i +": :.{!divfrom} #{!allowDaysFieldId}tsk_"+i +": :.{!divfrom} #{!dueDateFieldId}tsk_"+i +": :.{!divfrom} #{!taskTitle}_tsk_"+i);
+            //alert($("#adhoctaskId_tsk_"+i).val());
+            adhoctasks.push($("#{!seqFieldId}_tsk_"+i).val()+'@'+$("#{!userFieldId}_tsk_"+i).val()+'@'+$("#{!allowDaysFieldId}tsk_"+i).val()+'@'+(adhocDueDate.getMonth()+1)+"/"+adhocDueDate.getDate()+"/"+adhocDueDate.getFullYear()+'@'+$("#{!taskTitle}_tsk_"+i).val()+'@'+$("#adhoctaskId_tsk_"+i).val());
+         
+            //adhoctasks.push([$("#adhocseq_tsk_"+i).val();,$("#adhocusr_tsk_"+i).val();,$("#adhocAllowed_Days__ctsk_"+i).val();,
+        }
+        console.log('adhoctasks from component---'+adhoctasks);
+       
+        console.log(' newtsklen-->'+newtsklen);
+        return adhoctasks;
+    }
+    
+    function {!funcprefix}_resetgenform() {
+        isValid=true;
+         var newtsklen = $(".{!divfrom} #{!divid}_cont").length-1;
+        
+        for(var i = 0; i<newtsklen ; i++ ){
+            $('#{!userFieldId}_tsk_'+i+'_error').empty();
+            $('#{!taskTitle}_tsk_'+i+'_error').empty();
+            }
+       
+    }
+    </script>
+    
+   
+     <div class="{!divId}_task_holder hidden" id="{!divId}_cont" >
+         <div class="{!divId}_task">
+            <div class="panel panel-default panel-info">
+                <div class="checkbox navbar-right">
+                  <label>
+                   <a onclick="{!funcprefix}_removeAdhoc(this.parentNode.parentNode.parentNode.parentNode.parentNode,'{!divId}');" style="color:#fff">Delete</a>
+                  </label>
+                </div>
+                <div class="panel-heading">Adhoc Task</div>
+                <div class="panel-body">
+                    <div class="tsktitle">
+                          <span class="mandatory"><apex:outputtext value="*"/></span> Task Title
+                          <c:wiz_input fieldname="{!taskTitle}" initvalue="" required="{!isFieldRequired}"  disabled="false" />
+                     </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <td><span class="mandatory"><apex:outputtext value="*"/></span>&nbsp;&nbsp;{!$ObjectType.General_Task__c.Fields.Adhoc_Sequence__c.Label}</td>
+                                <td width="40%"><span class="mandatory"><apex:outputtext value="*"/></span>&nbsp;&nbsp;Owner</td>
+                                <td width="20%"><span class="mandatory"><apex:outputtext value="*"/></span>&nbsp;&nbsp;{!$ObjectType.General_Task__c.Fields.Allowed_Days__c.Label}</td>
+                                <td><span class="mandatory"><apex:outputtext value="*"/></span>&nbsp;&nbsp;{!$ObjectType.General_Task__c.Fields.Due_Date__c.Label}</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <select id="{!seqFieldId}" class="form-control adhocseq" required="{!isFieldRequired}">
+                                                                                                
+                                    </select>
+                                    <div id="{!seqFieldId}_error" class="help-block with-errors"></div>
+                                </td>
+                                    
+                                <td>
+                                   <select id="{!userFieldId}"   class="form-control adhocusr" required="{!isFieldRequired}">
+                                            <option></option>                                                                           
+                                    </select>
+                                  <div id="{!userFieldId}_error" class="help-block with-errors"></div>     
+                                </td>
+                                <td>
+                                  <c:wiz_input required="{!isFieldRequired}"  initvalue="0" type="number" min="0" fieldname="{!allowDaysFieldId}"  onblur="{!funcprefix}_autoCalculateAdhocDueDate(this)" ></c:wiz_input>   
+                                </td>
+                                <td>
+                                  <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())+100}"  FieldId="{!dueDateFieldId}"  initdate="" updateable="true"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="adhoctaskId">
+                        <input  id="adhoctaskId" name="adhoctaskId" type="hidden" value='null' ></input>
+                    </div>
+                      
+                </div>
+             </div>
+         </div>
+     </div> 
+ 
+    
+</apex:component>

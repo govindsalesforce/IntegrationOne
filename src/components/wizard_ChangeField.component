@@ -1,0 +1,377 @@
+<apex:component controller="Component_Handler">
+    <apex:attribute name="ModalId" description="Modal Id" type="string" required="true" />   
+    <apex:attribute name="TochangeFieldName" description="Field that has to change Type"  type="string"  />
+    <apex:attribute name="fieldclass" description="class for field" type="string" default="wiz-fields"/>
+    <apex:attribute name="sObjJsid" description="Javascript id" type="string" />    
+    <apex:attribute name="retUrl" description="return Url " type="string" />
+    <apex:attribute name="isSubmitter" description="is current user is submitter " type="Boolean" default="false"/>    
+    <apex:attribute name="ToChangeFieldId" description="field id that of to be changed field " type="string" />
+    <apex:attribute name="recordId" description="field id that of to be changed field " type="string" />
+    <apex:attribute name="datatype" description="field id that of to be changed field " type="string" />
+    <apex:attribute name="Field" description="field id that of to be changed field " type="string" />
+    <apex:attribute name="Fieldlabel" description="field label" type="string" />
+    <apex:attribute name="InApproval" description="field label" type="boolean" default="true" />
+    <apex:attribute name="sObjApprover" description="is current user Approver" type="boolean" />
+    <apex:attribute name="typeofApprover" description="Approver type" type="string" default="wiz-fields"/>    
+    <script>
+    function {!ModalId}_show(){
+        $('#{!ModalId}Authenticate_user_name').val('');
+        $('#{!ModalId}Authenticate_password').val('');
+        $('#'+'{!ModalId}').modal('show');
+    }
+    function {!sObjJsid}verifyValidation(){
+        var isvalidRequired=true;
+        
+        if('{!datatype}'=='date'){
+             $( '#'+'{!ToChangeFieldId}_error' ).html( "");
+            if($('#{!ToChangeFieldId}_hidden').val()==null||$('#{!ToChangeFieldId}_hidden').val()==''){
+                isvalidRequired=false;
+                $( '#'+'{!ToChangeFieldId}_error' ).html( "<p><font color='red'>This field is required</font></p>");
+            }
+        }    
+                $('.{!sObjJsid}_required').each(
+                function(){
+                    var validateid=this.id;
+                    $( "#"+validateid+'_error' ).html('');
+                    console.log(this.value.length);
+                    console.log(this);
+                    if(this.value.length==0||this.value==''){
+                        console.log($('#'+validateid+'__error' ));
+                        if($('#'+validateid).is(":visible")){
+                            $( '#'+validateid+'_error' ).html( "<p><font color='red'>This field is required</font></p>");
+                            isvalidRequired=false;
+                        }
+                    }
+                }
+            );
+        return isvalidRequired;
+    }
+    function {!sObjJsid}approvalResponseFun(){  
+            ApprovalResponse('{!RecordId}',escapeHtml($('#{!sObjJsid}__ApprovalRescomment').val()),{!sObjJsid}approvalResponse,'FieldId')
+    }
+    function {!sObjJsid}Submit(){
+        if(!{!sObjJsid}verifyValidation()){
+        return;
+        }
+        
+        
+        var listid=$( "#{!sObjJsid}_Approvercomment" ).val();
+        var listid=new Array();
+        var ids=$('#{!sObjJsid}_testApprover').val()
+
+        var listid=new Array();
+            if(ids){
+                if(ids.length>10){
+                    alert('you can choose maximum of 10 approvers');
+                    return;
+                }
+                for(i=0;i<ids.length;i++){
+                    listid.push(ids[i]);
+                    listid.push(ids[ids.length-1]);    
+                }
+            }else{
+                listid.push('asdfa');
+                listid.push('sdfsdf');
+            }
+
+        
+        if(!{!InApproval}){
+            if(<apex:outputText value="{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}"/>){
+                {!sObjJsid}verifyDigitalSignature($('#{!sObjJsid}Authenticate_user_name').val(),$('#{!sObjJsid}Authenticate_password').val(),{!sObjJsid}save,listid);
+                    
+                
+            }else{
+                {!sObjJsid}save(listid);
+            }
+        }else{   
+            if(<apex:outputText value="{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}"/>){
+                {!sObjJsid}verifyDigitalSignature($('#{!sObjJsid}Authenticate_user_name').val(),$('#{!sObjJsid}Authenticate_password').val(),{!sObjJsid}approvalResponse,listid);
+                    
+                
+            }else{       
+                {!sObjJsid}approvalResponseFun();
+            }
+        }
+    }
+    
+
+    function {!sObjJsid}save(listid){
+    
+    var unixtimestamp;
+    if('{!jsencode(datatype)}'=='date'){
+    var feildvalue=new Date($('#{!jsencode(ToChangeFieldId)}_hidden').val());        
+    console.log('inside if +'+feildvalue.getTime());
+        unixtimestamp='UXT'+feildvalue.getTime();
+    }else{
+        //unixtimestamp=$('#{!jsencode(ToChangeFieldId)}_hidden').val();
+            unixtimestamp=$('#{!jsencode(ToChangeFieldId)}').val();
+    }
+    console.log('{!recordId}'+listid+escapeHtml($('#{!sObjJsid}__ApprovalReqcomment').val())+'{!Field}'+unixtimestamp+'{!jsencode(datatype)}'+'false');
+    var submitApproval='false';
+    if({!sObjJsid}_approvalRequired=='Yes'){
+    submitApproval='true';
+    }
+
+    ChangeFieldRequest('{!recordId}',listid,escapeHtml($('#{!sObjJsid}__ApprovalReqcomment').val()),'{!TochangeFieldName}',unixtimestamp,'{!jsencode(datatype)}',submitApproval,'{!Fieldlabel}');
+    }
+    
+    function {!sObjJsid}verifyDigitalSignature(usr,pwd,callback,param){
+        
+        $('.dont-allow-multiple-clicks').attr('disabled', true);
+        
+        if('{!$User.UserName}'==usr){
+            
+            Visualforce.remoting.Manager.invokeAction(
+                // @RemoteAction
+                '{!$RemoteAction.Component_Handler.doVerify}',pwd,function(result, event){
+                    if(event.status){
+                        if(result){                            
+                            callback(param);
+                        }
+                        else{
+                            alert("invalid user name or password");
+                            if($('.dont-allow-multiple-clicks').attr('disabled')){
+                                $('.dont-allow-multiple-clicks').attr('disabled', false);
+                            }
+                            return ;
+                        }
+                    }
+                });
+        }else{
+            alert("invalid user name or password");
+            if($('.dont-allow-multiple-clicks').attr('disabled')){
+                $('.dont-allow-multiple-clicks').attr('disabled', false);
+            }
+        }
+                
+    }
+    function {!sObjJsid}_onClickTab(tab){
+            if(tab=='{!sObjJsid}changeDetails'){
+                {!sObjJsid}_ClearErrorschangefield();
+                $('#{!sObjJsid}_doVerifyUserNameButton').addClass('hidden');
+                $('#{!sObjJsid}RecallButtonIdNctaskChangeField').removeClass('hidden');
+                $('#{!sObjJsid}Authenticate_user_name').addClass('{!sObjJsid}_required');
+                $('#{!sObjJsid}Authenticate_password').addClass('{!sObjJsid}_required'); 
+                $('#{!sObjJsid}_user_name').removeClass('{!sObjJsid}_required');
+                $('#{!sObjJsid}_password').removeClass('{!sObjJsid}_required'); 
+                if({!InApproval}){
+                    $('#{!sObjJsid}Okbutton').addClass('hidden');
+                }
+            }
+            else
+                if(tab=='{!sObjJsid}decision'){
+                    {!sObjJsid}_ClearErrorschangefield();
+                    $('#{!sObjJsid}_doVerifyUserNameButton').removeClass('hidden');
+                    $('#{!sObjJsid}RecallButtonIdNctaskChangeField').addClass('hidden');
+                    $('#{!sObjJsid}Authenticate_user_name').removeClass('{!sObjJsid}_required');
+                    $('#{!sObjJsid}Authenticate_password').removeClass('{!sObjJsid}_required'); 
+                    $('#{!sObjJsid}_user_name').addClass('{!sObjJsid}_required');
+                    $('#{!sObjJsid}_password').addClass('{!sObjJsid}_required'); 
+                    $('#{!sObjJsid}Okbutton').removeClass('hidden');
+                }
+    }
+    
+            $(document).ready(function(){
+                $('#{!sObjJsid}_testApprover').addClass('{!sObjJsid}_required');
+            });
+                
+    
+            var {!sObjJsid}_approvalRequired='No';
+            function {!sObjJsid}_approvalRequire(ApprReq){
+                var hiddenElements = $('#{!sObjJsid}select_approver, #{!sObjJsid}approver_note').removeClass('hidden');
+                if( ApprReq.checked){
+                    $(hiddenElements).removeClass('hidden');
+                    $('#Authenticate{!sObjJsid}').addClass('hidden');
+                    {!sObjJsid}_approvalRequired='Yes';
+                }
+                if( !ApprReq.checked){
+                    {!sObjJsid}_approvalRequired='No';
+                    $('#Authenticate{!sObjJsid}').removeClass('hidden');
+                    $(hiddenElements).addClass('hidden');
+                };
+            }
+            function {!sObjJsid}_ClearErrorschangefield(){
+                $('.{!sObjJsid}_required').each(function(){
+                    $( '#'+this.id+'_error' ).html( "");
+                });
+            }
+            var {!sObjJsid}approvalResponse='Approve';
+            function {!sObjJsid}_showApproveField(param1,response){            
+                {!sObjJsid}approvalResponse=response;
+            }
+    </script>
+     <div class="modal fade" id="{!ModalId}"  role="dialog" aria-labelledby="{!ModalId}">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="{!ModalId}"><apex:outputText value="{!$Label.Change}"></apex:outputText> &nbsp;<apex:outputText value="{!Fieldlabel}"></apex:outputText></h4>
+                    </div>
+                    <div class="modal-body">
+                        <div>
+                            
+                            <!-- Nav tabs -->
+                            <ul class="nav nav-tabs" role="tablist">
+                                <li role="presentation" class="active"><a href="#{!sObjJsid}changeDetails" onclick="{!sObjJsid}_onClickTab('{!sObjJsid}changeDetails')" aria-controls="changeDetails" role="tab" data-toggle="tab">Change Details</a></li>
+                                <!--improvised start-->
+                                <li id='{!sObjJsid}_LI_decisionaa' class="LI_decision {!sObjApprover} {!if(sObjApprover,'','')}" role="presentation"><a href="#{!sObjJsid}decision" onclick="{!sObjJsid}_onClickTab('{!sObjJsid}decision')" aria-controls="decision" role="tab" data-toggle="tab">Decision</a></li>
+                                <!--improvised end-->
+                            </ul>
+                            
+                            <!-- Tab panes -->
+                            <div class="tab-content push-down">
+                                <!-- change details pane  -->
+                                <div role="tabpanel" class="tab-pane active " id="{!sObjJsid}changeDetails">
+                                    <div class="row"><!-- row start -->
+                                        <div class="wiz-form-holder ">
+                                            <!---------->
+                                            <apex:componentbody ></apex:componentbody>
+                                            <!---------->
+                                       <apex:outputPanel rendered="true">
+                                            <div class="col-md-12">
+                                                <label for="exampleInputEmail1"> Approval Required:</label><br/>
+                                                
+                                                
+                                                <c:wiz_checkbox FieldId="{!sObjJsid}_chk" FieldName="{!sObjJsid}_chk" initvalue="false" disabled="{!InApproval}"  onChangeFunction="{!sObjJsid}_approvalRequire"></c:wiz_checkbox>
+                                                
+                                            </div>
+                                        </apex:outputPanel>
+                                        
+                                       <div class="col-md-12 wiz-fields-wide hidden" id="{!sObjJsid}select_approver">
+                                            <div class="form-group">
+                                                <label for="exampleInputEmail1"><span class="mandatory">*</span> Select Approver:</label>
+                                                <c:wiz_multi disabled="false" multiple="true" FieldId="{!sObjJsid}_testApprover" initValues="" typeofuser="{!typeofApprover}"  querytable="User" queryfields="Name" />    
+                                            </div>
+                                        </div>
+                                        
+                                        
+                                            <div class="col-md-12 hidden" id="{!sObjJsid}approver_note">
+                                                
+                                                    <div class="form-group">
+                                                        <label for="exampleInputEmail1"><span class="mandatory required">*</span> <apex:outputText value="{!$Label.Note_To_Approver}"></apex:outputText></label>
+                                                        <textarea id='{!sObjJsid}__ApprovalReqcomment' type="text" class="form-control {!sObjJsid}_required"   value=''></textarea>
+                                                        <div class="help-block with-errors" id="{!sObjJsid}__ApprovalReqcomment_error"></div>
+                                                    </div>   
+                                            </div>
+                                            
+                                            <apex:outputPanel rendered="{!AND($Setup.QC_settings__c.Is_Digital_Signature_Needed__c)}">
+                                                <div id='Authenticate{!sObjJsid}' class="">
+                                                    <div class="col-md-6 col-sm-6 col-xs-12 wiz-fields" id="user_name" disabled='disabled'>
+                                                        <div class="form-group disabled" disabled="disabled">
+                                                            <label for="exampleInputEmail1"><span class="mandatory">*</span> User Name:</label>
+                                                            <input id='{!sObjJsid}Authenticate_user_name' class="form-control {!sObjJsid}_required" type="text" value='' />
+                                                            <div class="help-block with-errors" id="{!sObjJsid}Authenticate_user_name_error"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6 col-sm-6 col-xs-12 wiz-fields" id="password">
+                                                        <div class="form-group">
+                                                            <label for="exampleInputEmail1"><span class="mandatory">*</span> Password:</label>
+                                                            <input id='{!sObjJsid}Authenticate_password' class="form-control {!sObjJsid}_required" type="password" value='' />
+                                                            <div class="help-block with-errors" id="{!sObjJsid}Authenticate_password_error"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </apex:outputPanel>
+                                            
+                                            
+                                        </div>
+                                    </div> <!-- Row Ends -->
+                                    
+                                    
+                                </div>                                
+                                <!--improvised start-->
+                                
+                                <div role="tabpanel" class="tab-pane" id="{!sObjJsid}decision">
+                                    <div id="decision_form">
+                                        <div class="row"><!-- row start -->
+                                            <div class="wiz-form-holder ">
+                                                
+                                                <div class="wiz-fields-wide push-down">
+                                                    <label for="exampleInputEmail1"><span class="mandatory">*</span> Decision:</label><br/>
+                                                    <div class="btn-group" data-toggle="buttons">
+                                                        <label  class="btn btn-primary active"><span class='fa fa-thumbs-o-up'/>
+                                                            <input onchange="{!sObjJsid}_showApproveField(this.checked, 'Approve')" name="owner_decision" value="APPROVE" autocomplete="off" checked="" type="radio" />Approve
+                                                        </label>
+                                                        <label  class="btn btn-primary"><span class='fa fa-thumbs-o-down'/>
+                                                            <input onchange="{!sObjJsid}_showApproveField(this.checked, 'Reject')" name="owner_decision" value="REJECT" autocomplete="off" type="radio" />Reject
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="wiz-fields-wide push-down" id="comment">
+                                                    <div class="form-group">
+                                                        <label for="exampleInputEmail1"><span id="{!sObjJsid}_Comment_Required" class="mandatory">*</span> Comment:</label>
+                                                        <textarea id='{!sObjJsid}__ApprovalRescomment' type="text" class="form-control {!sObjJsid}_required" value='' />
+                                                        <div class="help-block with-errors " id="{!sObjJsid}__ApprovalRescomment_error"></div>
+                                                    </div>
+                                                </div>
+                                                <apex:outputPanel rendered="{!AND($Setup.QC_settings__c.Is_Digital_Signature_Needed__c)}">
+                                                    <div class="wiz-fields" id="user_name" disabled='disabled'>
+                                                        <div class="form-group disabled" disabled="disabled">
+                                                            <label for="exampleInputEmail1"><span class="mandatory">*</span> User Name:</label>
+                                                            <input id='{!sObjJsid}_user_name' class="form-control {!sObjJsid}_required" type="text" value='' />
+                                                            <div class="help-block with-errors" id="{!sObjJsid}_user_name_error"></div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="wiz-fields" id="password">
+                                                        <div class="form-group">
+                                                            <label for="exampleInputEmail1"><span class="mandatory">*</span> Password:</label>
+                                                            <input id='{!sObjJsid}_password' class="form-control {!sObjJsid}_required" type="password" value='' />
+                                                            <div class="help-block with-errors" id="{!sObjJsid}_password_error"></div>
+                                                        </div>
+                                                    </div>
+                                                </apex:outputPanel>
+                                                
+                                            </div>
+                                        </div> <!-- Row Ends -->
+                                    </div>
+                                    
+                                    
+                                </div>
+                                
+                                
+                                <!--improvised end-->
+                            </div>
+                            
+                        </div>
+                        <div class="clearfix"></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default dont-allow-multiple-clicks" onclick="{!sObjJsid}cancle();">Cancel</button>
+                            <button type="button" id="{!sObjJsid}Okbutton" class="btn btn-primary dont-allow-multiple-clicks {!if(InApproval,'hidden','')}" onclick="{!sObjJsid}Submit();">Ok</button>
+                        </div>
+                        <script>
+                        function {!sObjJsid}cancle(){
+                            /*var r = confirm("All the data will be lost");
+                            if (r == true) {
+                                $('#'+'{!ModalId}').modal('hide');
+                            } else {
+                                console.log("You pressed Cancel!");
+                            }*/
+                            var YESButtonInRedirectModalOnClick = function () {
+                                $('#'+'{!ModalId}').modal('hide');
+                                $('#redirectDialog').modal('hide');
+                            };
+                            var NOButtonInRedirectModalOnClick = function () {
+                                
+                            };
+                            $('#redirectDialog .btn-primary').bind( "click", YESButtonInRedirectModalOnClick);
+                            $('#redirectDialog .btn-default').bind( "click", NOButtonInRedirectModalOnClick);
+                            
+                            // Show the redirect dialog
+                            $('#redirectDialog').modal('show');
+                            
+                            // Remove the onClick event
+                            $('#redirectDialog').on('hidden.bs.modal', function () {
+                                $('#redirectDialog .btn-primary').unbind( "click", YESButtonInRedirectModalOnClick);
+                                $('#redirectDialog .btn-default').unbind( "click", NOButtonInRedirectModalOnClick);
+                            }) 
+                        }
+                        </script>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        
+</apex:component>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Risk Priority</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Risk Priorities</value>
+    </caseValues>
+    <fields>
+        <label><!-- Active --></label>
+        <name>Active__c</name>
+    </fields>
+    <fields>
+        <label><!-- Description --></label>
+        <name>Description__c</name>
+    </fields>
+    <fields>
+        <help><!-- Risk Priority Number (RPN) assigns a value the a specific combination of severity and probability. --></help>
+        <label><!-- Number --></label>
+        <name>Number__c</name>
+    </fields>
+    <fields>
+        <help><!-- Set the action to be take for this priority level. --></help>
+        <label><!-- Threshold Action --></label>
+        <name>Threshold_Action__c</name>
+        <picklistValues>
+            <masterLabel>Default to No CAPA Required</masterLabel>
+            <translation><!-- Default to No CAPA Required --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Default to Yes CAPA Required</masterLabel>
+            <translation><!-- Default to Yes CAPA Required --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Force Yes CAPA Required</masterLabel>
+            <translation><!-- Force Yes CAPA Required --></translation>
+        </picklistValues>
+    </fields>
+    <layouts>
+        <layout>Risk Priority Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <startsWith>Consonant</startsWith>
+</CustomObjectTranslation>

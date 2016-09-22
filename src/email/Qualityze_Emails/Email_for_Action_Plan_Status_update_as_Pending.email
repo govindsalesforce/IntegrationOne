@@ -1,0 +1,6 @@
+<table border="0" cellpadding="5" width="550" cellspacing="5" height="400" >
+<tr valign="top" height="400" >
+<td tEditID="c1r1" style=" background-color:#FFFFFF; color:#000000; bEditID:r3st1; bLabel:main; font-size:12pt; font-family:arial;" aEditID="c1r1" locked="0" >
+<![CDATA[<font face="arial">Hello,&nbsp;</font><br style="font-size: medium;"><br style="font-size: medium;"><span style="color: rgb(0, 0, 0); font-family: arial; font-size: medium;">ActionPlan Status &nbsp;for&nbsp;</span><span style="background-color: rgb(255, 255, 255);">{!General_Task__c.RecordType} &nbsp;of NCR record {!General_Task__c.Non_Conformance__c} is&nbsp;</span><span style="color: rgb(0, 0, 0); font-family: arial; font-size: medium;">&nbsp;is in Pending.</span><div><div><font face="arial"><a href="https://c.na22.visual.force.com/{!General_Sub_Task__c.General_TaskId__c}"><br></a></font></div><div><font face="arial"><a href="https://c.na22.visual.force.com/{!General_Sub_Task__c.General_TaskId__c}">Click here for Action Plan</a></font><br></div></div>]]></td>
+</tr>
+</table>

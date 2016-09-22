@@ -1,0 +1,49 @@
+<apex:component >
+<apex:attribute name="FieldId" description="unique JS ID" type="string" />
+<apex:attribute name="FieldName" description="API Name" type="string" required="true"/>
+<apex:attribute name="ObjectName" description="Name object under which the FieldName resides" type="string" required="false"/>
+<apex:attribute name="initvalue" description="Initial value" type="string" required="true"/>
+<apex:attribute name="onChangeFunction" description="onChange function. Name only, no parentheses please." type="String" required="false"/>
+<apex:attribute name="disabled" description="Means it is displayed but grayed out and cannot be edited." type="boolean" required="false" default="false"/>
+<script>
+$(document).ready(function(){
+       $('#{!FIeldId}').prop('disabled', {!disabled});
+    });
+</script>
+<input 
+       type="checkbox"
+       id="ALWAYS_CHECKED_but_CHANGED_BY_id_{!FieldId}"
+       name="{!FieldName}"
+       value="Yes"
+       hidden="false"
+       
+              checked="checked"
+       
+       />
+<apex:outputpanel layout="none" rendered="{!initvalue == 'Yes'}">
+<input 
+       type="checkbox"
+       id="{!FieldId}"
+       data-value="{!initvalue}" 
+       data-initvalue="{!initValue}"
+       value="Yes"
+       data-fieldname="{!FieldName}"
+       data-objectname="{!ObjectName}"
+       onChange="{!IF(ISBLANK(onChangeFunction), '', onChangeFunction+'(this)')}"
+       
+            checked="checked"
+       />
+</apex:outputpanel>
+<apex:outputpanel layout="none" rendered="{!initvalue != 'Yes'}">
+<input 
+       type="checkbox"
+       id="{!FieldId}"
+       data-value="{!initvalue}" 
+       data-initvalue="{!initValue}"
+       value="Yes"
+       data-fieldname="{!FieldName}"
+       data-objectname="{!ObjectName}"
+       onChange="{!IF(ISBLANK(onChangeFunction), '', onChangeFunction+'(this)')}"
+       />
+</apex:outputpanel>
+</apex:component>

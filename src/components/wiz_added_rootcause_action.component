@@ -1,0 +1,103 @@
+<apex:component controller="Component_Handler">
+    <apex:attribute name="editable" type="boolean" description="Show Edit / Delete Links" default="true"/>
+    <apex:attribute name="disabled" type="boolean" description="Disables and/or hides add/edit/del functionality" default="false"/>
+    <apex:attribute name="printonly" type="boolean" description="If enabled only prints data in table form without column headers." default="false"/>
+    <apex:attribute name="NC" type="Non_Conformance__c" required="true" description="Non-Conformance" />
+    <apex:attribute name="isLock" type="boolean" default="false" description="locking upadtion of record" />
+    <apex:attribute name="genTask" type="General_Task__c" description="Investigation Record" assignTo="{!investigation}"/>
+    <input type="hidden" value="{!rootCauseData}"/>
+    <script>
+    function delrootcause(id){
+       // alert("from del rootcause");
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.Component_Handler.deleteRootCause}',id,function(result, event){ 
+            if(result)
+                //document.location.reload(true); // using .reload causes POST to occur again.  This caused a bug where attachments were attached over and over.
+                window.location= '/apex/nc_task?id={!JSENCODE(NC.id)}&gtid={!JSENCODE($CurrentPage.Parameters.gtid)}&type={!JSENCODE($CurrentPage.Parameters.type)}';
+        });
+    }
+    </script>
+    
+    <apex:repeat value="{!rootCauses}" var="RootId">
+        <div class="panel-group screen-only " id="root_cause_accordion" role="tablist" aria-multiselectable="true">
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingOne">
+                    <h4 class="panel-title">
+                        <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" data-parent="#root_cause_accordion" href="#collapse{!RootId}_rc_1" aria-expanded="true" aria-controls="collapse{!RootId}_rc_1">
+                            <span class="glyphicon glyphicon-chevron-down" aria-hidden="false"></span>
+                        </a>
+                        
+                         <!-- <a data-toggle="collapse" data-parent="#accordion" href="#collapse{!AP}" aria-expanded="true" aria-controls="collapse{!AP}" class="">
+                        <b>Action Plan for </b> : <apex:outputLabel> ({!AP.Title__c})</apex:outputLabel>
+                    </a> -->
+                        
+                        
+                        
+                        <a data-toggle="collapse" data-parent="#root_cause_accordion" href="#collapse{!RootId}_rc_1" aria-expanded="true" aria-controls="collapse{!RootId}_rc_1"  class="">
+                            <b>Root Cause </b> <apex:outputLabel > ({!RootId.Cause_Code__r.Name})</apex:outputLabel>
+                        </a>
+                        <apex:outputPanel rendered="{!NOT(islock)}">
+                            <label class="pull-right" for="Change">
+                                <a class='wiz-link' href="#" onclick='editrootcause("{!RootId.Id}");'>Edit</a>
+                                &nbsp;|&nbsp;
+                                <a class='wiz-link' href="#" onclick='delrootcause("{!RootId.Id}");'>Delete</a>
+                            </label> 
+                        </apex:outputPanel>
+                    </h4>
+                </div><!--panel heding-->
+                <div id="collapse{!RootId}_rc_1" class="panel-collapse collapse out" role="tabpanel" aria-labelledby="headingOne{!RootId}" >
+                    <div class="panel-body">
+                        <div class="add-rootcause-wrapper added-defect screen-only">
+                            <div class="add-rootcause">
+                                
+                                <div class="row"><!-- row start -->
+                                    <div class="col-md-6">
+                                        <label>{!$ObjectType.General_Sub_Task__c.Fields.Against__c.Label}</label>
+                                        <input type="text" class="form-control" value="{!RootId.Against__c}" disabled="disabled" ></input>
+                                   </div>
+                                
+                                    <div class="col-md-6">
+                                        <label> Product / Process Code:</label>
+                                             <apex:outputPanel rendered="{!RootId.Against__c == 'Product'}">
+                                            <input type="text" class="form-control" value="{!RootId.Product__r.Name}" disabled="disabled"/ >
+                                        </apex:outputPanel> 
+                                         <apex:outputPanel rendered="{!RootId.Against__c == 'Process'}">
+                                            <input type="text" class="form-control" value="{!RootId.Process__r.Name}" disabled="disabled"/ >
+                                        </apex:outputPanel> 
+                                   </div>
+                                    <div class="col-md-12 push-down"></div>
+                                    <div class="col-md-6">
+                                        <label> {!$ObjectType.General_Sub_Task__c.Fields.Defect__c.Label}</label>                                      
+                                            <input type="text" class="form-control" value="{!RootId.Defect__r.Name}" disabled="disabled"/ >                                       
+                                   </div>
+                                    <div class="col-md-12 push-down"></div>
+                                    <div class="col-md-12">
+                                     <label> {!$ObjectType.General_Sub_Task__c.Fields.Defect_Description__c.Label}</label>    
+                                     <div class="alert alert-info" role="alert">
+                                       <apex:outputField value="{!RootId.Defect_Description__c}" /> 
+                                     </div>
+                                    </div>
+                                    <div class="col-md-12 push-down"></div>
+                                <div class="col-md-6">
+                                        <label> {!$ObjectType.General_Sub_Task__c.Fields.Cause_Code__c.Label}</label>                                      
+                                            <input type="text" class="form-control" value="{!RootId.Cause_Code__r.Name}" disabled="disabled"/ >                                       
+                                   </div>
+                                   <div class="col-md-12 push-down"></div>
+                                <div class="col-md-12">
+                                     <label> {!$ObjectType.General_Sub_Task__c.Fields.Cause_Code_Description__c.Label}</label>    
+                                     <div class="alert alert-info" role="alert">
+                                         <apex:outputField value="{!RootId.Cause_Code_Description__c}" />
+                                     </div>
+                                    </div>
+
+                            </div> <!-- Row Ends -->
+                             
+                        </div><!--add roootcause-->
+                    </div><!--wrapper-->
+                </div><!--panel body-->
+                
+            </div><!--tab panel-->
+        </div><!--panel default-->
+    </div><!--panel group-->
+
+</apex:repeat>
+</apex:component>

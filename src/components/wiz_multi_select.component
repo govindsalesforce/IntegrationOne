@@ -1,0 +1,104 @@
+<!--  
+
+v1.0        Qualityze Inc(GP)       15-SEP-2016     Initial Version
+                                                    //This Component is for wiz_multi_select  
+v1.1        Qualityze Inc(BK)       22-SEP-2016     Updated Version
+                                                    //This Component is for wiz_multi_select  
+
+-->
+<apex:component >
+<apex:attribute name="FieldId" description="unique JS ID" type="string" />
+<apex:attribute name="FieldName" description="API Name" type="string" required="true"/>
+<apex:attribute name="required" description="Required" type="boolean" default="false"/>
+<apex:attribute name="initvalues" description="Comma Seperated List of Initial value" type="string" required="true"/>
+<apex:attribute name="width" description="Field Width" type="string" />
+<apex:attribute name="disabled" description="Disabled" type="boolean" default="false"/>
+<apex:attribute name="onChangeFunction" description="onChange function. Name only, no parentheses please." type="String" required="false"/>
+<apex:attribute name="unSelectedDisplayText" description="text to display if field had no value and no default value. Default value overrides this text" type="String" required="false"/>
+<apex:attribute name="ObjectName" description="API name of the object" type="string" required="true"/>
+<apex:attribute name="name" description="name of the select list" type="string"/>
+
+<script>
+/*	v1.1	start */  
+	var MultiPicklist_{!ObjectName}_{!FieldId}='';
+/*	v1.1	end */	
+	$(document).ready(function(){
+	    console.log('document ready...');
+		$('#{!FieldId}').each(function(i, r) {
+        	console.log("setPicklists(): r = ", r);
+            var opts = '{!JSENCODE(initvalues)}'.split(',');
+        	var $r = $(r);
+            var val=null;
+            $.each(opts, function( index, opt ) {
+                console.log('opt  '+opt);
+                $(r).append('<option selected="selected" value="' + opt+ '">' + opt + '</option>');
+            });
+            var objectname = '{!JSENCODE(ObjectName)}';
+            var fieldname ='{!JSENCODE(FieldName)}';
+            var unSelectedDisplayText = $(r).data('unselecteddisplaytext');
+            var url = '/apex/vfsearch';
+            //console.log("setPicklists(): url = ", url);
+            var dataToSend = {
+            	objectname: objectname,
+            	fieldname: fieldname,
+            	type: 'picklist'
+            };
+            //console.log("setPicklists(): dataToSend = ", dataToSend);
+            var request = $.ajax({
+                url: url,
+                method: "GET",
+                data: dataToSend,
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('Authorization', "OAuth " + getSessionId());
+                    xhr.setRequestHeader('Accept', "application/json");
+                }
+            });
+            
+            request.fail(function(jqXHR, textStatus, errorThrown ) {
+            //console.log("QPMS_ERROR: Request for picklist data failed.  Error returned is next log:")
+            //console.log(jqXHR);
+            
+            });
+
+            request.done(function(dataString) {
+            	console.log("setPicklists().ajax.done: dataToSend = ", dataToSend);
+            	console.log("setPicklists().ajax.done: dataString = ", dataString);
+            	var data = JSON.parse(dataString);
+            	/*	v1.1	start */  
+            	MultiPicklist_{!ObjectName}_{!FieldId}=JSON.parse(dataString);
+            	/*	v1.1	start */  
+                //console.log("setPicklists().ajax.done: data = ", data);
+                var h='';
+
+                
+                if(val == "" && unSelectedDisplayText != "") {
+                    //h+= '<option disabled selected>' + unSelectedDisplayText + '</option>';
+                     h+= '<option disabled selected>' + escapeHtml(escapeHtml(unSelectedDisplayText)) + '</option>';
+                    
+                }
+                
+                var addTaskSeq=$(r).attr('isAddTaskSequence'),leastSeq=$(r).attr('leastSeq');
+                //console.log('setPickList addTaskSeq '+addTaskSeq+' leastSeq   '+leastSeq);
+                for (var key in data) {
+                    h+= '<option ';
+                    if($.inArray( key, opts)>=0){
+                        h += ' selected="selected"';
+                    }
+                    h += '>' + escapeHtml(key) + '</option>';
+               }
+               $(r).html(h);
+               $(r).select2({placeholder: 'Select ...', allowClear:true, disabled:{!disabled}});
+               $(r).change();
+                
+            });
+        });
+		    
+		    
+		});
+</script>
+<select id="{!FieldId}" name="{!IF(ISBLANK(FieldName), FieldId, FieldName)}" class="multiple form-control {!IF(Required, 'required', '')} multiSelectList" multiple="multiple" style="width:{!width};">
+   <option></option>
+</select>
+<div class="help-block with-errors" id="{!FieldId}_error"></div>
+
+</apex:component>

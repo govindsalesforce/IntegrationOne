@@ -1,0 +1,818 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Document Profile</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Document Profiles</value>
+    </caseValues>
+    <fields>
+        <label><!-- Action Status --></label>
+        <name>Action_Status__c</name>
+        <picklistValues>
+            <masterLabel>Completed</masterLabel>
+            <translation><!-- Completed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Open</masterLabel>
+            <translation><!-- Open --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Age --></label>
+        <name>Age__c</name>
+    </fields>
+    <fields>
+        <label><!-- Allowed Days --></label>
+        <name>Allowed_Days__c</name>
+    </fields>
+    <fields>
+        <label><!-- Applicable Regulations --></label>
+        <name>Applicable_Regulations__c</name>
+        <picklistValues>
+            <masterLabel>AR1</masterLabel>
+            <translation><!-- AR1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>AR2</masterLabel>
+            <translation><!-- AR2 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>AR3</masterLabel>
+            <translation><!-- AR3 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- ApprovalProcess --></label>
+        <name>ApprovalProcess__c</name>
+        <picklistValues>
+            <masterLabel>Change Due Date</masterLabel>
+            <translation><!-- Change Due Date --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Change Owner</masterLabel>
+            <translation><!-- Change Owner --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Document Approval</masterLabel>
+            <translation><!-- Document Approval --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Approval Process Complete --></label>
+        <name>Approval_Process_Complete__c</name>
+    </fields>
+    <fields>
+        <label><!-- Approval Required --></label>
+        <name>Approval_Required__c</name>
+    </fields>
+    <fields>
+        <label><!-- Approval Status --></label>
+        <name>Approval_Status__c</name>
+        <picklistValues>
+            <masterLabel>Approved</masterLabel>
+            <translation><!-- Approved --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pending Approval</masterLabel>
+            <translation><!-- Pending Approval --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Recall</masterLabel>
+            <translation><!-- Recall --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Rejected</masterLabel>
+            <translation><!-- Rejected --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Approved Date --></label>
+        <name>Approved_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Approver 1 --></label>
+        <name>Approver_1__c</name>
+        <relationshipLabel><!-- Document Profiles (Approver 1) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 2 --></label>
+        <name>Approver_2__c</name>
+        <relationshipLabel><!-- Document Profiles (Approver 2) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 3 --></label>
+        <name>Approver_3__c</name>
+        <relationshipLabel><!-- Document Profiles (Approver 3) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 4 --></label>
+        <name>Approver_4__c</name>
+        <relationshipLabel><!-- Document Profiles (Approver 4) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 5 --></label>
+        <name>Approver_5__c</name>
+        <relationshipLabel><!-- Document Profiles (Approver 5) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 6 --></label>
+        <name>Approver_6__c</name>
+        <relationshipLabel><!-- Document Profiles (Approver 6) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 7 --></label>
+        <name>Approver_7__c</name>
+        <relationshipLabel><!-- Document Profiles (Approver 7) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 8 --></label>
+        <name>Approver_8__c</name>
+        <relationshipLabel><!-- Document Profiles (Approver 8) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 9 --></label>
+        <name>Approver_9__c</name>
+        <relationshipLabel><!-- Document Profiles (Approver 9) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver --></label>
+        <name>Approver__c</name>
+        <relationshipLabel><!-- Document Profiles (Approver) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Authorised Entity Groups Name --></label>
+        <name>Authorised_Entity_Groups_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Authorised Entity Groups --></label>
+        <name>Authorised_Entity_Groups__c</name>
+    </fields>
+    <fields>
+        <label><!-- Authorised Entity Users Name --></label>
+        <name>Authorised_Entity_Users_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Authorised Entity Users --></label>
+        <name>Authorised_Entity_Users__c</name>
+    </fields>
+    <fields>
+        <label><!-- Auto Expire --></label>
+        <name>Auto_Expire__c</name>
+    </fields>
+    <fields>
+        <label><!-- Automatically Expire Previous Revision --></label>
+        <name>Automatically_Expire_Previous_Revision__c</name>
+    </fields>
+    <fields>
+        <label><!-- Business Unit --></label>
+        <name>Business_Unit__c</name>
+        <picklistValues>
+            <masterLabel>BU 1</masterLabel>
+            <translation><!-- BU 1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>BU 2</masterLabel>
+            <translation><!-- BU 2 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Customer --></label>
+        <name>CD_Customer_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Customer --></label>
+        <name>CD_Customer__c</name>
+        <relationshipLabel><!-- Document Profiles --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Categories --></label>
+        <name>Categories__c</name>
+        <picklistValues>
+            <masterLabel>Category1</masterLabel>
+            <translation><!-- Category1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Category2</masterLabel>
+            <translation><!-- Category2 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Category3</masterLabel>
+            <translation><!-- Category3 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Category4</masterLabel>
+            <translation><!-- Category4 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Category5</masterLabel>
+            <translation><!-- Category5 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Change Management --></label>
+        <name>Change_Management_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Change Management --></label>
+        <name>Change_Management__c</name>
+        <relationshipLabel><!-- Document Profiles --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Closed Date --></label>
+        <name>Closed_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Collaboration Review --></label>
+        <name>Collaboration_Review__c</name>
+    </fields>
+    <fields>
+        <help><!-- To Hold Primary Document Id --></help>
+        <label><!-- ContentDocumentId --></label>
+        <name>ContentDocumentId__c</name>
+    </fields>
+    <fields>
+        <help><!-- To Hold Primary Content Version Id --></help>
+        <label><!-- ContentVersionId --></label>
+        <name>ContentVersionId__c</name>
+    </fields>
+    <fields>
+        <label><!-- Created Date --></label>
+        <name>Created_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- CurrentApprovalSequenceNumber --></label>
+        <name>CurrentApprovalSequenceNumber__c</name>
+    </fields>
+    <fields>
+        <label><!-- Current Rev --></label>
+        <name>Current_Rev__c</name>
+    </fields>
+    <fields>
+        <label><!-- Date of Purge --></label>
+        <name>Date_of_Purge__c</name>
+    </fields>
+    <fields>
+        <label><!-- Department --></label>
+        <name>Department_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Department --></label>
+        <name>Department__c</name>
+        <relationshipLabel><!-- Document Profiles --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Description --></label>
+        <name>Description__c</name>
+    </fields>
+    <fields>
+        <label><!-- Document Name --></label>
+        <name>Document_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Document Owner --></label>
+        <name>Document_Owner__c</name>
+    </fields>
+    <fields>
+        <label><!-- Document Profile Auto Number --></label>
+        <name>Document_Profile_Auto_Number__c</name>
+    </fields>
+    <fields>
+        <label><!-- Document Specific Changes --></label>
+        <name>Document_Specific_Changes__c</name>
+    </fields>
+    <fields>
+        <label><!-- Document Status --></label>
+        <name>Document_Status__c</name>
+    </fields>
+    <fields>
+        <label><!-- Document Type --></label>
+        <name>Document_Type_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Document Type --></label>
+        <name>Document_Type__c</name>
+        <relationshipLabel><!-- Document Profiles --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Due Date --></label>
+        <name>Due_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Effective Date --></label>
+        <name>Effective_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Effectiveness Review Date --></label>
+        <name>Effectiveness_Review_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Effectiveness Review In Advance(In days) --></label>
+        <name>Effectiveness_Review_In_Advance__c</name>
+    </fields>
+    <fields>
+        <label><!-- Security --></label>
+        <name>Enable_Security__c</name>
+    </fields>
+    <fields>
+        <label><!-- Expiration Date --></label>
+        <name>Expiration_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Expire After (In days) --></label>
+        <name>Expire_After__c</name>
+    </fields>
+    <fields>
+        <label><!-- Followers --></label>
+        <name>Followers__c</name>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Footer --></label>
+        <name>Footer__c</name>
+    </fields>
+    <fields>
+        <label><!-- Grace Period for Release (In days) --></label>
+        <name>Grace_Period_for_Release__c</name>
+    </fields>
+    <fields>
+        <label><!-- Header --></label>
+        <name>Header__c</name>
+    </fields>
+    <fields>
+        <label><!-- Impacted Sites --></label>
+        <name>Impacted_Sites__c</name>
+    </fields>
+    <fields>
+        <label><!-- Initial Submitter --></label>
+        <name>Initial_Submitter__c</name>
+        <relationshipLabel><!-- Document Profiles (Initial Submitter) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Initiating Site --></label>
+        <name>Initiating_Site_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Initiating Site --></label>
+        <name>Initiating_Site__c</name>
+        <relationshipLabel><!-- Document Profiles --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Left(vertically) --></label>
+        <name>Left_vertically__c</name>
+    </fields>
+    <fields>
+        <label><!-- Name --></label>
+        <name>Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- New Expiration Date --></label>
+        <name>New_Expiration_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- New Owner --></label>
+        <name>New_Owner__c</name>
+        <relationshipLabel><!-- Document Profiles (New Owner) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Previous Rev --></label>
+        <name>New_Rev__c</name>
+    </fields>
+    <fields>
+        <label><!-- Note To Approver --></label>
+        <name>Note_To_Approver__c</name>
+    </fields>
+    <fields>
+        <label><!-- Numbering Scheme --></label>
+        <name>Numbering_Scheme__c</name>
+        <picklistValues>
+            <masterLabel>Scheme1</masterLabel>
+            <translation><!-- Scheme1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Scheme2</masterLabel>
+            <translation><!-- Scheme2 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Scheme3</masterLabel>
+            <translation><!-- Scheme3 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Owner --></label>
+        <name>Owner_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- PreRelease Duration Date --></label>
+        <name>PreRelease_Duration_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Pre Release Duration Date --></label>
+        <name>Pre_Release_Duration_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Primary File Location --></label>
+        <name>Primary_File_Location__c</name>
+    </fields>
+    <fields>
+        <label><!-- Primary File Name --></label>
+        <name>Primary_File_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Process --></label>
+        <name>Process_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Process --></label>
+        <name>Process__c</name>
+        <relationshipLabel><!-- Document Profiles --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Product --></label>
+        <name>Product_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Product --></label>
+        <name>Product__c</name>
+        <relationshipLabel><!-- Document Profiles --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Protected Draft --></label>
+        <name>Protected_Draft__c</name>
+    </fields>
+    <fields>
+        <label><!-- Reason --></label>
+        <name>Reason__c</name>
+    </fields>
+    <fields>
+        <label><!-- Reason for Change --></label>
+        <name>Reason_for_Change__c</name>
+    </fields>
+    <fields>
+        <label><!-- Relation --></label>
+        <name>Relation__c</name>
+        <picklistValues>
+            <masterLabel>Master</masterLabel>
+            <translation><!-- Master --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Related</masterLabel>
+            <translation><!-- Related --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Sub Document</masterLabel>
+            <translation><!-- Sub Document --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Release Date --></label>
+        <name>Release_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Required Change --></label>
+        <name>Required_Change__c</name>
+    </fields>
+    <fields>
+        <label><!-- Retention Duration (In days) --></label>
+        <name>Retention_Duration__c</name>
+    </fields>
+    <fields>
+        <label><!-- Right (vertically) --></label>
+        <name>Right_vertically__c</name>
+    </fields>
+    <fields>
+        <help><!-- To Hold Secondary Document Id --></help>
+        <label><!-- SecondaryContentDocumentId --></label>
+        <name>SecondaryContentDocumentId__c</name>
+    </fields>
+    <fields>
+        <help><!-- To Hold Secondary Content Version Id --></help>
+        <label><!-- SecondaryContentVersionId --></label>
+        <name>SecondaryContentVersionId__c</name>
+    </fields>
+    <fields>
+        <label><!-- Secondary File Name --></label>
+        <name>Secondary_File_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Secondary Format --></label>
+        <name>Secondary_Format__c</name>
+        <picklistValues>
+            <masterLabel>Auto Render</masterLabel>
+            <translation><!-- Auto Render --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Manual</masterLabel>
+            <translation><!-- Manual --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Sequence --></label>
+        <name>Sequence__c</name>
+        <picklistValues>
+            <masterLabel>10</masterLabel>
+            <translation><!-- 10 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>20</masterLabel>
+            <translation><!-- 20 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>30</masterLabel>
+            <translation><!-- 30 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>40</masterLabel>
+            <translation><!-- 40 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>50</masterLabel>
+            <translation><!-- 50 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>60</masterLabel>
+            <translation><!-- 60 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>70</masterLabel>
+            <translation><!-- 70 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>80</masterLabel>
+            <translation><!-- 80 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>90</masterLabel>
+            <translation><!-- 90 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Effectiveness Review In Advance --></label>
+        <name>Start_Effectiveness_Review_In_Advance__c</name>
+    </fields>
+    <fields>
+        <label><!-- Status --></label>
+        <name>Status__c</name>
+        <picklistValues>
+            <masterLabel>Current</masterLabel>
+            <translation><!-- Current --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Draft</masterLabel>
+            <translation><!-- Draft --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Expired</masterLabel>
+            <translation><!-- Expired --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Inworks</masterLabel>
+            <translation><!-- Inworks --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Obsolete</masterLabel>
+            <translation><!-- Obsolete --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Preexpire</masterLabel>
+            <translation><!-- Preexpire --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Prerelease</masterLabel>
+            <translation><!-- Prerelease --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Revised</masterLabel>
+            <translation><!-- Revised --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Void</masterLabel>
+            <translation><!-- Void --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Submit --></label>
+        <name>Submit__c</name>
+        <picklistValues>
+            <masterLabel>Save</masterLabel>
+            <translation><!-- Save --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Submit</masterLabel>
+            <translation><!-- Submit --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Submitted Date --></label>
+        <name>Submitted_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Supersede Previous Revision --></label>
+        <name>Supersede_Previous_Revision__c</name>
+    </fields>
+    <fields>
+        <label><!-- TempStop --></label>
+        <name>TempStop__c</name>
+    </fields>
+    <fields>
+        <label><!-- Title --></label>
+        <name>Title__c</name>
+    </fields>
+    <fields>
+        <label><!-- Type --></label>
+        <name>Type__c</name>
+        <picklistValues>
+            <masterLabel>&amp;#60;script type&amp;#x3D;&amp;#34;text&amp;#x2F;javascript&amp;#34;&amp;#62;alert(&amp;#39;Test Value&amp;#39;);&amp;#60;&amp;#x2F;script&amp;#62;</masterLabel>
+            <translation><!-- &amp;#60;script type&amp;#x3D;&amp;#34;text&amp;#x2F;javascript&amp;#34;&amp;#62;alert(&amp;#39;Test Value&amp;#39;);&amp;#60;&amp;#x2F;script&amp;#62; --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>&lt;script type=&quot;text/javascript&quot;&gt;alert(&apos;Test Value&apos;);&lt;/script&gt;</masterLabel>
+            <translation><!-- &lt;script type=&quot;text/javascript&quot;&gt;alert(&apos;Test Value&apos;);&lt;/script&gt; --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Expire</masterLabel>
+            <translation><!-- Expire --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>New</masterLabel>
+            <translation><!-- New --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Revise</masterLabel>
+            <translation><!-- Revise --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Temp</masterLabel>
+            <translation><!-- Temp --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- UD Date --></label>
+        <name>UD_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD Picklist --></label>
+        <name>UD_Picklist__c</name>
+        <picklistValues>
+            <masterLabel>No</masterLabel>
+            <translation><!-- No --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pick1</masterLabel>
+            <translation><!-- Pick1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pick2</masterLabel>
+            <translation><!-- Pick2 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Yes</masterLabel>
+            <translation><!-- Yes --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Region --></label>
+        <name>UD_Region__c</name>
+        <picklistValues>
+            <masterLabel>APAC</masterLabel>
+            <translation><!-- APAC --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>APJ</masterLabel>
+            <translation><!-- APJ --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>EMEA</masterLabel>
+            <translation><!-- EMEA --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Europe</masterLabel>
+            <translation><!-- Europe --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Latin America</masterLabel>
+            <translation><!-- Latin America --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>NALA</masterLabel>
+            <translation><!-- NALA --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>North America</masterLabel>
+            <translation><!-- North America --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- UD RichText --></label>
+        <name>UD_RichText__c</name>
+    </fields>
+    <fields>
+        <label><!-- Sites --></label>
+        <name>UD_Sites__c</name>
+        <picklistValues>
+            <masterLabel>Denver</masterLabel>
+            <translation><!-- Denver --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Dublin</masterLabel>
+            <translation><!-- Dublin --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Japan</masterLabel>
+            <translation><!-- Japan --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Kuala Lumpur</masterLabel>
+            <translation><!-- Kuala Lumpur --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Liverpool</masterLabel>
+            <translation><!-- Liverpool --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Nashville</masterLabel>
+            <translation><!-- Nashville --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Singapore</masterLabel>
+            <translation><!-- Singapore --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Site A</masterLabel>
+            <translation><!-- Site A --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Site B</masterLabel>
+            <translation><!-- Site B --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- UD Text --></label>
+        <name>UD_Text__c</name>
+    </fields>
+    <fields>
+        <label><!-- Valid Duration --></label>
+        <name>Valid_Duration__c</name>
+    </fields>
+    <fields>
+        <label><!-- Viewonly Entity Groups Name --></label>
+        <name>Viewonly_Entity_Groups_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Viewonly Entity Groups --></label>
+        <name>Viewonly_Entity_Groups__c</name>
+    </fields>
+    <fields>
+        <label><!-- Viewonly Entity Users Name --></label>
+        <name>Viewonly_Entity_Users_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Viewonly Entity Users --></label>
+        <name>Viewonly_Entity_Users__c</name>
+    </fields>
+    <fields>
+        <label><!-- Watermark Text --></label>
+        <name>Watermark_Text__c</name>
+    </fields>
+    <fields>
+        <label><!-- isLocked --></label>
+        <name>isLocked__c</name>
+    </fields>
+    <fields>
+        <label><!-- isRevise --></label>
+        <name>isRevise__c</name>
+    </fields>
+    <fields>
+        <label><!-- isTempRevise --></label>
+        <name>isTempRevise__c</name>
+    </fields>
+    <fields>
+        <label><!-- isTemp --></label>
+        <name>isTemp__c</name>
+    </fields>
+    <layouts>
+        <layout>Document Profile Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <recordTypes>
+        <label><!-- DocumentProfile --></label>
+        <name>DocumentProfile</name>
+    </recordTypes>
+    <startsWith>Consonant</startsWith>
+    <validationRules>
+        <errorMessage><!-- PreRelease Duration Date cannot be lesser than the document created date. --></errorMessage>
+        <name>PreReleasedDate_cannot_less_CreatedDate</name>
+    </validationRules>
+</CustomObjectTranslation>

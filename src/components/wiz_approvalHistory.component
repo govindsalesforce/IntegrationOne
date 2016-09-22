@@ -1,0 +1,219 @@
+<apex:component controller="Component_Handler">
+    <apex:attribute name="TargetobjectId" type="id" required="true" description="History of current object id" assignto="{!objectId}"/> 
+    <apex:attribute name="Parent" type="string" required="false" description="Parent Name" /> 
+    <br/>
+    <apex:outputPanel rendered="{!(ApprovalHistory.size>0)}">
+        <div class="">
+            
+        <div class="line-accordian" id="General_task" role="tablist" aria-multiselectable="true">
+            <div class="container-fluid page-margins  pane  panel-default" id="app_warppernc_approvalHistory">            
+                <div class="panel-holder ">
+                    
+                        
+                        <table class="table table-bordered table--hover" cellspacing="5" id="approvalHistory" width="100%" >
+                            <h4>Approval History</h4>
+                            <thead>
+                                <tr>
+                                    <th width="8%">Type</th> 
+                                    <th width="8%">Submitted By</th>                                
+                                    <th width="8%">Assigned to</th>                                 
+                                    <th width="8%">Modified/Approved By</th>                                    
+                                    <th width="8%">Last Modified Date</th>                                    
+                                    <th width="8%">Comments</th>    
+                                    <th width="8%">Status</th>
+                                </tr>
+                            </thead>         
+                            <apex:variable value="{!0}" var="jsidap"/> 
+                            <apex:variable value="{!0}" var="isRecalled"/>
+                            <apex:variable value="{!0}" var="Flag"/> 
+                            <apex:repeat value="{!ApprovalHistory[0].Steps}" var="PS">
+                                    <apex:outputPanel rendered="{!(PS.StepStatus=='Removed')}">
+                                        <apex:variable value="{!isRecalled+1}" var="isRecalled"/>
+                                    </apex:outputPanel>                                       
+                            </apex:repeat>
+                                <apex:repeat rendered="{!Flag==0}" value="{!ApprovalHistory[0].Steps[0]}" var="PS" >
+                                    <apex:outputPanel rendered="{!or(PS.StepStatus!='Started',isRecalled>0)}">
+                                        <apex:variable value="{!Flag+1}" var="Flag"/>
+                                        <apex:variable value="{!jsidap+1}" var="jsidap"/>
+                                    <tr class="list-row">
+                                    
+                                        <td width="20%">{!if(PDs[ApprovalHistory[0].ProcessDefinitionId].DeveloperName=='GeneralTask','Task Approval',if(PDs[ApprovalHistory[0].ProcessDefinitionId].DeveloperName=='Change_Owner_Multiple_Approver','Change Owner',if(PDs[ApprovalHistory[0].ProcessDefinitionId].DeveloperName=='Change_Due_Date','Change DueDate',PDs[ApprovalHistory[0].ProcessDefinitionId].Name)))}</td>                                                                         
+                                        <td width="20%">{!User[ApprovalHistory[0].SubmittedById].Name}</td>      
+
+                                        <td width="20%">{!User[PS.OriginalActorid].Name}</td>
+                                        <td width="20%">{!if(isRecalled>0,User[ApprovalHistory[0].SubmittedById].Name,User[PS.Actorid].Name)}</td>                                                                                  
+                                        <td width="20%">
+                                            <apex:outputField value="{!PS.CreatedDate}"/>
+                                        </td>        
+                                        <td width="20%"><apex:outputText rendered="{!NOT(ISBLANK(PS.Comments))}" >
+                                            <span data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="{!PS.Comments}" title="" class="status-marker ">{!LEFT(PS.Comments,30)}...</span>
+                                            </apex:outputText></td>                                        
+                                        <td width="20%">
+                                            {!if(OR(PS.StepStatus=='Removed',isRecalled>0),'Recalled',PS.StepStatus)}
+                                        </td>                                  
+                                    </tr>                                     
+                                    </apex:outputPanel>
+                                </apex:repeat>    
+                                <apex:repeat rendered="{!AND(ApprovalHistory[0].Workitems.size>0,Flag==0)}" value="{!ApprovalHistory[0].Workitems[0]}" var="PW">  
+                                    <apex:variable value="{!Flag+1}" var="Flag"/>
+                                    <tr class="list-row">
+                                        <td width="20%">{!if(PDs[ApprovalHistory[0].ProcessDefinitionId].DeveloperName=='GeneralTask','Task Approval',if(PDs[ApprovalHistory[0].ProcessDefinitionId].DeveloperName=='Change_Owner_Multiple_Approver','Change Owner',if(PDs[ApprovalHistory[0].ProcessDefinitionId].DeveloperName=='Change_Due_Date','Change DueDate',PDs[ApprovalHistory[0].ProcessDefinitionId].Name)))}</td>                                                                         
+                                        <td width="20%">{!User[ApprovalHistory[0].SubmittedById].Name}</td>      
+
+                                        <td width="20%">{!User[PW.Actorid].Name}</td> 
+                                        <td width="20%"><apex:outputtext value="{!User[ApprovalHistory[0].SubmittedById].Name}"/></td>                                         
+                                        <td width="20%">
+                                            <apex:outputField value="{!PW.CreatedDate}"/>
+                                        </td>              
+                                        <td width="20%">
+                                        
+                                        </td>                                        
+                                        <td width="20%">{!if(ApprovalHistory[0].Status=='Removed','Recalled',ApprovalHistory[0].Status)}</td>                                  
+                                    </tr>    
+                                </apex:repeat>
+                                
+                                <apex:repeat rendered="{!AND(Flag==0,isRecalled>0)}" value="{!ApprovalHistory[0].Steps[0]}" var="PS" >
+                                    <apex:outputPanel rendered="{!PS.StepStatus=='Started'}">
+                                        <apex:variable value="{!Flag+1}" var="Flag"/>
+                                    <tr class="list-row">
+                                        <td width="20%">{!if(PDs[ApprovalHistory[0].ProcessDefinitionId].DeveloperName=='GeneralTask','Task Approval',if(PDs[ApprovalHistory[0].ProcessDefinitionId].DeveloperName=='Change_Owner_Multiple_Approver','Change Owner',if(PDs[ApprovalHistory[0].ProcessDefinitionId].DeveloperName=='Change_Due_Date','Change DueDate',PDs[ApprovalHistory[0].ProcessDefinitionId].Name)))}</td>                                                                         
+                                        <td width="20%">{!User[ApprovalHistory[0].SubmittedById].Name}</td>      
+
+                                            <apex:variable value="{!0}" var="flag"/>
+                                            <apex:repeat rendered="{!ApprovalHistory[0].Steps.size>0}" value="{!ApprovalHistory[0].Steps}" var="PSs">  
+                                                <apex:outputPanel rendered="{!flag>0}">
+                                                    {!User[PSs.OriginalActorid].Name},
+                                                </apex:outputPanel>
+                                                <apex:variable value="{!flag+1}" var="flag"/>
+                                            </apex:repeat>                
+                                        <apex:repeat rendered="{!ApprovalHistory[0].Workitems.size>0}" value="{!ApprovalHistory[0].Workitems}" var="PW">   
+                                                {!User[PW.OriginalActorid].Name},
+                                        </apex:repeat>                                       
+                                        <td width="20%">{!User[PS.OriginalActorid].Name}</td>                                         
+                                        <td width="20%">
+                                            <apex:outputField value="{!PS.CreatedDate}"/>
+                                        </td>                      
+                                        <td width="20%"><apex:outputText rendered="{!NOT(ISBLANK(PS.Comments))}" >
+                                            <span data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="{!PS.Comments}" title="" class="status-marker ">{!LEFT(PS.Comments,30)}...</span>
+                                            </apex:outputText></td>
+                                        <td width="20%">                                                 
+                                        </td>                               
+                                        <td width="20%">{!if(PS.StepStatus=='Removed','Recalled',PS.StepStatus)}</td>                                  
+                                    </tr>                                     
+                                    </apex:outputPanel>
+                                </apex:repeat>  
+                            <tr><td colspan="7"><a data-target="#nc_approvalHistory"  data-toggle="modal">More...</a></td></tr>
+                        </table>
+                                                    
+                    </div>
+                </div>
+            </div>        
+        
+        <div class="modal fade in" id="nc_approvalHistory" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false" style="display: none; padding-right: 17px;">
+       <!-- <div aria-hidden="true" style="display: none;" class="modal fade" tabindex="-1" role="dialog" id="nc_approvalHistory">-->
+            <div class="modal-dialog modal-lg" >
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"> × </span></button>
+                        <h4 class="modal-title" id="nc_approvalHistoryTitle">{!Parent} Approval History</h4>
+                    </div>
+                    <div class="modal-body" style="height: 400px; overflow: auto;" id="nc_approvalHistorybody" >
+                        <table class="table table-hover table-responsive table-bordered table-striped" cellspacing="5" id="ApprovalHistory" width="100%" >
+                            <thead>
+                                <tr>
+                                    <th width="20%">Type</th> 
+                                    <th width="20%">Submitted By</th>                                  
+                                    <th width="20%">Assigned to</th>                                 
+                                    <th width="20%">Modified/Approved By</th>                                    
+                                    <th width="20%">Last Modified Date</th>
+                                    <th width="20%">Comments</th>                                      
+                                    <th width="20%">Status</th>
+                                </tr>
+                            </thead>
+                            <apex:repeat value="{!ApprovalHistory}" var="Pi">
+                                <apex:variable value="{!0}" var="isRecalled"/>
+                                <apex:repeat value="{!Pi.Steps}" var="PS" >
+                                    <apex:outputPanel rendered="{!(PS.StepStatus=='Removed')}">
+                                        <apex:variable value="{!isRecalled+1}" var="isRecalled"/>
+                                    </apex:outputPanel>                                    
+                                </apex:repeat>
+                                <apex:repeat value="{!Pi.Steps}" var="PS" >
+                                    <apex:outputPanel rendered="{!PS.StepStatus!='Started'}">
+                                    <tr class="list-row">
+                                        <td width="20%">{!if(PDs[Pi.ProcessDefinitionId].DeveloperName=='GeneralTask','Task Approval',if(PDs[Pi.ProcessDefinitionId].DeveloperName=='Change_Owner_Multiple_Approver','Change Owner',if(PDs[Pi.ProcessDefinitionId].DeveloperName=='Change_Due_Date','Change DueDate',PDs[Pi.ProcessDefinitionId].Name)))}</td>                                                                         
+                                        <td width="20%">{!User[Pi.SubmittedById].Name}</td>      
+
+                                        <td width="20%">{!User[PS.OriginalActorid].Name}</td>
+                                        <td width="20%">{!if(isRecalled>0,User[ApprovalHistory[0].SubmittedById].Name,User[PS.Actorid].Name)}</td>                                                                                    
+                                        <td width="20%">
+                                            <apex:outputField value="{!PS.CreatedDate}"/>
+                                        </td>                      
+                                        <td width="20%"><apex:outputText rendered="{!NOT(ISBLANK(PS.Comments))}" >
+                                                <span data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="{!PS.Comments}" title="" class="status-marker ">{!LEFT(PS.Comments,30)}...</span>
+                                                </apex:outputText>
+                                        </td>                                        
+                                        <td width="20%">
+                                            {!if(OR(PS.StepStatus=='Removed',isRecalled>0),'Recalled',PS.StepStatus)}
+                                        </td>                                  
+                                    </tr>                                     
+                                    </apex:outputPanel>
+                                </apex:repeat>    
+                                <apex:repeat rendered="{!Pi.Workitems.size>0}" value="{!Pi.Workitems}" var="PW">                                            
+                                    <tr class="list-row">
+                                        <td width="20%">{!if(PDs[Pi.ProcessDefinitionId].DeveloperName=='GeneralTask','Task Approval',if(PDs[Pi.ProcessDefinitionId].DeveloperName=='Change_Owner_Multiple_Approver','Change Owner',if(PDs[Pi.ProcessDefinitionId].DeveloperName=='Change_Due_Date','Change DueDate',PDs[Pi.ProcessDefinitionId].Name)))}</td>                                                                         
+                                        <td width="20%">{!User[Pi.SubmittedById].Name}</td>      
+                                        <td width="20%">{!User[PW.Actorid].Name}</td> 
+                                        <td width="20%"><apex:outputtext value="{!User[Pi.SubmittedById].Name}"/></td>                                         
+                                        <td width="20%">
+                                            <apex:outputField value="{!PW.CreatedDate}"/>
+                                        </td>                      
+
+                                        <td width="20%"></td>                                        
+                                        <td width="20%">{!if(Pi.Status=='Removed','Recalled',Pi.Status)}</td>                                  
+                                    </tr>    
+                                </apex:repeat>
+                                
+                                <apex:repeat value="{!Pi.Steps}" var="PS" >
+                                    <apex:outputPanel rendered="{!PS.StepStatus=='Started'}">
+                                    <tr class="list-row">
+                                        <td width="20%">{!if(PDs[Pi.ProcessDefinitionId].DeveloperName=='GeneralTask','Task Approval',if(PDs[Pi.ProcessDefinitionId].DeveloperName=='Change_Owner_Multiple_Approver','Change Owner',if(PDs[Pi.ProcessDefinitionId].DeveloperName=='Change_Due_Date','Change DueDate',PDs[Pi.ProcessDefinitionId].Name)))}</td>                                                                         
+                                        <td width="20%">{!User[Pi.SubmittedById].Name}</td>      
+
+                                        <td width="20%">
+                                            <apex:variable value="{!0}" var="afterdecision"/>
+                                            <apex:repeat rendered="{!Pi.Steps.size>0}" value="{!Pi.Steps}" var="PSs">
+                                                <apex:variable value="{!afterdecision+1}" var="afterdecision"/>
+                                                <apex:outputPanel rendered="{!AND(afterdecision>0,Pi.Steps.size>afterdecision)}"><!--   for removing last step  OriginalActorid  (i.e  submitter)    --->
+                                                    {!User[PSs.OriginalActorid].Name}
+                                                    <apex:outputText rendered="{!Pi.Steps.size>1}">,</apex:outputText> 
+                                                </apex:outputPanel>
+                                            </apex:repeat>                 
+                                        <apex:repeat rendered="{!Pi.Workitems.size>0}" value="{!Pi.Workitems}" var="PW">   
+                                                {!User[PW.OriginalActorid].Name}
+                                            <apex:outputText rendered="{!Pi.Workitems.size>1}">,</apex:outputText> 
+                                        </apex:repeat>                                            
+                                        </td> 
+                                        <td width="20%">{!User[PS.OriginalActorid].Name}</td>                                         
+                                        <td width="20%">
+                                            <apex:outputField value="{!PS.CreatedDate}"/>
+                                        </td>                      
+                                        <td width="20%"><apex:outputText rendered="{!NOT(ISBLANK(PS.Comments))}" >                                            
+                                                <span data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="{!PS.Comments}" title="" class="status-marker ">{!LEFT(PS.Comments,30)}...</span>
+                                            </apex:outputText>
+                                        </td>                                        
+                                        <td width="20%">{!if(PS.StepStatus=='Removed','Recalled',PS.StepStatus)}</td>                                  
+                                    </tr>                                     
+                                    </apex:outputPanel>
+                                </apex:repeat>                 
+                            </apex:repeat>
+                        </table>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div>
+        </div>
+    </apex:outputPanel>
+</apex:component>

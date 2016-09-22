@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Process</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Processes</value>
+    </caseValues>
+    <fields>
+        <label><!-- Active --></label>
+        <name>Active__c</name>
+    </fields>
+    <fields>
+        <label><!-- Business Unit --></label>
+        <name>Business_Unit__c</name>
+        <picklistValues>
+            <masterLabel>Val1</masterLabel>
+            <translation><!-- Val1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Val2</masterLabel>
+            <translation><!-- Val2 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Defect --></label>
+        <name>Defect__c</name>
+        <relationshipLabel><!-- Processes --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Manufacturing Site --></label>
+        <name>Manufacturing_Site__c</name>
+        <relationshipLabel><!-- Processes --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Organization --></label>
+        <name>Organization_del__c</name>
+        <relationshipLabel><!-- Processes --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Process Classification --></label>
+        <name>Process_Classification__c</name>
+        <picklistValues>
+            <masterLabel>Val1</masterLabel>
+            <translation><!-- Val1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Val2</masterLabel>
+            <translation><!-- Val2 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Process Code --></label>
+        <name>Process_Code__c</name>
+    </fields>
+    <fields>
+        <label><!-- Process Description --></label>
+        <name>Process_Description__c</name>
+    </fields>
+    <fields>
+        <label><!-- Process Quality --></label>
+        <name>Process_Quality__c</name>
+    </fields>
+    <fields>
+        <label><!-- Revision --></label>
+        <name>Revision__c</name>
+    </fields>
+    <fields>
+        <label><!-- Type --></label>
+        <name>Type__c</name>
+        <picklistValues>
+            <masterLabel>Operational Process</masterLabel>
+            <translation><!-- Operational Process --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Standard Operational Process</masterLabel>
+            <translation><!-- Standard Operational Process --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- UDF --></label>
+        <name>UDF__c</name>
+    </fields>
+    <layouts>
+        <layout>Process Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <startsWith>Consonant</startsWith>
+</CustomObjectTranslation>

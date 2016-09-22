@@ -1,0 +1,33 @@
+<apex:component >
+<script type="text/javascript">
+    $(document).ready(function(){
+        if('{!type}'=='number'){
+            $('#{!IF(ISBLANK(fieldId),fieldname,fieldId)}').attr('min','{!min}');
+        }
+        $( "#{!IF(ISBLANK(fieldId),fieldname,fieldId)}").on('input', function() {
+            $('#{!IF(ISBLANK(fieldId),fieldname,fieldId)}_error').empty();
+            if ($(this).val().length>="{!maxlength}") {
+               $('#{!IF(ISBLANK(fieldId),fieldname,fieldId)}_error').html('<p style="color: red;">Reached {!maxlength} character limit.</p>');       
+            }
+        });
+    })
+</script>
+<apex:attribute name="fieldname" type="String" description="API Field Name" required="True"/>
+<apex:attribute name="fieldId" type="String" description="Id of the field" required="false"/>
+<apex:attribute name="initvalue" type="string" description="Initial Value" required="true"/>
+<apex:attribute name="disabled" type="boolean" description="Disabled" default="false"/>
+<apex:attribute name="required" type="boolean" description="Required" default="false"/>
+<apex:attribute name="type" type="string" default="text" description="type of input (text, number)"/>
+<apex:attribute name="min" type="string"  description="min value for the input"/>
+<apex:attribute name="maxlength" type="Integer"  description="maxlength for the input" default="120"/>
+<apex:attribute name="onblur" type="string" default="" description="function which is called upon blur of the input"></apex:attribute>
+
+<apex:outputpanel layout="none" rendered="{!NOT(disabled)}">
+<input type="{!type}" id="{!IF(ISBLANK(fieldId),fieldname,fieldId)}" class="form-control {!IF(required, 'required', '')} {!if(type='Number', 'number', '')}" name="{!fieldname}" value="{!initvalue}" maxlength="{!maxlength}" onblur="{!onblur}"  oninput="maxlengthvalidation(this)"/>
+</apex:outputpanel>
+<apex:outputpanel layout="none" rendered="{!disabled}">
+<input type="{!type}" disabled="disabled" id="{!IF(ISBLANK(fieldId),fieldname,fieldId)}" class="form-control {!IF(required, 'required', '')} {!if(type='Number', 'number', '')}" name="{!fieldname}" value="{!initvalue}" onblur="{!onblur}"/>
+</apex:outputpanel>
+<div id="{!IF(ISBLANK(fieldId),fieldname,fieldId)}_error" class="help-block with-errors"></div>
+
+</apex:component>

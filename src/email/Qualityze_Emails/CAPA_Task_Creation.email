@@ -1,0 +1,23 @@
+<table border="0" cellpadding="5" width="550" cellspacing="5" height="400" >
+<tr valign="top" height="400" >
+<td tEditID="c1r1" style=" background-color:#FFFFFF; color:#000000; bEditID:r3st1; bLabel:main; font-size:12pt; font-family:arial;" aEditID="c1r1" locked="0" >
+<![CDATA[Dear {!01I610000012EC9.00N6100000ACLf8} ,
+<br>
+<br>New CAPA Task - {!General_Task__<a href="http://c.Name" target="_blank">c.Name</a>}  created and assigned to you.
+<br>
+<br>
+<br>Regards,
+<br>Qualityze IncDear {!01I6100000125To.OwnerFullName},
+<br>
+<br>	New NC Record has been created. Please see details as below:
+<br>
+<br>CAPA Number: {!CAPA__<a href="http://c.Name" target="_blank">c.Name</a>}
+<br>
+<br>CAPA Status: {!01I6100000125To.00N6100000AFHMr}
+<br>
+<br>
+<br>Reagards,
+<br>
+<br>Qualityze Inc.]]></td>
+</tr>
+</table>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <encodingKey>ISO-8859-1</encodingKey>
+    <letterhead>Qualityze_Inc</letterhead>
+    <name>CAPA Task:Approval request</name>
+    <style>freeForm</style>
+    <subject>Approval Request for {!01I61000000v12Z.RecordType}</subject>
+    <textOnly>Hello,
+
+
+
+You have been assigned as an approver for the {!01I61000000v12Z.RecordType} task of CAPA record {!01I61000000udkO.Name}. Please log in to the application and complete the approval process by the due date identified.
+
+
+Please contact {!01I61000000udkO.OwnerFullName}  if you have any questions about this assignment and/or non-conformance record.
+
+
+Thank you.
+
+
+
+Click here for details{!01I61000000udkO.RecordType}</textOnly>
+    <type>html</type>
+</EmailTemplate>

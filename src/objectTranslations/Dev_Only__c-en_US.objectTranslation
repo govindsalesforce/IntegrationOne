@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Dev Only</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Dev Only</value>
+    </caseValues>
+    <fields>
+        <label><!-- API_Version --></label>
+        <name>API_Version__c</name>
+    </fields>
+    <fields>
+        <label><!-- Namespace Prefix --></label>
+        <name>Namespace_Prefix__c</name>
+    </fields>
+    <startsWith>Consonant</startsWith>
+</CustomObjectTranslation>

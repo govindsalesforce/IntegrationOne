@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Process Relationship</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Process Relationship</value>
+    </caseValues>
+    <fields>
+        <label><!-- Operational Process Code --></label>
+        <name>Operational_Process_Code__c</name>
+    </fields>
+    <fields>
+        <label><!-- Operational Process --></label>
+        <name>Operational_Process__c</name>
+        <relationshipLabel><!-- Process Relationship (Standard Operational Process) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Standard Operational Process Code --></label>
+        <name>Process_Code__c</name>
+    </fields>
+    <fields>
+        <label><!-- Process Relationship Id --></label>
+        <name>Process_Relationship_Id__c</name>
+    </fields>
+    <fields>
+        <label><!-- Standard Operational Process --></label>
+        <name>Standard_Operational_Process__c</name>
+        <relationshipLabel><!-- Process Relationship (Operational Process) --></relationshipLabel>
+    </fields>
+    <recordTypes>
+        <label><!-- Standard Operational Process --></label>
+        <name>Standard_Operational_Process</name>
+    </recordTypes>
+    <startsWith>Consonant</startsWith>
+    <webLinks>
+        <label><!-- New_Process_Relationship --></label>
+        <name>New_Process_Relationship</name>
+    </webLinks>
+</CustomObjectTranslation>

@@ -1,0 +1,160 @@
+<!--  
+
+v1.0       Qualityze Inc                               Initial Version
+                                                      
+                                   
+v1.1       Qualityze Inc(GP)    15-SEP-2016           Changed the logic to make sure that we are not accessing the form element which already deleted
+
+-->
+<apex:component controller="QC_custom_settings">
+    <apex:attribute name="FormId" description="Form Id" type="string" required="true" />
+    <apex:attribute name="FormClass" description="Form Class" type="string" />
+    <apex:attribute name="submitPage" description="VF Page to submit data" type="string" required="true" />
+    <apex:attribute name="postSaveJS" description="Post Save JavaScript. The record Id available as a var RecordId." type="String" />
+    <apex:attribute name="RecordId" description="Record Id to Update" type="Id" Required="true" />
+
+    <script>
+        $(document).ready(function() {
+            $('#{!formid}').ajaxForm({
+                beforeSubmit: {!formid}_beforeSubmit,
+                success: {!formid}_saveRecord,
+                error: function(response, status, err){
+                },
+                url: '{!URLFOR('/apex/' + submitpage)}',
+                dataType: 'json'
+               
+                
+            });
+        });
+        
+    function {!formId}_beforeSubmit(formData, jqForm, options) { 
+        //console.log(formData);
+        var fields = new Array();
+        var deletes = 0;
+        
+        for(var i=0; i<formData.length; i++){
+          console.log('formData[i].name     '+formData[i].name+'  formData[i].value  '+formData[i].value )
+          var index = $.inArray(formData[i].name, fields);
+          console.log('index   '+index +'  i    '+i+'  formData.length   '+formData.length);
+          if(index > -1){
+              //index = index + deletes;
+              
+              //v1.1 start
+              for(var indx=0;indx<formData.length;indx++){
+                  if(formData[indx] && formData[indx].name == formData[i].name){
+                     index=indx;
+                     break;
+                  }
+              }
+              //v1.1 end
+              
+              formData[index].value = formData[index].value + ',' + formData[i].value;
+              console.log('deleting at '+i);
+              delete formData[i];
+              //deletes++;
+               
+          }else if(formData[i].name == 'Id' && formData[i].value == ''){
+            fields.push(formData[i].name);
+            delete formData[i];
+            deletes++
+          }else{
+            fields.push(formData[i].name);
+          } 
+          
+
+        }
+        //consle.log();
+  
+    }
+
+        // post-submit callback 
+        
+        function {!formId}_saveRecord(responseText, statusText, xhr, $form) {
+            console.log('save started');
+            var recordId = '{!RecordId}';
+            var method = 'POST';
+            if(recordId == '' && typeof responseText.Id != 'undefined'){
+              recordId = responseText.Id;  
+            }
+           
+            if(recordId != ''){
+              recordId = '/' + recordId;
+              method = 'PATCH';
+
+            }
+            
+            delete responseText.Id;
+            
+            //URL endpoint for REST API. Appends record ID if doing an update.
+            var url = 'https://{!JSENCODE(Server)}.salesforce.com/services/data/v{!JSENCODE(API_Version)}/sobjects/' + responseText.attributes.type + recordId;
+            delete responseText.attributes;
+            
+            console.log(url);
+            var request = $.ajax({
+                url: url,
+                method: method,
+                contentType: "application/json",
+                dataType: 'json',
+                beforeSend: function(xhr) {
+                    //authenticate with salesforce. getSessionId is a javascript method on each visualforce page. 
+                    //It depends on a merge field that is unavailable in the javascript files.
+                    xhr.setRequestHeader('Authorization', "OAuth " + getSessionId());
+                    xhr.setRequestHeader('Accept', "application/json");
+
+                },
+                data: JSON.stringify(responseText)
+            });
+
+            request.done(function(data, textStatus, jqXHR) {
+                ///TODO: Call Post Save JS function.
+                
+                //console.log('BEGIN wiz_form.vfc: {!formId}_saveRecord() -->request.done(functio():');
+                //console.log('data:'); console.log(data);
+                //console.log('textStatus:'); console.log(textStatus);
+                //console.log('jqXHR:'); console.log(jqXHR);
+                //console.log('END wiz_form.vfc: {!formId}_saveRecord() -->request.done(functio():');
+                
+                var RecordId = null;
+                if (jqXHR != null && jqXHR.responseJSON != null && jqXHR.responseJSON.id != null) {
+                    RecordId = jqXHR.responseJSON.id;   
+                } else {
+                    // If the ID wasn't returned in the response then we'll just cheat and get the ID from the current URL.
+                    var patternGetIdFromUrl = /[?&]id=([^&]+)/i;
+                    RecordId = patternGetIdFromUrl.exec(window.location.href)[1];
+                }
+                //console.log('wiz form making postSaveJS not  reloading the location  page '+$('#page').val());
+               
+                {!PostSaveJS}
+                //location.reload();
+                
+                // window.location.href='/apex/nc_products?id='+RecordId;  Ben asks: is this supposed to be hard-coded to 'nc_products' page? Answer: No.
+            });
+
+            request.fail(function(jqXHR, textStatus, errorThrown) {
+                $('.dont-allow-multiple-clicks').removeAttr('disabled');
+                console.log(jqXHR);
+                console.log(errorThrown);
+                //Loop through REST response for error messages and add to each field. 
+                var resp = jqXHR.responseJSON;
+                for (var i = 0; i < resp.length; i++) {
+                    if (resp[i].errorCode == 'FIELD_CUSTOM_VALIDATION_EXCEPTION') {
+                        if (resp[i].fields.length > 0) {
+                            for (var j = 0; j < resp[i].fields.length; j++) {
+                                var mesg= resp[i].message;
+                                var result= mesg.fontcolor("red");
+                                $('#' + resp[i].fields[j] + '_error').html(result);
+                            }
+                            $('#signature').modal('hide');
+                        } else {
+                            //put error message on page somewhere
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+    <form action="{!URLFOR('/apex/' + submitpage)}" id="{!formId}" class="{!formClass}">
+        <apex:componentBody />
+    </form>
+
+</apex:component>

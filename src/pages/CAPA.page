@@ -1,0 +1,1850 @@
+<!--
+v1.0  Qualityze Inc(TS)        19-MAY-2016    Initial Version.
+This page includes CAPA init. 
+-->
+<apex:page sidebar="false" readOnly="true" standardcontroller="CAPA__c" extensions="CAPA,Approvalclass,FileAttachmentController,QC_custom_settings"	showHeader="false" standardStylesheets="false" docType="html-5.0">
+    <script type="text/javascript">
+    
+      $( document ).ready(function() {
+          setTimeout(show(), 1000);
+      });
+      
+      function show(){
+         $("#loading").hide();
+         $("#overlay").hide();
+      }
+    
+    
+    function ApprovalResponse(RecordId,ApprovalRescomment,approved,FieldId){
+        
+        Visualforce.remoting.Manager.invokeAction(
+            // @RemoteAction
+            '{!$RemoteAction.Approvalclass.submitApprovalResponse}',RecordId,ApprovalRescomment,approved,FieldId,function(result, event){
+                if(event.status){
+                    
+                    window.location.href = '/apex/capa?id='+'{!JSENCODE(CAPA__c.Id)}&pg={!JSENCODE($CurrentPage.parameters.pg)}';
+                }
+            });
+    } 
+    function submitApprovalRequestCAPAOwner(RecordId,listid,ApprovalReqcomment,newOwner){
+        
+        Visualforce.remoting.Manager.invokeAction(
+            // @RemoteAction
+            '{!$RemoteAction.CAPA.submitApprovalRequestCAPAOwner}',RecordId,listid,ApprovalReqcomment,newOwner,function(result, event){
+                if(event.status){
+                    window.location.href = '/apex/capa?id='+'{!JSENCODE(CAPA__c.Id)}&pg={!JSENCODE($CurrentPage.parameters.pg)}';
+                }
+            });
+        
+    }
+    </script>
+    <div id="overlay" style="background-color: rgba(0, 0, 0, 0.15);z-index: 999;position: absolute;left: 0;top: 0;width: 100%;height: 200%;"></div>
+    <div id="loading" style="height: 64px;width: 64px;align:center; position: absolute;margin: -100px 0 0 -200px;top: 80%;left: 50%;z-index:1000">
+       <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i> <span class="sr-only">Loading...</span>
+       
+    </div>
+    <apex:composition template="qualityze_app_layout">
+        
+        <apex:define name="header_bar_component">
+            <!-- Begin : Header Bar With Search Option -->
+            <c:header_bar ObjectType="{!$ObjectType.CAPA__c}" ObjectTypeLinkTitle="CAPA"/>
+            <!-- End : Header Bar With Search Option -->
+        </apex:define>
+        
+        <apex:define name="theheader">
+            <!-- Begin : CAPA Header -->
+            <c:capa_header capaOpenTaskSequence="{!capaOpenTaskSequence}" recordid="{!CAPA.Id}"
+                           rendered="{!NOT(ISBLANK(CAPA.Id))}" />
+            <!-- End : CAPA Header -->
+        </apex:define>
+        
+        <apex:define name="wizsteps">
+            <!-- Begin : Navigation Steps -->
+            <c:wizard_steps step="{!IF($CurrentPage.parameters.pg=='capa_init',1,IF($CurrentPage.parameters.pg=='capa_resolution',2,10))}"
+                            rendered="{!NOT(ISBLANK(CAPA.Id))}"
+                            requestedFieldHolder="{!CAPA.CAPA_Status__c},{!CAPA.Resolution_Code__c}"
+                            tasks="{!capaTasks}" adhocTaskDetails="{!adhocTaskDetails}"
+                            object="{!CAPA}" />
+            <!-- End : Navigation Steps -->
+        </apex:define>
+        
+        <apex:define name="from-holder-title">
+            <apex:outputText value="{!IF($CurrentPage.parameters.pg=='capa_init','CAPA Initiation',IF($CurrentPage.parameters.pg=='capa_resolution','CAPA Resolution',IF($CurrentPage.parameters.pg=='capa_details','CAPA Details',IF($CurrentPage.parameters.pg=='capa_reference','CAPA Reference','CAPA Initiation'))))}" />
+        </apex:define>
+        
+        <apex:define name="theform">
+            <c:wiz_ChangeCapaOwner CA="{!CAPA}" isCapaApprover="{!isChangeCapaOwnerApprover}" isSubmitter="{!isCapaOwnerSubmitter}"  isInApproval="{!CAPA__c.Approval_Status__c=='Pending Approval'}" isLock="{!OR(CAPA__c.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Title__c.updateable),CAPA__c.Approval_Status__c=='Pending Approval')}" Required="true" rendered="{!AND($ObjectType.CAPA__c.Fields.OwnerId.Accessible,$CurrentPage.Parameters.id!=null,$CurrentPage.parameters.pg=='capa_init')}" formId="Ownerid_Task" ModalId="CapaModalId" ToChangeFieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_New_Owner__c"  CAPAJsis="changeOwner" TochangeFieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c">
+                <c:wiz_field FieldLabel="{!$ObjectType.CAPA__c.Fields.New_Owner__c.Label}"   required="true" jsid="change_owner" rendered="{!$ObjectType.CAPA__c.Fields.New_Owner__c.Accessible}">                                
+                    <c:wiz_multi typeofuser="CAPA_Owner" FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_New_Owner__c" Required="true" multiple="false" initValues="{value:'{!CAPA__c.New_Owner__c}', label:'{!JSENCODE(CAPA__c.New_Owner__r.Name)}'}" width="100%" queryFields="Name" disabled="{!OR(CAPA__c.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Title__c.updateable),CAPA__c.Approval_Status__c=='Pending Approval')}" querytable="User"></c:wiz_multi>                  		
+                </c:wiz_field>
+            </c:wiz_ChangeCapaOwner>
+            <!-- Begin : Initiation -->
+            <apex:outputPanel rendered="{!OR($CurrentPage.parameters.pg=='capa_init',ISBLANK($CurrentPage.parameters.pg))}">
+                <c:wiz_form submitpage="stringify_sobject" formid="capaForm" formclass="appform validate" recordid="{!CAPA.Id}" postsavejs="window.location.href = '/apex/CAPA?id=' + RecordId+'&pg=capa_resolution'">
+                    <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}capa__c"/>
+                    <input type="hidden" name="Id" value="{!CAPA.Id}" />
+                    <input type="hidden" name="page" id="page" value="capa_init" />
+                    <input type="hidden" id="stepName" name="stepName" value="Initiation" />
+                    
+                    <c:wiz_field Wide="false" 
+                                 FieldLabel="{!$ObjectType.CAPA__c.Fields.Title__c.Label}"
+                                 required="true" jsid="capa_title"
+                                 rendered="{!$ObjectType.CAPA__c.Fields.Title__c.Accessible}">
+                        <c:wiz_input fieldname="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Title__c"
+                                     initvalue="{!CAPA__c.Title__c}"
+                                     disabled="{!OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Title__c.updateable),CAPA.Approval_Status__c=='Pending Approval')}"
+                                     required="true"/>
+                    </c:wiz_field>
+                    <div class="clearfix"></div>
+                    <c:wiz_field Wide="true" 
+                                 FieldLabel="{!$ObjectType.CAPA__c.Fields.Problem_Statement__c.Label}"
+                                 required="true" jsid="capa_problem_stmt"
+                                 rendered="{!$ObjectType.CAPA__c.Fields.Problem_Statement__c.Accessible}">
+                        
+                        <c:wiz_richtext fieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Problem_Statement__c" maxlength="4000"
+                                        initvalue="{!CAPA.Problem_Statement__c}"
+                                        rendered="{!NOT(OR(CAPA.Closed__c,CAPA.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Title__c.updateable),CAPA.Approval_Status__c=='Pending Approval'))}" 
+                                        required="true"/>
+                        <apex:outputpanel rendered="{!OR(CAPA.Closed__c,CAPA.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Title__c.updateable),CAPA.Approval_Status__c=='Pending Approval')}">
+                            <div class="alert alert-info">
+                                <apex:outputField value="{!CAPA__c.Problem_Statement__c}" />
+                            </div>
+                        </apex:outputpanel>
+                    </c:wiz_field>
+                    
+                    <c:wiz_field FieldLabel="{!$ObjectType.CAPA__c.Fields.CAPA_Source__c.Label}"
+                                 required="true" jsid="capa_source"
+                                 rendered="{!$ObjectType.CAPA__c.Fields.CAPA_Source__c.Accessible}">
+                        
+                        <c:wiz_select disabled="{!OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Title__c.updateable),CAPA.Approval_Status__c=='Pending Approval')}"
+                                      width="100%" developername="CAPA_Source__c"
+                                      ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA__c"
+                                      FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Source__c"
+                                      required="true"
+                                      onChangeFunction="capaSourceSelection"
+                                      unSelectedDisplayText="   "
+                                      initvalue="{!CAPA.CAPA_Source__c}" />
+                        
+                    </c:wiz_field>
+                     <!--CAPA SOURCE SHOW HIDE -START-->
+                    
+                    <c:wiz_field FieldLabel="Manufacturer\Supplier" jsid="man"
+                                 rendered="{!$ObjectType.CAPA__c.Fields.Manufacturer_Supplier__c.Accessible}">
+                        <c:wiz_multi width="100%" required="false"
+                                     FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Manufacturer_Supplier__c"
+                                     multiple="false" queryFields="Name" querytable="Account"
+                                     filtervalue="Manufacturer_Supplier"
+                                     initvalues="{value: '{!JSENCODE(CAPA__c.Manufacturer_Supplier__c)}', label:'{!JSENCODE(CAPA__c.Manufacturer_Supplier__r.Name)}'}"
+                                     disabled="{!OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Title__c.updateable),CAPA.Approval_Status__c=='Pending Approval')}"  />
+                    </c:wiz_field>
+                     <!--CAPA SOURCE SHOW HIDE -END-->
+                    <c:wiz_field FieldLabel="{!$ObjectType.CAPA__c.Fields.Source_Number__c.Label}"
+                                 required="false" jsid="capa_source_number"
+                                 rendered="{!$ObjectType.CAPA__c.Fields.Source_Number__c.Accessible}">
+                        
+                        <c:wiz_input fieldname="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Source_Number__c"  initvalue="{!CAPA__c.Source_Number__c}"  required="false" disabled="{!OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Title__c.updateable),CAPA.Approval_Status__c=='Pending Approval')}"></c:wiz_input>
+                    </c:wiz_field>
+                    
+                    <c:wiz_field FieldLabel="{!$ObjectType.CAPA__c.Fields.Department__c.Label}"
+                                 required="false" jsid="dept"
+                                 rendered="{!$ObjectType.CAPA__c.Fields.Department__c.Accessible}">
+                        <c:wiz_multi width="100%" required="false"
+                                     FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Department__c"
+                                     multiple="false" queryFields="Name"
+                                     querytable="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Business_Entity__c"
+                                     initvalues="{value: '{!CAPA__c.Department__c}', label:'{!CAPA__c.Department__r.Name}'}"
+                                     disabled="{!OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Title__c.updateable),CAPA.Approval_Status__c=='Pending Approval')}" />
+                    </c:wiz_field>
+                    
+                    <c:wiz_field FieldLabel="{!$ObjectType.CAPA__c.Fields.Occurance_Date__c.Label}"
+                                 required="true" jsid="occurancedate"
+                                 rendered="{!$ObjectType.CAPA__c.FIelds.Occurance_Date__c.Accessible}">
+                        <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"
+                                    FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Occurance_Date__c"
+                                    initdate="{!IF(ISBLANK(CAPA__c.Occurance_Date__c),today(),CAPA__c.Occurance_Date__c)}"
+                                    updateable="{!NOT(OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Title__c.updateable),CAPA.Approval_Status__c=='Pending Approval'))}" />
+                    </c:wiz_field>
+                    
+                    <c:wiz_field FieldLabel="{!$ObjectType.CAPA__c.Fields.Reported_By__c.Label}"
+                                 required="true" jsid="reportedby"
+                                 rendered="{!$ObjectType.CAPA__c.Fields.Reported_By__c.Accessible}">
+                        <c:wiz_multi disabled="{!OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Title__c.updateable),CAPA.Approval_Status__c=='Pending Approval')}"
+                                     width="100%"
+                                     FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Reported_By__c"
+                                     multiple="false" queryFields="Name" querytable="User" onchange=""
+                                     initValues="{label: '{!JSENCODE(IF(NOT(ISBLANK(CAPA.Reported_By__c)) , CAPA.Reported_By__r.FirstName + ' ' + CAPA.Reported_By__r.LastName, $User.FirstName + ' ' + $User.LastName))}',
+                                                 value: '{!JSENCODE(IF(NOT(ISBLANK(CAPA.Reported_By__c)), CAPA.Reported_By__c, $User.Id))}'}"/>
+                    </c:wiz_field>
+                    
+                    <c:wiz_field FieldLabel="{!$ObjectType.CAPA__c.Fields.Reported_Date__c.Label}"
+                                 required="true" jsid="reporteddate"
+                                 rendered="{!$ObjectType.CAPA__c.FIelds.Reported_Date__c.Accessible}">
+                        <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"
+                                    FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Reported_Date__c"
+                                    initdate="{!IF(ISBLANK(CAPA__c.Reported_Date__c),today(),CAPA__c.Reported_Date__c)}"
+                                    updateable="{!NOT(OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Title__c.updateable),CAPA.Approval_Status__c=='Pending Approval'))}" />
+                    </c:wiz_field>
+                    
+                    <c:wiz_field FieldLabel="{!$ObjectType.CAPA__c.Fields.Criticality__c.Label}"
+                                 required="true" jsid="capa_source"
+                                 rendered="{!$ObjectType.CAPA__c.Fields.Criticality__c.Accessible}">
+                        
+                        <c:wiz_select disabled="{!OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Title__c.updateable),CAPA.Approval_Status__c=='Pending Approval')}"
+                                      width="100%" developername="Criticality__c"
+                                      ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA__c"
+                                      FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Criticality__c"
+                                      required="true"
+                                      onChangeFunction="makeCriticalityDirty"
+                                      initvalue="{!CAPA__c.Criticality__c}" />
+                    </c:wiz_field>
+                    
+                    
+                    <c:wiz_field FieldLabel="Owner" required="true" jsid="owner"
+                                 rendered="{!AND($ObjectType.CAPA__c.Fields.OwnerId.Accessible,ISBLANK($CurrentPage.parameters.id))}">
+                        <c:wiz_multi disabled="{!OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Title__c.updateable))}"
+                                     width="100%" FieldId="OwnerId" multiple="false"
+                                     queryFields="Name" querytable="User" onchange=""
+                                     initValues="{label: '{!JSENCODE(IF(NOT(ISBLANK(CAPA.OwnerId)) , CAPA.Owner.Name, $User.FirstName + ' ' + $User.LastName))}',
+                                                 value: '{!JSENCODE(IF(NOT(ISBLANK(CAPA.OwnerId)), CAPA.OwnerId, $User.Id))}'}" typeofuser="CAPA_Owner" />
+                    </c:wiz_field>
+                    
+                    <apex:outputPanel rendered="{!AND($ObjectType.CAPA__c.Fields.OwnerId.Accessible,NOT(ISBLANK($CurrentPage.parameters.id)))}">
+                        <div class="col-md-6 col-sm-6 col-xs-12  form-group" id="owner">
+                                <label for="owner">
+                                    <span class="mandatory">
+                                        *
+                                    </span>Owner:
+                                </label>
+                            <apex:outputPanel rendered="{!AND(CAPA__c.Approval_Status__c!='Pending Approval',CAPA.CAPA_Status__c=='Open')}">
+                                <label class="pull-right" for="Change">
+                                    <a href="#" onclick='CapaModalId_changeField()'>Change</a>
+                                </label>
+                            </apex:outputPanel> 
+                            
+                            <apex:outputPanel rendered="{!AND(CAPA__c.Approval_Status__c=='Pending Approval',CAPA.CAPA_Status__c=='Open')}">
+                                <label class="pull-right" for="Change">
+                                    <a href="#" onclick='CapaModalId_changeField()'>Pending Approval</a>
+                                </label>
+                            </apex:outputPanel> 
+                                <br/>
+                            <c:wiz_multi disabled="true"
+                                         width="100%" FieldId="OwnerId" multiple="false"
+                                         queryFields="Name" querytable="User" onchange=""
+                                         initValues="{label: '{!JSENCODE(IF(NOT(ISBLANK(CAPA.OwnerId)) , CAPA.Owner.Name, $User.FirstName + ' ' + $User.LastName))}',
+                                                     value: '{!JSENCODE(IF(NOT(ISBLANK(CAPA.OwnerId)), CAPA.OwnerId, $User.Id))}'}" typeofuser="CAPA_Owner" />
+                        </div>
+                        </apex:outputPanel>
+                    <!--<c:wiz_change_capa_owner isSubmitter="{!isSubmitter}" CAPAJsis="capaJavascriptid" ToChangeFieldid="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c" isApprover="{!isApprover}" ca="{!CAPA}" fieldclass="col-md-6 col-sm-6 col-xs-12" id="capachangeownerid" isInApproval="{!CAPA.Approval_Status__c=='Pending Approval'}" isLock="{!OR(CAPA__c.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Title__c.updateable),CAPA.Approval_Status__c=='Pending Approval')}" Required="true" rendered="{!AND($ObjectType.CAPA__c.Fields.OwnerId.Accessible,$CurrentPage.Parameters.id!=null)}" ModalId="CapaModapId" TochangeFieldName="">
+                        <c:wiz_field FieldLabel="{!$ObjectType.CAPA__c.Fields.New_Owner__c.Label}"   required="true" jsid="change_owner" rendered="{!$ObjectType.CAPA__c.Fields.New_Owner__c.Accessible}">            
+                        <c:wiz_multi typeofuser="CAPA_Owner" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c" Required="true" multiple="false" initValues="{value:'{!CAPA.New_Owner__c}', label:'{!CAPA.New_Owner__r.Name}'}" width="100%" queryFields="Name" disabled="{!OR(CAPA__c.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Title__c.updateable),CAPA.Approval_Status__c=='Pending Approval')}" querytable="User"></c:wiz_multi>
+                        </c:wiz_field>                        
+                    </c:wiz_change_capa_owner>-->
+                    
+                    <c:wiz_field FieldLabel="{!$ObjectType.CAPA__c.Fields.Sites_Impacted__c.Label}" wide="true" required="false" jsid="sitesImpacted"
+                                 rendered="{!$ObjectType.CAPA__c.Fields.Sites_Impacted__c.Accessible}">
+                        <select  id="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sites_Impacted__c" name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sites_Impacted__c" class="form-control" multiple="multiple" style="width:100%;">
+                            
+                        </select>
+                    </c:wiz_field>
+                    <div class="clearfix"></div>
+                    
+                    <div class="clearfix"></div>
+                    <apex:variable value="{!0}" var="showCustomFieldSection"/>
+                    <apex:repeat value="{!$ObjectType.CAPA__c.FieldSets.CAPA_CustomFields}" var="f">
+                     <apex:outputPanel rendered="{!$ObjectType.CAPA__c.Fields[f].Accessible}">
+                     <apex:variable value="{!showCustomFieldSection+1}" var="showCustomFieldSection"/>
+                     </apex:outputPanel>
+                    </apex:repeat>
+                    <apex:outputPanel rendered="{!AND($ObjectType.CAPA__c.FieldSets.CAPA_CustomFields.size!=0,showCustomFieldSection!=0)}">
+                        <div class="push-down panel-group"></div>
+                        <div class="panel-group col-md-12" id="accordionCustomFields" role="tablist"
+                             aria-multiselectable="true">
+                            <div class="panel panel-default">
+                                <div class="panel-heading" role="tab" id="headingOneCustomFields">
+                                    <h4 class="panel-title">
+                                        <a data-toggle="collapse" data-parent="#accordionCustomFields"
+                                           href="#collapseOneCustomFields" aria-expanded="true"
+                                           aria-controls="collapseOne" class="collapsed"> <span class="col-exp"></span> Custom Fields
+                                        </a>
+                                    </h4>
+                                </div>
+                                <div id="collapseOneCustomFields" class="panel-collapse collapse out"
+                                     role="tabpanel" aria-labelledby="headingOne">
+                                    <div class="panel-body">                    
+                                        <apex:repeat value="{!$ObjectType.CAPA__c.FieldSets.CAPA_CustomFields}" var="f">
+                                            <c:wiz_field Wide="{!($ObjectType.CAPA__c.Fields[f].type=='textarea')}" FieldLabel="{!$ObjectType.CAPA__c.Fields[f].Label}"
+                                                         required="{!f.required}" jsid="{!LEFT(f,LEN(f)-3)}"
+                                                         rendered="{!$ObjectType.CAPA__c.Fields[f].Accessible}">
+                                                 <div class="clearfix"></div>
+                                                <c:wiz_richtext rendered="{!AND($ObjectType.CAPA__c.Fields[f].type=='textarea',$ObjectType.CAPA__c.Fields[f].htmlFormatted,NOT(OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields[f].updateable),CAPA.Approval_Status__c=='Pending Approval')))}" FieldId="{!f}" FieldName="{!f}" initvalue="{!CAPA[f]}" Required="{!f.required}" ></c:wiz_richtext>
+                                                  <apex:outputpanel rendered="{!AND($ObjectType.CAPA__c.Fields[f].type=='textarea',$ObjectType.CAPA__c.Fields[f].htmlFormatted,OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields[f].updateable),CAPA.Approval_Status__c=='Pending Approval'))}">
+                                                    <div class="alert alert-info" > <apex:outputField value="{!CAPA[f]}" /> </div>
+                                                      </apex:outputpanel>                  
+                                                <c:wiz_textarea rendered="{!AND($ObjectType.CAPA__c.Fields[f].type=='textarea',NOT($ObjectType.CAPA__c.Fields[f].htmlFormatted),NOT(OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields[f].updateable),CAPA.Approval_Status__c=='Pending Approval')))}" ObjectName="{!$ObjectType.CAPA__c.name}" FieldId="{!f}" FieldName="{!f}" initvalue="{!CAPA[f]}" Required="{!f.required}"></c:wiz_textarea>                       
+                                                  <apex:outputpanel rendered="{!AND($ObjectType.CAPA__c.Fields[f].type=='textarea',NOT($ObjectType.CAPA__c.Fields[f].htmlFormatted),OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields[f].updateable),CAPA.Approval_Status__c=='Pending Approval'))}">
+                                                  <div class="alert alert-info" > <apex:outputField value="{!CAPA[f]}" /> </div>
+                                                  </apex:outputpanel>												
+												<c:wiz_date rendered="{!$ObjectType.CAPA__c.Fields[f].type=='date'}" FieldId="{!f}"  required="{!if(f.required,'','none')}none" FieldName="{!f}" initdate="" updateable="{!NOT(OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields[f].updateable),CAPA.Approval_Status__c=='Pending Approval'))}">
+                                                </c:wiz_date>
+                                                <c:wiz_multi width="100%" rendered="{!$ObjectType.CAPA__c.Fields[f].type=='reference'}" required="{!f.required}"
+                                                             FieldId="{!f}"
+                                                             multiple="false" queryFields="Name" querytable="{!$ObjectType.CAPA__c.Fields[f].referenceTo[0]}"
+                                                             filtervalue=""                                                             
+                                                             initvalues="{value: '{!JSENCODE(CAPA[f])}', label:'{!JSENCODE(CAPA[$ObjectType.CAPA__c.Fields[f].relationshipName].Name)}'}"
+                                                             disabled="{!OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields[f].updateable),CAPA.Approval_Status__c=='Pending Approval')}"  >
+                                                    
+                                                </c:wiz_multi>
+                                                <apex:outputPanel rendered="{!$ObjectType.CAPA__c.Fields[f].type=='date'}">
+                                                    <script>                            
+                                                    $(document).ready(function() {
+                                                        $("#{!f}").datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY" });
+                                                    });
+                                                    </script>
+                                                    
+                                                </apex:outputPanel>
+                                                <c:wiz_select ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA__c" developername="{!f}" onChangeFunction="makeCapaResourceDirty" width="100%" rendered="{!$ObjectType.CAPA__c.Fields[f].type=='picklist'}" FieldId="{!f}" FieldName="{!f}" initvalue="{!CAPA[f]}" unSelectedDisplayText="   " Required="{!f.required}" disabled="{!OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields[f].updateable),CAPA.Approval_Status__c=='Pending Approval')}"></c:wiz_select> 
+                                                <c:wiz_input rendered="{!$ObjectType.CAPA__c.Fields[f].type=='string'}" fieldId="{!f}" fieldname="{!f}"  initvalue="{!CAPA[f]}"  required="{!f.required}" disabled="{!OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields[f].updateable),CAPA.Approval_Status__c=='Pending Approval')}"></c:wiz_input>
+                                            </c:wiz_field>
+                                        </apex:repeat>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </apex:outputPanel>          
+                    
+                </c:wiz_form>
+                
+            </apex:outputPanel>
+            <!--End : CAPA init-->
+            <!-- Begin : CAPA Resolution -->
+            <apex:outputPanel rendered="{!$CurrentPage.parameters.pg=='capa_resolution'}">
+                <script type="text/javascript">
+                $( document ).ready(function() {
+                    $('#capaClo{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY"}).on('dp.change',function(selected){
+                        console.log('datetime picker change for task');
+                        var difMS=selected.date-new Date("{!CAPA__c.CreatedDate}");
+                        var difDays=Math.round(difMS/(1000*60*60*24));
+                        $("#"+this.id.replace('Due_Date__c','Allowed_Days__c')).val(difDays);
+                        $('#'+this.id+'_hidden').val(new Date(selected.date));
+                        
+                    }
+                                                                                                                                                                     );
+                    $("#capaClo{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c").data("DateTimePicker").minDate(new Date("{!CAPA__c.CreatedDate}"));
+                    Visualforce.remoting.Manager.invokeAction(
+                        // @RemoteAction
+                        '{!$RemoteAction.CAPA.getResolutionCodes}',
+                        // Callback
+                        function(result, event){
+                            $.each(result, function(res) {
+                                console.log('resCode   '+result[res]);
+                                if(result[res]=='CAPA Workflow' || result[res]=='Discarded'){
+                                    $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c").append($("<option />").val(result[res]).text(result[res]));
+                                }
+                                else if({!NeedAdditionalResolutionCodes}){
+                                    $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c").append($("<option />").val(result[res]).text(result[res]));
+                                }
+                            });
+                            var selectedResolutionCode='{!JSENCODE(CAPA__c.Resolution_Code__c)}'?'{!JSENCODE(CAPA__c.Resolution_Code__c)}':'CAPA Workflow';
+                            $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c option[value='"+selectedResolutionCode+"']").attr("selected",true);
+                            $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c").trigger('change');
+                            if({!OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c)}){
+                                $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c").attr('disabled',true);
+                            }
+                            
+                        },
+                        // Don't know, couldn't find docs
+                        {escape: true}
+                    );  
+                    
+                })
+                </script>
+                
+                <div class="wiz-field capa-resolution">
+                    <c:wiz_form submitpage="stringify_sobject" formid="capaForm" formclass="appform validate" recordid="{!CAPA__c.Id}" 
+                                postsavejs="location.reload();" >
+                        <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}capa__c"/>
+                        <input type="hidden" id="page" name="page" value="capa_resolution"/>
+                        <input type="hidden" id="stepName" name="stepName" value="Resolution" />
+                        <input type="hidden" name="Id" value="{!CAPA.Id}" />
+                        <input id="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Status__c" type="hidden" name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Status__c" value="{!CAPA.CAPA_Status__c}" />
+                        <input id="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Phase__c" type="hidden" name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Phase__c" value="{!CAPA.CAPA_Phase__c}" />
+                        <input id="capaResCode" type="hidden" name="capaResCode" value="{!CAPA.Resolution_Code__c}"/>
+                        <div class="row">
+                            <c:wiz_field FieldLabel="{!$ObjectType.CAPA__c.Fields.Immidiate_Action_Taken__c.Label}" required="true" jsid="immediateActionTaken" wide="true">
+                                <c:wiz_richtext Rendered="{!NOT(OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Immidiate_Action_Taken__c.updateable)))}" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Immidiate_Action_Taken__c" initvalue="{!CAPA__c.Immidiate_Action_Taken__c}" Required="true" maxlength="4000"/>
+                                <apex:outputpanel rendered="{!OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Immidiate_Action_Taken__c.updateable))}">
+                                    <div class="alert alert-info" > <apex:outputField value="{!CAPA__c.Immidiate_Action_Taken__c}" /> </div>
+                                </apex:outputpanel>
+                            </c:wiz_field>
+                        </div>
+                        <div class="row">
+                            <!--<c:wiz_field FieldLabel="{!JSENCODE($ObjectType.CAPA__c.Fields.Resolution_Code__c.Label)}" required="true" jsid="ResolutionCodeContainer">
+                                <c:wiz_select onChangeFunction="showHideBasedOnCAPAResolutionCode();" 
+                                    FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c" 
+                                    developername="Resolution_Code__c"
+                                    ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA__c" 
+                                    FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c" 
+                                    required="true"  
+                                    initvalue="{!CAPA__c.Resolution_Code__c}" 
+                                    width="100%"
+                                    disabled="{!OR(CAPA__c.Closed__c,NOT($ObjectType.CAPA__c.Fields.Resolution_Code__c.Updateable),AND(CAPA__c.Resolution_Code__c=='CAPA Workflow',CAPA__c.CAPA_Status__c=='Reopened'))}"
+                                />
+                            </c:wiz_field>-->
+                            
+                            
+                            
+                            <c:wiz_field FieldLabel="Resolution Code" required="true" jsid="ResolutionCodeContainer">
+                                <select id="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c"  name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c" class="form-control" onChange="showHideBasedOnCAPAResolutionCode()"  required="required">
+                                    
+                                </select>
+                            </c:wiz_field>
+                            <div id="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c_error" class="help-block with-errors"></div>
+                            <div class="form-group" id="capaAdhocBtnDiv">
+                                <div class="tab-content">
+                                    <div class="wiz-fields text-right">
+                                        <br/><button type="button" id='capaAdhocBtn' class="btn btn-primary" onClick="resAdhoc_add_genAdhocTask($('.pageAdhoc'),'adhocDiv')">Add Adhoc Task</button>
+                                    </div>  
+                                </div>    
+                            </div>
+                        </div>
+                        
+                        <c:wiz_field FieldLabel="Comments" required="true" jsid="capa_resolution_closed_comments" wide="true">
+                            <!-- <c:wiz_richtext readonly="{!OR(Non_Conformance__c.Closed__c, NOT($ObjectType.Non_Conformance__c.Fields.Resolution_Closed_Comment__c.updateable))}" FieldId="QPMS__Resolution_Closed_Comment__c" initvalue="{!Non_Conformance__c.Resolution_Closed_Comment__c}" Required="false" />  -->
+                            
+                            <c:wiz_richtext Rendered="{!NOT(OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Resolution_Closed_Comment__c.updateable)))}" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Closed_Comment__c" initvalue="{!CAPA__c.Resolution_Closed_Comment__c}" Required="true" maxlength="4000"/>
+                            
+                            <apex:outputpanel rendered="{!OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Resolution_Closed_Comment__c.updateable))}">
+                                <div class="alert alert-info" > <apex:outputField value="{!CAPA__c.Resolution_Closed_Comment__c}" /> </div>
+                            </apex:outputpanel>
+                            
+                        </c:wiz_field>
+                        </c:wiz_form>
+                        <div id="capaWorkflowDiv" >
+                            <div class="pageAdhoc" id="pageAdhoc">
+                                <!-- <c:wiz_addadhoctask currentpagetaskseq="{!leastSequence}" funcprefix="resAdhoc" divfrom="pageAdhoc" divId="adhocDiv"  seqFieldId="adhocseq" userFieldId="adhocusr" allowDaysFieldId="adhocAllowed_Days__c" dueDateFieldId="adhocDue_Date__c" taskTitle="adhocTitle" isFieldRequired="false" typeOfUser="NC_Task_Owner" /> -->
+                                <c:wiz_addadhoctask funcprefix="resAdhoc" status="{!JSENCODE(CAPA.CAPA_Status__c)}" adhocTaskList="{!adhocTasks}" divfrom="pageAdhoc"  divId="adhocDiv"  seqFieldId="adhocseq" userFieldId="adhocusr" allowDaysFieldId="adhocAllowed_Days__c" dueDateFieldId="adhocDue_Date__c" taskTitle="adhocTitle" isFieldRequired="false" typeOfUser="CAPA_Task_Owner" />
+                                
+                            </div>
+                            <apex:repeat value="{!adhocTasks}" var="adt" rendered="{!OR(CAPA.CAPA_Status__c=='Reopened',CAPA.CAPA_Status__c=='Closed',CAPA.CAPA_Status__c=='Inworks',CAPA.CAPA_Status__c=='Void')}">
+                                <c:wiz_displayadhoctasks taskTitle="{!JSENCODE(adt.AdhocTask_Title__c)}" seqInitValue="{!adt.Sequence_Position__c}"  userInitValue="{!JSENCODE(adt.Owner.Name)}" allowDaysInitValue="{!adt.Allowed_Days__c}" dueDateInitValue="{!adt.Due_Date__c}"/>
+                            </apex:repeat>
+                            <c:wiz_task task="investigation" taskTitle="Investigation" onCheckBoxChange="callCAPAResPane" seqFieldId="capaInv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c" seqInitValue="{!IF(ISBLANK(invTask.Sequence_Position__c),10,invTask.Sequence_Position__c)}" userFieldId="capaInvUser" userInitValue="{value:'{!JSENCODE(invTask.OwnerId)}', label:'{!JSENCODE(invTask.Owner.Name)}'}" allowDaysFieldId="inv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c" allowDaysInitValue="{!invTask.Allowed_Days__c}" dueDateFieldId="inv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c" dueDateInitValue="{!invTask.Due_Date__c}"  ncCrDt="{!CAPA__c.CreatedDate}"  isTaskChecked="{!hasInvTask}" disabled="{!OR(CAPA.Is_In_Works__c,CAPA.Closed__c,NOT($ObjectType.CAPA__c.Fields.Resolution_Code__c.Updateable),AND(CAPA__c.Resolution_Code__c=='CAPA Workflow',CAPA__c.CAPA_Status__c=='Reopened'))}" typeoftaskowner="CAPA_Task_Owner" isSeqDisabled="true">   </c:wiz_task>
+                            
+                            <c:wiz_task task="implementation" taskTitle="Implementation" onCheckBoxChange="callCAPAResPane" seqFieldId="capaImpl{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c" seqInitValue="{!IF(ISBLANK(implTask.Sequence_Position__c),20,implTask.Sequence_Position__c)}" userFieldId="capaImplUser" userInitValue="{value:'{!JSENCODE(implTask.OwnerId)}', label:'{!JSENCODE(implTask.Owner.Name)}'}" allowDaysFieldId="impl{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c" allowDaysInitValue="{!implTask.Allowed_Days__c}" dueDateFieldId="impl{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c" dueDateInitValue="{!implTask.Due_Date__c}" ncCrDt="{!CAPA__c.CreatedDate}"  isTaskChecked="{!hasImplTask}" disabled="{!OR(CAPA.Is_In_Works__c,CAPA.Closed__c,NOT($ObjectType.CAPA__c.Fields.Resolution_Code__c.Updateable),AND(CAPA__c.Resolution_Code__c=='CAPA Workflow',CAPA__c.CAPA_Status__c=='Reopened'))}" typeoftaskowner="CAPA_Task_Owner" isSeqDisabled="true">  </c:wiz_task>
+                            
+                            <c:wiz_task task="effectivenessReview" taskTitle="EffectivenessReview" onCheckBoxChange="callCAPAResPane" seqFieldId="capaER{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c" seqInitValue="{!IF(ISBLANK(erTask.Sequence_Position__c),30,erTask.Sequence_Position__c)}" userFieldId="capaERUser" userInitValue="{value:'{!JSENCODE(erTask.OwnerId)}', label:'{!JSENCODE(erTask.Owner.Name)}'}" allowDaysFieldId="er{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c" allowDaysInitValue="{!erTask.Allowed_Days__c}" dueDateFieldId="er{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c"  dueDateInitValue="{!erTask.Due_Date__c}" ncCrDt="{!CAPA__c.CreatedDate}" isTaskChecked="{!hasERTask}" disabled="{!OR(CAPA.Is_In_Works__c,CAPA.Closed__c,NOT($ObjectType.CAPA__c.Fields.Resolution_Code__c.Updateable),AND(CAPA__c.Resolution_Code__c=='CAPA Workflow',CAPA__c.CAPA_Status__c=='Reopened'))}" typeoftaskowner="CAPA_Task_Owner" isSeqDisabled="true"> </c:wiz_task>
+                        </div>    
+                        <div id="closurePanel" class="panel panel-default panel-info">
+                            <div class="panel-heading">Closure</div>
+                            <div class="panel-body">
+                                
+                                <table class="table">
+                                    
+                                        <thead>
+                                            <tr>
+                                                <td width="40%"><span class="mandatory"><apex:outputtext value="*"/></span>&nbsp;&nbsp;Owner</td>
+                                                <td width="20%"><span class="mandatory"><apex:outputtext value="*"/></span>&nbsp;&nbsp;{!$ObjectType.General_Task__c.Fields.Allowed_Days__c.Label}</td>
+                                                <td><span class="mandatory"><apex:outputtext value="*"/></span>&nbsp;&nbsp;{!$ObjectType.General_Task__c.Fields.Due_Date__c.Label}</td>
+                                            </tr>
+                                        </thead>
+                                        
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <c:wiz_multi width="100%" required="true"  disabled="{!OR(CAPA.Closed__c,NOT($ObjectType.CAPA__c.Fields.Resolution_Code__c.Updateable),AND(CAPA__c.Resolution_Code__c=='CAPA Workflow',CAPA__c.CAPA_Status__c=='Reopened'))}" FieldId="cloUser" multiple="false" queryFields="Name" querytable="User"
+                                                                 queryorderby="Id"
+                                                                 initvalues="{value:'{!JSENCODE(closTask.OwnerId)}', label:'{!JSENCODE(closTask.Owner.Name)}'}" typeofuser="CAPA_Task_Owner"
+                                                                 />
+                                                    
+                                                    
+                                                </td>
+                                                <td>
+                                                    <c:wiz_input disabled="false"  required="true" min="0" type="number" fieldname="capaClo{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c" initvalue="{!closTask.Allowed_Days__c}"  onblur="autoCalculateDueDate(this,'capaClo{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c','{!CAPA__c.CreatedDate}')"></c:wiz_input>
+                                                </td>
+                                                <td>
+                                                    <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())+100}" FieldId="capaClo{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c" initdate="{!closTask.Due_Date__c}" updateable="true"/>
+                                                </td>
+                                            </tr>
+                                    </tbody>
+                              
+                            </table> 
+                            
+                            
+                            
+                            
+                            <c:wiz_approval disabled="{!OR(CAPA.Is_In_Works__c,CAPA.Closed__c,CAPA.CAPA_Status__c=='Void',AND(CAPA.Resolution_Code__c=='CAPA Workflow',CAPA.CAPA_Status__c=='Reopened'))}"  seqFieldId="closApprSeq" tableId="closApprTab" userFieldId="closApprUsr" allowDaysFieldId="closApprAllowed_Days__c" dueDateFieldId="closApprDue_Date__c" crDate="{!CAPA.CreatedDate}" taskId="{!JSENCODE(closTask.Id)}" isApproverNoteNeeded="true" noteToApprover="{!JSENCODE(closTask.Note_To_Approver__c)}" isReloadNeeded="false" typeofapprover="CAPA_Approval" submitForm="capaForm"></c:wiz_approval>
+                            
+                        </div>  
+                        
+                        
+                        
+                    </div>   
+                
+            </div>
+            
+        </apex:outputPanel>
+        <!-- End : CAPA Resolution -->
+        <!-- Begin :CAPA Details -->
+        <apex:outputPanel rendered="{!$CurrentPage.parameters.pg=='capa_details'}">
+            <input type="hidden" name="page" id="page" value="capa_details"/>
+            <input type="hidden" id="stepName" name="stepName" value="Details" />
+            <h1>CAPA Initiation</h1>
+            <table class="table table-responsive table-bordered">
+                <tbody>
+                    
+                    <tr>
+                        <td class="title-col">
+                            {!$ObjectType.CAPA__c.Fields.Title__c.Label}
+                        </td>
+                        <td>
+                            {!JSENCODE(CAPA.Title__c)}
+                        </td>
+                        
+                        <td class="title-col">
+                            {!$ObjectType.CAPA__c.Fields.CAPA_Source__c.Label}
+                        </td>
+                        <td>
+                            {!JSENCODE(CAPA.CAPA_Source__c)}
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="title-col">
+                            {!$ObjectType.CAPA__c.Fields.Department__c.Label}
+                        </td>
+                        <td>
+                            {!JSENCODE(CAPA.Department__r.Name)}
+                        </td>
+                        
+                        <td class="title-col">
+                            {!$ObjectType.CAPA__c.Fields.Occurance_Date__c.Label}
+                        </td>
+                        <td>
+                            <apex:outputText value="{0,date, dd MMM yyyy}"> <!-- TODO: Make this dependent on Org settings so that date format can be updated from a central location -->
+                                <apex:param value="{!CAPA.Occurance_Date__c}"/>
+                            </apex:outputText>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="title-col">
+                            {!$ObjectType.CAPA__c.Fields.Reported_By__c.Label}
+                        </td>
+                        <td>
+                            <apex:outputField value="{!CAPA.Reported_By__r.Name}" />
+                        </td>
+                        
+                        <td class="title-col">
+                            {!$ObjectType.CAPA__c.Fields.Reported_Date__c.Label}
+                        </td>
+                        <td>
+                            <apex:outputText value="{0,date, dd MMM yyyy}"> <!-- TODO: Make this dependent on Org settings so that date format can be updated from a central location -->
+                                <apex:param value="{!CAPA.Reported_Date__c}"/>
+                            </apex:outputText>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="title-col">
+                            {!$ObjectType.CAPA__c.Fields.Criticality__c.Label}
+                        </td>
+                        <td> 
+                            {!JSENCODE(CAPA.Criticality__c)}
+                        </td>
+                        
+                        <td class="title-col">
+                            CAPA Owner
+                        </td>
+                        <td>
+                            {!IF(ISBLANK(CAPA.CreatedById), $User.FirstName + ' ' + $User.LastName, CAPA.CreatedBy.FirstName + ' ' + CAPA.CreatedBy.LastName)}
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="title-col">
+                            {!$ObjectType.CAPA__c.Fields.Sites_Impacted__c.Label}
+                        </td>
+                        <td> 
+                            {!JSENCODE(CAPA.Sites_Impacted__c)}
+                        </td>
+                        
+                        <td class="title-col">
+                            {!$ObjectType.CAPA__c.Fields.Source_Number__c.Label}
+                        </td>
+                        <td>
+                            {!JSENCODE(CAPA.Source_Number__c)}
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="title-col">
+                            {!$ObjectType.CAPA__c.Fields.Problem_Statement__c.Label}
+                        </td>
+                        <td colspan="3">
+                            <div class="alert alert-info">
+                                <apex:outputField value="{!CAPA.Problem_Statement__c}" />
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    
+                </tbody>
+            </table> 
+            
+            
+            
+            
+            
+            <div class="page-break"></div>
+            
+            <h1>CAPA Resolution</h1>
+            
+            <table class="table table-responsive table-bordered">
+                <tbody>
+                    <tr>
+                        <td class="title-col" style="width: 20%">
+                            {!$ObjectType.CAPA__c.Fields.Immidiate_Action_Taken__c.Label}
+                        </td>
+                        <td>
+                            <div class="alert alert-info">
+                                <apex:outputField value="{!CAPA.Immidiate_Action_Taken__c}" />
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <apex:outputpanel rendered="{!CAPA.Resolution_Code__c!='CAPA Workflow'}">
+                            <td class="title-col">
+                                {!$ObjectType.CAPA__c.Fields.Resolution_Closed_Comment__c.Label}
+                            </td>
+                            <td>
+                                <div class="alert alert-info">
+                                    <apex:outputField value="{!CAPA.Resolution_Closed_Comment__c}" />
+                                </div>
+                            </td>
+                        </apex:outputpanel>
+                        
+                    </tr>
+                    
+                    
+                </tbody>
+            </table>
+            
+            
+            
+            <div class="panel-group screen-only" id="accordion" role="tablist" aria-multiselectable="true">
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="headingCAPAResolutionCode">
+                        <h4 class="panel-title">
+                            <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" data-parent="#accordion" href="#collapseCAPAResolutionCode" aria-expanded="true" aria-controls="collapseCAPAResolutionCode">
+                                <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                            </a>                            
+                            
+                            
+                            <a data-toggle="collapse" data-parent="#accordion" href="#collapseCAPAResolutionCode" aria-expanded="true" aria-controls="collapseCAPAResolutionCode">
+                                Resolution ({!JSENCODE(CAPA.Resolution_Code__c)})
+                            </a>
+                        </h4> 
+                    </div>            
+                    
+                    <div id="collapseCAPAResolutionCode" class="panel-collapse collapse out" role="tabpanel" aria-labelledby="headingCAPAResolutionCode">
+                        <div class="panel-body">                        
+                            <div class="add-contain-wrapper added-containment-action screen-only">
+                                <div class="add-containment">                    
+                                    <apex:outputPanel rendered="{!if(CAPA.Resolution_Code__c=='CAPA Workflow',true,false)}">
+                                        <table class="table table-responsive table-bordered">
+                                            <tbody>
+                                                <tr>
+                                                    <th>Task Name</th>
+                                                    <th>Sequence</th>
+                                                    <th>Owner</th>
+                                                    <th>Allowed Days</th>
+                                                    <th>Due Date</th>
+                                                </tr>
+                                                
+                                                <apex:repeat value="{!allCAPAGnrlTasks}"  var="General_Task">                                              
+                                                    <tr>
+                                                        <!--<td>{!JSENCODE(General_Task.RecordType.Name)}</td>-->
+                                                        <td>{!if(General_Task.RecordType.Name=='AdhocTask',General_Task.AdhocTask_Title__c,General_Task.RecordType.Name)}</td>
+                                                        <td>{!if(General_Task.RecordType.Name=='Closure','',General_Task.Sequence_Position__c)}</td>
+                                                        <td>{!JSENCODE(General_Task.Owner.Name)}</td>
+                                                        <td>{!General_Task.Allowed_Days__c}</td>
+                                                        <td>  
+                                                            <apex:outputText value="{0,date,dd MMM yyyy}">
+                                                                <apex:param value="{!General_Task.Due_Date__c}" /> 
+                                                            </apex:outputText>
+                                                        </td>
+                                                    </tr>
+                                                </apex:repeat>
+                                                
+                                            </tbody>
+                                        </table> 
+                                    </apex:outputPanel>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            
+            <!-- <apex:repeat value="{!allCAPAGnrlTasks}"  var="GnrlTask" rendered="{!if(CAPA.Resolution_Code__c=='CAPA Workflow',true,false)}">
+                
+                <apex:outputPanel rendered="{!if(GnrlTask.RecordType.Name=='Investigation',true,false)}">
+                    <c:wiz_investigation_CAPA_Details recordid="{!JSENCODE(GnrlTask.id)}" INvest="{!GnrlTask}" capaRecord="{!CAPA__c}"/>
+                </apex:outputPanel>
+                
+                <apex:outputPanel rendered="{!if(GnrlTask.RecordType.Name=='Implementation',true,false)}">
+                    <c:wiz_implementation_CAPA_Details ImpleId="{!JSENCODE(GnrlTask.id)}" Imple="{!GnrlTask}" />
+                    
+                </apex:outputPanel>
+                
+                <apex:outputPanel rendered="{!if(GnrlTask.RecordType.Name=='EffectivenessReview',true,false)}">
+                    <c:wiz_effectiveness_review_CAPA_Details recordid="{!JSENCODE(GnrlTask.id)}" ERT="{!GnrlTask}" />
+                </apex:outputPanel>
+                
+                <apex:outputPanel rendered="{!if(GnrlTask.RecordType.Name=='AdhocTask',true,false)}">
+                    <c:wiz_AdhocTask_CAPA_Details Adhoc="{!GnrlTask}" RecordId="{!JSENCODE(GnrlTask.id)}"></c:wiz_AdhocTask_CAPA_Details> 
+                </apex:outputPanel>
+                
+                <apex:outputPanel rendered="{!if(GnrlTask.RecordType.Name=='Closure',true,false)}">
+                    <c:wiz_closure_CAPA_Details Closure="{!GnrlTask}" RecordId="{!JSENCODE(GnrlTask.id)}" />
+                </apex:outputPanel>
+                
+            </apex:repeat> -->
+            <apex:outputPanel rendered="{!if(AND($ObjectType.CAPA__c.Fields.Resolution_Code__c.Accessible,CAPA.Resolution_Code__c=='CAPA Workflow'),true,false)}">
+                 <c:wiz_task_details investigationTask="{!invTask}" implementationTask="{!implTask}" effectivenessReviewTask="{!erTask}" adhocTasks="{!adhocTasks}" closureTask="{!closTask}" module="CAPA"></c:wiz_task_details>
+            </apex:outputPanel>
+            
+            <div class="panel-group screen-only" id="accordion" role="tablist" aria-multiselectable="true">
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="headingCAPAXReference">
+                        <h4 class="panel-title">
+                            <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" data-parent="#accordion" href="#collapseCAPAXReference" aria-expanded="true" aria-controls="collapseCAPAResolutionCode">
+                                <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                            </a>                            
+                            
+                            
+                            <a data-toggle="collapse" data-parent="#accordion" href="#collapseCAPAXReference" aria-expanded="true" aria-controls="collapseCAPAXReference">
+                                Reference
+                            </a>
+                        </h4> 
+                    </div>            
+                    
+                    <div id="collapseCAPAXReference" class="panel-collapse collapse out" role="tabpanel" aria-labelledby="headingCAPAXReference">
+                        <div class="panel-body">                        
+                            <div class="add-XReference-wrapper screen-only">
+                                <div class="add-XReference">                    
+                                    <div class="panel-body">
+                                        <h2>NC</h2>
+                                        
+                                        <table class="table table-hover table-condensed">
+                                            
+                                            <tbody id="ncbody">
+                                                
+                                                <tr>
+                                                    <th>{!$ObjectType.Non_Conformance__c.Fields.Name.Label}</th>
+                                                    <th>{!$ObjectType.Non_Conformance__c.Fields.NC_Type__c.Label}</th>
+                                                    <th>Owner</th>
+                                                    <th>{!$ObjectType.Non_Conformance__c.Fields.NC_Source__c.Label}</th>
+                                                    <th>{!$ObjectType.Non_Conformance__c.Fields.NC_Status__c.Label}</th>
+                                                    
+                                                </tr>
+                                                <apex:repeat value="{!nonConf}" var="ncon">
+                                                    <tr id="{!JSENCODE(ncon.Id)}">
+                                                        <td><a href='/{!JSENCODE(ncon.id)}'>{!JSENCODE(ncon.Name)} </a></td>
+                                                        <td>{!JSENCODE(ncon.NC_Type__c)}</td>
+                                                        <td>{!JSENCODE(ncon.NC_Owner_Name__c)}</td>
+                                                        <td>{!JSENCODE(ncon.NC_Source__c)}</td>
+                                                        <td>{!JSENCODE(ncon.NC_Status__c)}</td>
+                                                    </tr>
+                                                    
+                                                </apex:repeat>
+                                            </tbody>
+                                        </table>
+                                        
+                                        <h2>CAPA</h2>
+                                        
+                                        <table class="table table-hover table-condensed">
+                                            <tbody id="capabody">
+                                                
+                                                <tr>
+                                                    <th>{!$ObjectType.CAPA__c.Fields.Name.Label}</th>
+                                                    <th>{!$ObjectType.CAPA__c.Fields.Title__c.Label}</th>
+                                                    <th>Owner</th>
+                                                    <th>{!$ObjectType.CAPA__c.Fields.CAPA_Source__c.Label}</th>
+                                                    <th>{!$ObjectType.CAPA__c.Fields.CAPA_Status__c.Label}</th>
+                                                </tr>
+                                                <apex:repeat value="{!capaList}" var="capa">
+                                                    <tr id="{!JSENCODE(capa.Id)}">
+                                                        <td><a href='/{!JSENCODE(capa.Id)}'>{!JSENCODE(capa.Name)}</a></td>
+                                                        <td>{!JSENCODE(capa.Title__c)}</td>
+                                                        <td>{!JSENCODE(capa.Owner.Name)}</td>
+                                                        <td>{!JSENCODE(capa.CAPA_Source__c)}</td>
+                                                        <td>{!JSENCODE(capa.CAPA_Status__c)}</td>
+                                                        
+                                                    </tr>
+                                                    
+                                                </apex:repeat> 
+                                            </tbody>
+                                        </table>
+                                        
+                                        
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </apex:outputPanel>
+        
+        <!-- Begin : CAPA Reference -->
+        <apex:outputPanel rendered="{!$CurrentPage.parameters.pg=='capa_reference'}">
+        	<input type="hidden" id="page" name="page" value="capa_xreference"/>
+            <input type="hidden" id="stepName" name="stepName" value="xreference" />
+            <div class="wiz-form-holder">
+                <div class="row">
+                    <div class="wiz-field capa-xreference">
+                        <div class="col-md-12">
+                            <div class="wiz-fields-wide">
+                                <div>
+                                    
+                                    <!-- Nav tabs -->
+                                    <ul class="nav nav-tabs" role="tablist">
+                                        <li role="presentation" class="active"><a href="#reference" aria-controls="reference" role="tab" data-toggle="tab">Reference</a></li>
+                                        <li role="presentation"><a href="#add_ref" aria-controls="add_ref" role="tab" data-toggle="tab">Add Reference</a></li>
+                                    </ul>
+                                    
+                                    <!-- Tab panes -->
+                                    <div class="tab-content">
+                                        <!-- Reference pane -->
+                                        <div role="tabpanel" class="tab-pane active" id="reference">
+                                            <div class="panel-body">
+                                                <h2>NC</h2>
+                                                
+                                                <table class="table table-hover table-condensed">
+                                                    
+                                                    <tbody id="ncbody">
+                                                        
+                                                        <tr>
+                                                            <th>{!$ObjectType.Non_Conformance__c.Fields.Name.Label}</th>
+                                                            <th>{!$ObjectType.Non_Conformance__c.Fields.NC_Type__c.Label}</th>
+                                                            <th>Owner</th>
+                                                            <th>{!$ObjectType.Non_Conformance__c.Fields.NC_Source__c.Label}</th>
+                                                            <th>{!$ObjectType.Non_Conformance__c.Fields.NC_Status__c.Label}</th>
+                                                            <th></th>
+                                                        </tr>
+                                                        <apex:repeat value="{!nonConf}" var="ncon">
+                                                            <tr id="{!JSENCODE(ncon.Id)}">
+                                                                <td><a href='/{!JSENCODE(ncon.id)}'>{!JSENCODE(ncon.Name)}</a></td>
+                                                                <td>{!JSENCODE(ncon.NC_Type__c)}</td>
+                                                                <td>{!ncon.NC_Owner_Name__c}</td>
+                                                                <td>{!JSENCODE(ncon.NC_Source__c)}</td>
+                                                                <td>{!JSENCODE(ncon.NC_Status__c)}</td>
+                                                                <!-- <td>Yes</td> -->
+                                                                <td><i class="fa fa-remove" onclick="removeNC('{!JSENCODE(ncon.Id)}');"></i></td>
+                                                            </tr>
+                                                        
+                                                        </apex:repeat>
+                                                    </tbody>
+                                                </table>
+                                                
+                                                <h2>CAPA</h2>
+                                                
+                                                <table class="table table-hover table-condensed">
+                                                    <tbody id="capabody">
+                                                        
+                                                        <tr>
+                                                            <th>{!$ObjectType.CAPA__c.Fields.Name.Label}</th>
+                                                            <th>{!$ObjectType.CAPA__c.Fields.Title__c.Label}</th>
+                                                            <th>Owner</th>
+                                                            <th>{!$ObjectType.CAPA__c.Fields.CAPA_Source__c.Label}</th>
+                                                            <th>{!$ObjectType.CAPA__c.Fields.CAPA_Status__c.Label}</th>
+                                                            <!-- <th>Is Primary</th> -->
+                                                            <th></th>
+                                                        </tr>
+                                                        <apex:repeat value="{!capaList}" var="capa">
+                                                            <tr id="{!JSENCODE(capa.Id)}">
+                                                                <td><a href='/{!JSENCODE(capa.id)}'>{!JSENCODE(capa.Name)}</a></td>
+                                                                <td>{!JSENCODE(capa.Title__c)}</td>
+                                                                <td>{!capa.Owner.Name}</td>
+                                                                <td>{!JSENCODE(capa.CAPA_Source__c)}</td>
+                                                                <td>{!JSENCODE(capa.CAPA_Status__c)}</td>
+                                                                <!-- <td>Yes</td> -->
+                                                                <td><i class="fa fa-remove" onclick="removeCAPA('{!JSENCODE(capa.Id)}');"></i></td>
+                                                            </tr>
+                                                        
+                                                       </apex:repeat> 
+                                                    </tbody>
+                                                </table>
+                                                
+                                   
+                                            </div>
+                                        </div>
+                                        <!-- Reference pane -->
+                                        
+                                        <!-- Add Reference -->
+                                        <div role="tabpanel" class="tab-pane" id="add_ref">
+                                            <div class="panel-body">
+                                                
+                                                <apex:form id="f1">
+                                                    <div class="form-group" id="stexts">
+                                                        <label for="exampleInputEmail1">Search (You can search NC/CAPA Number, Source, Type, Status, Owner Name)</label>
+                                                        <!--<input type="search" class="form-control" id="search" placeholder="(You can search NC/CAPA Number, Source, Type, Status, Owner Name)"/>-->
+                                                        <apex:inputtext id="input" value="{!search}" styleclass="form-control" html-placeholder="(You can search NC/CAPA Number, Source, Type, Status, Owner Name)" disabled="{!OR(CAPA__c.CAPA_Status__c == 'Closed',CAPA__c.CAPA_Status__c == 'Void')}"/>
+                                                        
+                                                    </div>
+                                                    <div class="form-group checkbox-list">
+                                                        
+                                                        <div class="row col-md-12">
+                                                            <script>
+                                                            function checkAll(allChkbox){
+                                                                console.log('checkAll   '+$(allChkbox).is(":checked"));
+                                                                $('.oneCheckbox').prop('checked',$(allChkbox).is(":checked"));
+                                                                
+                                                            }
+                                                            function singleCheck(){
+                                                                if($(".oneCheckbox").length == $(".oneCheckbox:checked").length) {
+                                                                    $(".allCheckbox").prop("checked", "checked");
+                                                                }else{
+                                                                    $(".allCheckbox").removeAttr("checked");
+                                                                }
+                                                            }
+                                                            </script>
+                                                            
+                                                                <table>
+                                                                    <tr>
+                                                                        <td>
+                                                                            <label><apex:inputCheckbox id="allCheckbox" label="All" value="{!allCheck}" onclick="checkAll(this);" styleClass="allCheckbox" disabled="{!OR(CAPA__c.CAPA_Status__c == 'Closed',CAPA__c.CAPA_Status__c == 'Void')}"/> All &nbsp; </label>
+                                                                        </td>
+                                                                        <td>
+                                                                            <label><apex:inputCheckbox id="ncCheckbox" label="NC" value="{!ncCheck}" styleClass="oneCheckbox" onclick="singleCheck();" disabled="{!OR(CAPA__c.CAPA_Status__c == 'Closed',CAPA__c.CAPA_Status__c == 'Void')}"/> NC &nbsp; </label>
+                                                                        </td>
+                                                                        <td>
+                                                                            <label><apex:inputCheckbox id="capaCheckbox" label="CAPA" value="{!capaCheck}" styleClass="oneCheckbox" onclick="singleCheck();" disabled="{!OR(CAPA__c.CAPA_Status__c == 'Closed',CAPA__c.CAPA_Status__c == 'Void')}"/> CAPA &nbsp; </label>
+                                                                        </td>
+                                                                    </tr>
+                                                                </table>
+                                                            
+                                                        </div>
+                                                        <div class="clearfix"></div>
+                                                             
+                                                    </div>
+                                                    <div>
+                                                        <p class="bg-danger search-hint">Select modules you want to search into</p>
+                                                        <apex:commandButton value="Search" action="{!doSearch}" styleClass="btn btn-primary" reRender="nccapa" onclick="validSearch();" oncomplete="checkList();" disabled="{!OR(CAPA__c.CAPA_Status__c == 'Closed',CAPA__c.CAPA_Status__c == 'Void')}">
+                                                            <apex:actionSupport oncomplete="{!allCheck}" ></apex:actionSupport>
+                                                            <apex:actionSupport oncomplete="{!ncCheck}"></apex:actionSupport>
+                                                            <apex:actionSupport oncomplete="{!capaCheck}"></apex:actionSupport>
+                                                        </apex:commandButton>
+                                                        
+                                                        <script>
+                                                        	function validSearch(){
+                                                                var search= $("[id$='input']").val();
+                                                                if(search==null || search==''){
+                                                                    showDialog('1',"Enter Some Text");
+                                                                    //return false;
+                                                                }
+                                                            }
+                                                        </script>
+                                                    </div>
+                                                    <br/>
+                                                    <br/>
+                                                </apex:form>
+                                                
+                                                <h2>NC</h2>
+                                                <apex:pageBlock id="nccapa">
+                                                    
+                                                    <script>
+                                                    function checkList(flag){
+                                                        console.log('inside checklist '+flag);
+                                                        <apex:repeat value="{!allNCs}" var="ncObj">
+                                                            <apex:repeat value="{!nonConf}" var="nconf">
+                                                                if(flag){
+                                                                    if('{!JSENCODE(ncObj.id)}' == '{!JSENCODE(nconf.id)}'){ 
+                                                                        $('#ncTbody').find({!JSENCODE(ncObj.id)}).attr('class','danger');
+                                                                    }
+                                                                }else{    
+                                                                    if('{!JSENCODE(ncObj.id)}' == '{!JSENCODE(nconf.id)}'){ 
+                                                                        console.log('true');
+                                                                        $('#ncTbody').find({!JSENCODE(nconf.id)}).find('td').eq(5).find('i').attr('class','fa fa-remove action-link');
+                                                                        $('#ncTbody').find({!JSENCODE(ncObj.id)}).attr('class','danger');
+                                                                    }
+                                                        		}
+                                                        /*if('{!JSENCODE(ncObj.id)}' != '{!JSENCODE(nconf.id)}'){
+                                                                	$('#ncTbody').find({!JSENCODE(ncObj.id)}).attr('class','danger');
+                                                                    $('#ncTbody').find({!JSENCODE(nconf.id)}).attr('class','');
+                                                                }*/
+                                                        
+                                                        	</apex:repeat>
+                                                        </apex:repeat>
+                                                        
+                                                        <apex:repeat value="{!allCAPAs}" var="capaObj">
+                                                            <apex:repeat value="{!capaList}" var="cList">
+                                                                if(flag){
+                                                                    console.log('flag '+flag);
+                                                                    if('{!JSENCODE(capaObj.id)}' == '{!JSENCODE(cList.id)}'){ 
+                                                                        $('#capaTbody').find({!JSENCODE(capaObj.id)}).attr('class','danger');
+                                                                    }
+                                                                }else{
+                                                                    if('{!JSENCODE(capaObj.id)}' == '{!JSENCODE(cList.id)}'){ 
+                                                                        console.log('true');
+                                                                        $('#capaTbody').find({!JSENCODE(cList.id)}).find('td').eq(5).find('i').attr('class','fa fa-remove action-link');
+                                                                        $('#capaTbody').find({!JSENCODE(capaObj.id)}).attr('class','danger');
+                                                                    }
+                                                                }
+                                                        /*if('{!JSENCODE(capaObj.id)}' != '{!JSENCODE(cList.id)}'){
+                                                                	$('#capaTbody').find({!JSENCODE(capaObj.id)}).attr('class','danger');
+                                                                    $('#capaTbody').find({!JSENCODE(cList.id)}).attr('class','');
+                                                                }*/
+                                                        
+                                                        </apex:repeat>
+                                                        </apex:repeat>
+                                                        
+                                                    }
+                                                    
+                                                    $(function(){
+                                                        
+                                                        // Slim scroll functions
+                                                        $('#nclist').slimScroll({
+                                                          height: '250px',
+                                                          color: '#7af1f4',
+                                                          railOpacity: 0.1,
+                                                          wheelStep: 3
+                                                          });
+                                                    });
+                                                    </script>
+                                                    <!--<div class="slimScrollDiv" style="position: relative; overflow: hidden; width: auto; height: 250px;">
+                                                    <div id="nclist" style="overflow: hidden; width: auto; height: 250px;">-->
+                                                         <table class="table table-hover table-condensed" style="width:100%">
+                                                            
+                                                            
+                                                             <tbody id="ncTbody">
+                                                                <tr>
+                                                                    <th>{!$ObjectType.Non_Conformance__c.Fields.Name.Label}</th>
+                                                                    <th>{!$ObjectType.Non_Conformance__c.Fields.NC_Type__c.Label}</th>
+                                                                    <th>Owner</th>
+                                                                    <th>{!$ObjectType.Non_Conformance__c.Fields.NC_Source__c.Label}</th>
+                                                                    <th>{!$ObjectType.Non_Conformance__c.Fields.NC_Status__c.Label}</th>
+                                                                    <th></th>
+                                                                </tr>
+                                                            
+                                                           
+                                                                <apex:repeat value="{!allNCs}" var="ncs">
+                                                                                                                                       
+                                                                    <tr id="{!ncs.Id}">
+                                                                        <td>{!ncs.Name}</td>
+                                                                        <td>{!ncs.NC_Type__c}</td>
+                                                                        <td>{!ncs.Owner.Name}</td>
+                                                                        <td>{!ncs.NC_Source__c}</td>
+                                                                        <td>{!ncs.NC_Status__c}</td>
+                                                                        <td><i class="fa fa-plus action-link" onclick="ncActions(this,'{!ncs.Id}');"></i></td>
+                                                                        
+                                                                    </tr>
+                                                                 </apex:repeat>
+                                                            </tbody>    
+                                                        </table>
+                                                    <!--</div>
+                                                    </div>-->
+                                                    <!--<div class="slimScrollBar" style="width: 7px; position: absolute; top: 24px; opacity: 0.4; display: none; border-radius: 7px; z-index: 99; right: 1px; height: 211.864px; background: rgb(122, 241, 244);"></div>
+                                                    <div class="slimScrollRail" style="width: 7px; height: 100%; position: absolute; top: 0px; display: none; border-radius: 7px; opacity: 0.1; z-index: 90; right: 1px; background: rgb(51, 51, 51);"></div>-->
+                                                <h2>CAPA</h2>
+                                                <table class="table table-hover table-condensed" id="capass">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>{!$ObjectType.CAPA__c.Fields.Name.Label}</th>
+                                                            <th>{!$ObjectType.CAPA__c.Fields.Title__c.Label}</th>
+                                                            <th>Owner</th>
+                                                            <th>{!$ObjectType.CAPA__c.Fields.CAPA_Source__c.Label}</th>
+                                                            <th>{!$ObjectType.CAPA__c.Fields.CAPA_Status__c.Label}</th>
+                                                            <th></th>
+                                                        </tr>
+                                                    </thead>
+                                                        <tbody id="capaTbody">
+                                                        <apex:repeat value="{!allCAPAs}" var="capas">
+                                                               
+                                                                <tr id="{!capas.Id}">
+                                                                    <td>{!capas.Name}</td>
+                                                                    <td>{!capas.Title__c}</td>
+                                                                    <td>{!capas.Owner.Name}</td>
+                                                                    <td>{!capas.CAPA_Source__c}</td>
+                                                                    <td>{!capas.CAPA_Status__c}</td>
+                                                                    <td><i class="fa fa-plus action-link" onclick="capaActions(this,'{!capas.Id}');"></i></td>
+                                                                </tr>
+                                                             
+                                                        </apex:repeat>
+                                                    </tbody>
+                                                                                                        
+                                                    
+                                                    </table>
+                                                
+                                        
+                                                </apex:pageBlock>
+                                            </div>
+                                        </div>
+                                        <!-- Add Reference -->
+                                	</div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                     </div>
+                </div>
+            </div>
+        
+        
+        </apex:outputPanel>
+        <!--End : CAPA Reference-->
+    </apex:define>
+    
+    <apex:define name="approvalHistory">
+        <c:wiz_approvalHistory Parent="CAPA" TargetobjectId="{!CAPA__c.id}"></c:wiz_approvalHistory>
+    </apex:define> 
+    <apex:define name="buttonbar">
+        <!--Begin CAPA Init Buttons-->
+        <apex:outputPanel rendered="{!OR($CurrentPage.parameters.pg=='capa_init',ISBLANK($CurrentPage.parameters.pg))}">
+            <apex:outputPanel rendered="{!CAPA.Approval_Status__c!='Pending Approval'}">
+                <apex:outputpanel layout="none"
+                                  rendered="{!AND(NOT(CAPA.Closed__c),NOT(CAPA__c.Is_In_Works__c),OR($ObjectType.CAPA__c.Updateable, AND(ISBLANK(CAPA__c.Id), $ObjectType.CAPA__c.Createable)))}">
+                    <button type="button" class="btn btn-default"
+                            onclick="cancelPopup();"><span class="fa fa-close"></span> Cancel</button>
+                    <button type="submit" onclick="$(this).addClass('most-recent-click');$('#nextBtn').removeClass('most-recent-click');validate(null,undefined,'capaForm');" id="submitBtn"
+                            class="btn {!IF(NOT(ISBLANK(CAPA.Id)),'btn-primary','btn-success')} dont-allow-multiple-clicks"><span class="fa {!IF(NOT(ISBLANK(CAPA.Id)),'fa fa-floppy-o','fa fa-send')}"></span> {!IF(NOT(ISBLANK(CAPA.Id)),'Save','Submit')}</button>
+                </apex:outputpanel>
+                <apex:outputpanel layout="none"
+                                  rendered="{!NOT(ISBLANK(CAPA__c.Id))}">
+                    <button type="submit" id="nextBtn"
+                            onclick="$(this).addClass('most-recent-click'); $('#submitBtn').removeClass('most-recent-click');performDirtyCheck();if(isDirty){saveORUnsaveChangesAndRedirect()}else{window.location.href = '/apex/CAPA?id={!JSENCODE($Currentpage.parameters.Id)}&pg=capa_resolution'}"
+                            class="btn btn-primary dont-allow-multiple-clicks"><span class="fa fa-step-forward"></span> Next</button>
+                </apex:outputpanel>
+            </apex:outputPanel>
+        </apex:outputPanel>
+        <!--End CAPA Init Buttons-->
+        
+        <!--Begin CAPA resolution Buttons-->
+        <apex:outputPanel rendered="{!OR($CurrentPage.parameters.pg=='capa_resolution')}">
+            <apex:outputpanel layout="none" rendered="{!AND(NOT(CAPA.Closed__c),NOT(CAPA__c.Is_In_Works__c),$ObjectType.CAPA__c.Updateable)}">
+                <button type="button" class="btn btn-default" id="PageCancelButton" onclick="cancelPopup();"><span class="fa fa-close"></span> Cancel</button>
+            </apex:outputpanel>
+           
+            <apex:outputpanel layout="none" rendered="{!AND(NOT(CAPA.Closed__c),NOT(CAPA__c.Is_In_Works__c),$ObjectType.CAPA__c.Updateable)}">
+                <button 
+                        id="PageSaveButton" 
+                        type="button" 
+                        onclick="$(this).addClass('most-recent-click'); $('#PageSubmitButton').removeClass('most-recent-click');disableApprovers();validate({'save':true});resAdhoc_gentaskValidate();" 
+                        class="btn btn-primary"
+                        ><span class="fa fa-floppy-o"></span> Save</button>
+            </apex:outputpanel>
+            <apex:outputpanel layout="none" rendered="{!AND(NOT(CAPA.Closed__c),NOT(CAPA__c.Is_In_Works__c),$ObjectType.CAPA__c.Updateable)}">        
+                <button 
+                        id="PageSubmitButton" 
+                        type="button" 
+                        onclick="$(this).addClass('most-recent-click'); $('#PageSaveButton').removeClass('most-recent-click');updateCAPAStatus();disableApprovers();validate({'submit':true});resAdhoc_gentaskValidate();" 
+                        class="btn btn-success" 
+                        data-target="#signature"
+                        ><span class="fa fa-send"></span> Submit</button>
+            </apex:outputpanel> 
+            <!--
+            <apex:outputpanel layout="none"
+            rendered="{!AND(OR(CAPA__c.Closed__c,CAPA__c.Is_In_Works__c),$ObjectType.CAPA__c.Updateable)}">
+            <button type="submit" id="nextBtn"
+            onclick="window.location.href = '/apex/capa_details?id={!$Currentpage.parameters.Id}'"
+            class="btn btn-primary dont-allow-multiple-clicks"> Next</button>
+            </apex:outputpanel>    -->
+            <apex:outputPanel rendered="{!OR(CAPA.Closed__c,CAPA__c.Is_In_Works__c,(CAPA__c.CAPA_Status__c == 'Reopened'))}">
+                <c:wiz_nextButton subTask="{!CAPA__c.General_Tasks__r}" currentPosition="0"></c:wiz_nextButton>
+            </apex:outputPanel>
+        </apex:outputPanel>
+        <!--End CAPA resolution Buttons-->
+        
+        <!-- Begin : CAPA Reference Buttons-->
+        <apex:outputPanel rendered="{!$CurrentPage.parameters.pg=='capa_reference'}">
+            <apex:outputPanel rendered="{!NOT(OR(CAPA__c.CAPA_Status__c == 'Closed',CAPA__c.CAPA_Status__c == 'Void'))}" >
+            	<button type="button" id="Cancel" class="btn btn-default" onclick="cancelPopup()"><span class="fa fa-close"></span> Cancel</button>
+             	<button type="button" id="Submit" class="btn btn-success dont-allow-multiple-clicks" onclick="onSubmit();"><span class="fa fa-send"></span> Submit </button>
+            </apex:outputPanel>
+            <button type="button" class="btn btn-primary" onclick="window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE(closTask.id)}&type=Closure';"><span class="fa fa-step-forward"></span> Next</button>
+        </apex:outputPanel>
+        <!-- End : CAPA Reference Buttons-->
+    </apex:define>
+    
+    <apex:define name="rightpane">
+        
+        <!-- Right container -->
+        
+        <div id="rightContainer" class="tab-content">
+            
+            <!-- Help Pane -->
+            <div class="tab-pane active help" id="help">
+                <c:Contextual_Help currentpage1="{!IF(ISBLANK($CurrentPage.parameters.pg),'capa_init',$CurrentPage.parameters.pg)}" />
+            </div>
+            <!-- Help Pane -->
+            
+            <!-- chronology -->
+            <div class="tab-pane  chronology" id="chronology">
+                <c:capa_chronology rendered="true" CAPAID="{!JSENCODE(CAPA.id)}"/>                     
+            </div>
+            <!-- chronology -->  
+            
+            <!-- Attachment List -->
+            <c:wiz_attachments record_id="{!CAPA__c.Id}" showAddButtonLink="{!AND(NOT(ISBLANK(CAPA__c.Id)),NOT(CAPA__c.CAPA_Status__c=='Closed'))}"></c:wiz_attachments>
+            
+        </div>
+        <!-- Right container -->
+        
+    </apex:define>
+    
+</apex:composition>
+
+<!-- Begin : JavaScript For Init -->
+<apex:outputPanel rendered="{!OR($CurrentPage.parameters.pg=='capa_init',ISNULL($CurrentPage.parameters.pg))}">
+    <script>
+    var isDirty=false,initialCriticality='N.A',initialCapaSource='N.A',initialSelectedImpactedSites;
+    $( document ).ready(function() {
+        $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Occurance_Date__c').datetimepicker()
+        .on('dp.change', function(e){
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Reported_Date__c').data("DateTimePicker").minDate(e.date);
+        });
+        $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Reported_Date__c').data("DateTimePicker").minDate($('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Occurance_Date__c').data("DateTimePicker").date());
+        
+        $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Reported_Date__c').datetimepicker()
+        .on('dp.change', function(e){
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Occurance_Date__c').data("DateTimePicker").maxDate(e.date);
+        });
+        $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Occurance_Date__c').data("DateTimePicker").maxDate($('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Reported_Date__c').data("DateTimePicker").date());
+        var availableImactedSites='{!JSENCODE(availableImpactedSites  )}'.split(',');
+        var selectedImactedSites='{!JSENCODE(CAPA.Sites_Impacted__c)}'.split(',');
+        //console.log('CAPA__c.Sites_Impacted__c  {!JSENCODE(CAPA.Sites_Impacted__c)}  splitted already');
+        //console.log(selectedImactedSites);
+        
+        //console.log('Available Impacted Sites');
+        $('.site-list').html('');
+        var visibility;
+        for(var i=0;i<availableImactedSites.length-1;i++){
+            console.log('Impacted Site  '+  availableImactedSites[i] +'    '+jQuery.inArray(availableImactedSites[i],selectedImactedSites));
+            if(jQuery.inArray(availableImactedSites[i],selectedImactedSites)>-1){
+                $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sites_Impacted__c").append('<option selected="selected" value='+availableImactedSites[i]+'>'+availableImactedSites[i]+'</option>');
+            }
+            else{
+                $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sites_Impacted__c").append('<option value='+availableImactedSites[i]+'>'+availableImactedSites[i]+'</option>');
+            }
+            
+        } 
+        $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sites_Impacted__c").select2({
+            closeOnSelect:false
+        });
+        
+        if({!OR(CAPA.Is_In_Works__c,CAPA.Closed__c,JSENCODE(CAPA.Approval_Status__c)=='Pending Approval')}){
+            $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sites_Impacted__c").attr('disabled',true);
+        }
+        
+        var ctrlId,value;
+        $("input,textarea,#select2-Department__c-container,#select2-Reported_By__c-container,#select2-OwnerId-container").each(function() {
+            ctrlId=$(this).attr('id');
+            ctrlId=(ctrlId)?ctrlId:'';
+            if(ctrlId.indexOf('ViewState')==-1){
+                value=($(this).attr('class')=='select2-selection__rendered')?$(this).attr('title'): $(this).val();
+                console.log("id   "+ctrlId+"  :  value   "+value );
+                $(this).attr("originalValue",value);
+            } 
+        });
+        
+        
+    });
+    
+    function performDirtyCheck (){
+        var ctrlId,orig,value;
+        $("input,textarea,.select2-selection__rendered").each(function() {
+            ctrlId=$(this).attr('id');
+            ctrlId=(ctrlId)?ctrlId:'';
+            if(ctrlId.indexOf('ViewState')==-1){
+                if(this.hasAttribute('originalValue')){
+                    orig = $(this).attr("originalValue");
+                    value =$(this).attr('class')=='select2-selection__rendered'?$(this).attr('title'): $(this).val();
+                    console.log('Before  '+orig+'  After   '+value);
+                    if(orig && orig != value ) {
+                        isDirty=true;
+                        return false;
+                    }
+                }            
+            }
+            
+        });
+        if(!isDirty)
+            isDirty=(initialSelectedImpactedSites!=$(".selected-list .sitename").length)?true:false;
+    }
+    
+    function makeCriticalityDirty(chkd,value){
+        //alert('criticality ...'+value);
+        if(initialCriticality=='N.A'){
+            initialCriticality=value;
+        }
+        else if(initialCriticality!=value){
+            isDirty=true;
+        }
+        
+    }
+    
+    function makeCapaResourceDirty(chkd,value){
+        //alert('Capa resource  '+value)
+        if(initialCapaSource=='N.A'){
+            initialCapaSource=value;
+        }
+        else if(initialCapaSource!=value){
+            isDirty=true;
+        }
+        
+    }
+    
+    function saveORUnsaveChangesAndRedirect(){
+        var YESButtonInRedirectModalOnClick = function () {
+            //window.location.href = window.location.href = '/apex/capa_resolution?id={!$Currentpage.parameters.Id}';
+            window.location.href = '/apex/CAPA?id={!JSENCODE($Currentpage.parameters.Id)}&pg=capa_resolution';
+        };
+        var NOButtonInRedirectModalOnClick = function () {
+            validate();
+        };
+        $('#redirectDialog .btn-primary').bind( "click", YESButtonInRedirectModalOnClick);
+        $('#redirectDialog .btn-default').bind( "click", NOButtonInRedirectModalOnClick);
+        
+        // Show the redirect dialog
+        $('#redirectDialog').modal('show');
+        
+        // Remove the onClick event
+        $('#redirectDialog').on('hidden.bs.modal', function () {
+            $('#redirectDialog .btn-primary').unbind( "click", YESButtonInRedirectModalOnClick);
+            $('#redirectDialog .btn-default').unbind( "click", NOButtonInRedirectModalOnClick);
+        })
+    }
+    
+    
+    
+    
+    function saveCallback(data){
+        
+        if(typeof data != 'undefined'){
+            window.location='/apex/capa_init?id=' + data.id;
+        }else{
+            window.location='/apex/capa_init?id={!$CurrentPage.parameters.Id}';
+        }
+    }
+    
+    function cancelPopup()
+    {
+        var r = confirm('You will lose unsaved changes!');
+        if (r == true) {
+            x = "You pressed OK!";
+            alert(x);
+            window.location.href='/{!$ObjectType.CAPA__c}/o';
+        } else
+            x = "You pressed Cancel!";
+        
+    }
+    
+    
+    function onValidCAPAInit(){
+        if({!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}){
+            $('#uname').val('');
+            $('#pw').val(''); 
+            $('.dont-allow-multiple-clicks').removeAttr('disabled');
+            $('#signature').modal('show');
+        }else{
+            navigateAfterDigitalSignature();
+        } 
+        
+    }
+    
+    function navigateAfterDigitalSignature(){
+        if(!$('.dont-allow-multiple-clicks').attr('disabled')){
+            $('.dont-allow-multiple-clicks').attr('disabled', true);
+        } 
+        
+        $('#capaForm').submit();
+    }
+    
+    </script>
+    <style>
+        .select-group {
+        background-color: #EDEDED;
+        border-radius: 6px;
+        padding-top: 10px;
+        }
+    </style>
+    
+</apex:outputPanel>
+<!--End CAPA Init Script--->
+<!-- Begin : JavaScript For Resolution -->
+<apex:outputPanel rendered="{!OR($CurrentPage.parameters.pg=='capa_resolution')}">
+    <script>
+    $(document).ready(function() { 
+        $("#createadhoctask").hide();
+        if({!OR(CAPA.CAPA_Status__c=='Closed',CAPA.CAPA_Status__c=='Inworks',CAPA.CAPA_Status__c=='Void',AND(CAPA.Resolution_Code__c=='CAPA Workflow',CAPA.CAPA_Status__c=='Reopened'))})
+            $("#capaAdhocBtn").attr('disabled','disabled');
+        if({!OR(CAPA__c.Closed__c,NOT($ObjectType.CAPA__c.Fields.Resolution_Code__c.Updateable),AND(CAPA__c.Resolution_Code__c=='CAPA Workflow',CAPA__c.CAPA_Status__c=='Reopened'))})
+         $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c').attr('disabled','disabled');
+    });
+    
+    
+    function saveCallback(data){
+                
+                if(typeof data != 'undefined'){
+                    window.location='/apex/nc_products?id=' + data.id;
+                }else{
+                    window.location='/apex/nc_products?id={!$CurrentPage.parameters.Id}';
+                }
+            }
+    
+    function cancelPopup()
+    {
+        var YESButtonInRedirectModalOnClick = function () {
+            //window.location.href = '/apex/capa_resolution?id={!JSENCODE($CurrentPage.parameters.id)}';
+            window.location.href = '/apex/CAPA?id={!JSENCODE($CurrentPage.parameters.id)}&pg=capa_resolution';
+        };
+        var NOButtonInRedirectModalOnClick = function () {
+            
+        };
+        $('#redirectDialog .btn-primary').bind( "click", YESButtonInRedirectModalOnClick);
+        $('#redirectDialog .btn-default').bind( "click", NOButtonInRedirectModalOnClick);
+        
+        // Show the redirect dialog
+        $('#redirectDialog').modal('show');
+        
+        // Remove the onClick event
+        $('#redirectDialog').on('hidden.bs.modal', function () {
+            $('#redirectDialog .btn-primary').unbind( "click", YESButtonInRedirectModalOnClick);
+            $('#redirectDialog .btn-default').unbind( "click", NOButtonInRedirectModalOnClick);
+        })
+        
+    }
+    function updateCAPAStatus(){
+        if($('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c').val()=='CAPA Workflow'){
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Status__c').val('Inworks');
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Phase__c').val('Investigation');
+        }else{
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Status__c').val('Closed'); 
+        }
+    }
+    function navigateAfterDigitalSignature(){
+        $('#PageSaveButton').attr('disabled','true');$('#PageSubmitButton').attr('disabled','true');$('#PageCancelButton').attr('disabled','true');
+        if($('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c').val()=='CAPA Workflow' && {!NOT(CAPA__c.Is_In_Works__c)}){
+            createCAPATasks(true);
+        }
+        else{
+            $('#capaForm').submit();
+        }
+    }
+    function isDatesValid(){
+        var isDateValid=true;
+        var isAdhocValid=true,adhocTasks=resAdhoc_pageAdhoc_getAllAdhoctasks()
+        errMsg='';
+        if($('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c').val()=='CAPA Workflow'){
+            //alert('Is Due Date Validation Needed  {!$Setup.QC_settings__c.Is_Due_Date_Validation_Needed__c} ');
+            if({!$Setup.QC_settings__c.Is_Due_Date_Validation_Needed__c}){
+                var seqDueDateMap={},seqs=[],invDueDate,implDueDate,erDueDate;
+                if(adhocTasks){
+                    $.each(adhocTasks,function(index,adhocTask){
+                        adhocTask=adhocTask.split('@');
+                        seq=adhocTask[0];
+                        dueDate=seqDueDateMap[seq];
+                        newDueDate=new Date(adhocTask[3]);
+                        console.log('adhoc seq  '+seq+' dueDate  '+dueDate+' newDueDate  '+newDueDate);
+                        if(dueDate){
+                            dueDate=new Date(dueDate);
+                            if(dueDate.getTime()<newDueDate.getTime()){
+                                seqDueDateMap[seq]=newDueDate;
+                            }
+                        }
+                        else{
+                            seqDueDateMap[seq]=newDueDate;
+                            seqs.push(seq);
+                        }
+                    });
+                } 
+                if($("#investigation").is(':checked')){
+                    seq=$("#capaInv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c").val();
+                    invDueDate=new Date($("#inv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_GRDATE").val());
+                    seqDueDateMap[seq]=invDueDate;
+                    seqs.push(seq);
+                }
+                if($("#implementation").is(':checked')){
+                    seq=$("#capaImpl{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c").val();
+                    implDueDate=new Date($("#impl{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_GRDATE").val());
+                    seqDueDateMap[seq]=implDueDate;
+                    seqs.push(seq);
+                }
+                if($("#effectivenessReview").is(':checked')){
+                    seq=$("#capaER{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c").val();
+                    erDueDate=new Date($("#er{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_GRDATE").val());
+                    seqDueDateMap[seq]=erDueDate;
+                    seqs.push(seq);
+                }
+                seqs.sort(sortSeq);
+                var hsd,lsd
+                for(var i=0;i<seqs.length-1;i++){
+                    for(var j=i+1;j<seqs.length;j++){
+                        hsd=seqDueDateMap[seqs[j]];
+                        lsd=seqDueDateMap[seqs[i]];
+                        if(hsd.getTime()<lsd.getTime()){
+                            isDateValid=false;
+                            showDialog('1','The task Due Date cannot be less than the Due Date of lower sequence task.')
+                            return false;
+                        }
+                    }
+                }
+                if(isDateValid){      
+                    var closureDueDate=new Date($("#capaClo{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_GRDATE").val());
+                    //alert('closureDueDate    '+closureDueDate);
+                    if($("#closApprTab_chk").is(':checked')){
+                        $('#closApprTab_table > tbody  > tr').each(function() {
+                            tds=$(this).find('td');
+                            dueDt=$("#"+tds.eq(3).find('div').find('input[type="text"]').attr('id')).val(); 
+                            console.log('dueDt   '+dueDt);
+                            if(new Date(dueDt).getTime()>closureDueDate.getTime()){
+                                isDateValid=false;
+                                showDialog('1','The Closure Task Due Date cannot be less than the Approval(s) Due Date.');
+                                return false; 
+                            }
+                            else if(seqs.length > 0 && seqDueDateMap[seqs[seqs.length-1]].getTime() > new Date(dueDt).getTime()){
+                                isDateValid=false;
+                                showDialog('1','The Closure Task Approval Due date should be not be less than the Task Due Date');
+                                return false; 
+                            }
+                            
+                        });
+                        if(isDateValid){  
+                            if(!isApprovalDueDatesValid()){
+                                showDialog('1','The Closure Task Approval Due Date cannot be less than  the lower sequence Approval(s) Due Date.');
+                                return false;
+                            }
+                        }
+                    }
+                    else {
+                        $.each(seqs,function(index,sq){
+                            if(closureDueDate.getTime()<seqDueDateMap[sq].getTime()){
+                                isDateValid=false;
+                                showDialog('1','The Closure Task Due Date cannot be less than the task(s) Due Date.');
+                                return false;
+                            }
+                        });
+                    }
+                }
+                
+            }
+            
+            isAdhocValid=isValid;
+        }
+        return isDateValid && isAdhocValid;
+    }
+    function disableApprovers(){
+        if(!$("#closApprTab_chk").is(':checked')){
+            console.log('disabling the approvers');
+            $("#closApprTab_table").find("input,select").each(function(){
+                console.log('disable the controls  ');
+                $(this).attr('disabled', true);
+            });
+        } 
+    }
+    function createCAPATasks(isSubmit){
+        var tasks={},invDueDate,implDueDate,erDueDate,cloDueDate;
+        var adhocTasks = [];
+        adhocTasks = resAdhoc_pageAdhoc_getAllAdhoctasks();
+        console.log('createCAPATasks  adhocTasks ');
+        console.log(adhocTasks);
+        if($("#investigation").is(':checked')){
+            invDueDate=new Date($("#inv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_GRDATE").val());
+            tasks['Investigation']=[10,$("#capaInvUser").val(),$("#inv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c").val(),(invDueDate.getMonth()+1)+"/"+invDueDate.getDate()+"/"+invDueDate.getFullYear()];
+        }
+        if($("#implementation").is(':checked')){
+            implDueDate=new Date($("#impl{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_GRDATE").val());
+            tasks['Implementation']=[20,$("#capaImplUser").val(),$("#impl{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c").val(),(implDueDate.getMonth()+1)+"/"+implDueDate.getDate()+"/"+implDueDate.getFullYear()];
+        }
+        if($("#effectivenessReview").is(':checked')){
+            erDueDate=new Date($("#er{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_GRDATE").val());
+            tasks['EffectivenessReview']=[30,$("#capaERUser").val(),$("#er{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c").val(),(erDueDate.getMonth()+1)+"/"+erDueDate.getDate()+"/"+erDueDate.getFullYear()];
+        }
+        var closureDueDate=new Date($("#capaClo{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_GRDATE").val());
+        console.log(' closureDueDate    '+closureDueDate);
+        var appDueDate=new Date($("#app{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_GRDATE").val());
+        tasks['Closure']=[200,$("#cloUser").val(),$("#capaClo{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c").val(),(closureDueDate.getMonth()+1)+"/"+closureDueDate.getDate()+"/"+closureDueDate.getFullYear()];
+        console.log('CAPA tasks');
+        console.log(tasks);
+        Visualforce.remoting.Manager.invokeAction(
+            // @RemoteAction
+            '{!$RemoteAction.CAPA.createCAPATasks}',adhocTasks,
+            
+            tasks,'{!CAPA__c.Id}',(isSubmit)?true:false,$("#closApprTab_chk").is(':checked'),false,
+            
+            // Callback
+            function(result, event){
+                console.log('createCAPATasks   result  '+result);
+                //alert('result  closure task id   '+result['Closure']);
+                if($("#closApprTab_chk").is(':checked')){
+                    saveApprovalData(result['Closure'])
+                }
+                else{
+                    $('#capaForm').submit();
+                }
+                
+            },
+            // Don't know, couldn't find docs
+            {escape: true}
+        );
+        
+    }
+    
+    function isTasksValid(){
+            var isTaskValid=true;
+            if($('#Resolution_Code__c').val()=='CAPA Workflow'){
+              if($("#investigation").is(':checked')){
+                  var tempValid=isInvestigationValid();
+                  isTaskValid=isTaskValid?tempValid:isTaskValid;
+              }
+              if($("#implementation").is(':checked')){
+                  var tempValid=isImplementationValid();
+                  isTaskValid=isTaskValid?tempValid:isTaskValid;
+              }
+              if($("#effectivenessReview").is(':checked')){
+                  console.log('In Resolution');
+                  var tempValid=isEffectivenessReviewValid();
+                  isTaskValid=isTaskValid?tempValid:isTaskValid;
+              }
+              if($("#closApprTab_chk").is(':checked')){
+                 var tempValid=isApprovalsValid();
+                 isTaskValid=isTaskValid?tempValid:isTaskValid;
+              }
+              if(!$("#capaClo{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_GRDATE").val()){
+                 isTaskValid=false;
+                 $('#cloDueDate_error').html("<p><font color='red'>This field is required</font></p>");
+              }
+              if(!$("#cloUser").val()){
+                 isTaskValid=false;
+                 $('#cloUser_error').html("<p><font color='red'>This field is required</font></p>");
+              }
+              if(!$("#capaClo{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c").val()){
+                 isTaskValid=false;
+                 $('#capaClo{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c_error').html("<p><font color='red'>This field is required</font></p>");
+              }
+           }
+              	console.log('isTaskValid'+isTaskValid);
+        		return isTaskValid;
+           }
+    function onValidCAPAResolution(validateParams){
+        if(isTasksValid() && isDatesValid()){
+            if(validateParams.save){
+              if($('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c').val()=='CAPA Workflow' && $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Status__c').val()!='CAPA Workflow'){
+                  $('#PageSaveButton').attr('disabled','true');$('#PageSubmitButton').attr('disabled','true');$('#PageCancelButton').attr('disabled','true');createCAPATasks();
+              }
+              else{
+                  $('#PageSaveButton').attr('disabled','true');$('#PageSubmitButton').attr('disabled','true');$('#PageCancelButton').attr('disabled','true');$('#capaForm').submit();
+              }
+            } 
+            if(validateParams.submit){ 
+                var isDigSigNd='<apex:outputText value="{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}"/>'
+                if(isDigSigNd=='true'){
+                    $('#uname').val('');$('#pw').val('');$('#signature').modal('show');
+                }
+                else{
+                    navigateAfterDigitalSignature();
+                }
+            }
+          }
+    }
+    </script>
+</apex:outputPanel>   
+<!--End CAPA Resolution Script--->
+
+<!-- Begin : CAPA Reference -->
+        <apex:outputPanel rendered="{!$CurrentPage.parameters.pg=='capa_reference'}">
+         <script>
+    	$(document).ready(function() {
+    		if('{!JSENCODE(CAPA__c.CAPA_Status__c)}' == 'Closed' || '{!JSENCODE(CAPA__c.CAPA_Status__c)}' == 'Void'){
+    			$('#ncbody').find('i').hide();
+    			$('#capabody').find('i').hide();
+    		}
+    	});
+    	var deletedNCIds = [];
+    	var deletedCAPAIds = [];
+        var checkedNCs = [];
+    	//var uncheckedNCs = [];
+    	var checkedCAPAs = [];
+    	//var uncheckedCAPAs = [];
+    	function cancelPopup()
+        {
+           var YESButtonInRedirectModalOnClick = function () {
+               //window.location.href = '/apex/capa_xreference?id={!JSENCODE($CurrentPage.parameters.id)}';
+               window.location.href = '/apex/CAPA?id={!JSENCODE($CurrentPage.parameters.id)}&pg=capa_reference'
+           };
+           var NOButtonInRedirectModalOnClick = function () {
+               
+           };
+           $('#redirectDialog .btn-primary').bind( "click", YESButtonInRedirectModalOnClick);
+           $('#redirectDialog .btn-default').bind( "click", NOButtonInRedirectModalOnClick);
+           
+           // Show the redirect dialog
+           $('#redirectDialog').modal('show');
+           
+           // Remove the onClick event
+           $('#redirectDialog').on('hidden.bs.modal', function () {
+               $('#redirectDialog .btn-primary').unbind( "click", YESButtonInRedirectModalOnClick);
+               $('#redirectDialog .btn-default').unbind( "click", NOButtonInRedirectModalOnClick);
+           })
+        }
+    	
+    	function onSubmit(){
+    		var isDigitalneeded = "<apex:outputtext value="{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}" />";
+            if(isDigitalneeded == 'true'){
+                $('#uname').val('');
+                $('#pw').val('');
+                $('.dont-allow-multiple-clicks').removeAttr('disabled');
+                $('#signature').modal('show');
+            }else if(isDigitalneeded == 'false'){    
+                $('#Submit').attr('disabled', 'true');
+                saveXReferences();
+            }
+        }
+    
+    	function saveXReferences(){
+            Visualforce.remoting.Manager.invokeAction(
+            // @RemoteAction
+            '{!$RemoteAction.CAPA.saveXReferences}',deletedNCIds,deletedCAPAIds,'{!JSENCODE($CurrentPage.parameters.id)}',checkedNCs,checkedCAPAs,
+            // Callback
+            function(result, event){
+                if(result==0){
+                    console.log('record saved successfully');
+                    //window.location.href = '/apex/capa_xreference?id={!JSENCODE($CurrentPage.parameters.id)}';
+                    window.location.href = '/apex/CAPA?id={!JSENCODE($CurrentPage.parameters.id)}&pg=capa_reference'
+                }else{
+                    console.log('failed to save');
+                    //window.location.href = '/apex/capa_xreference?id={!JSENCODE($CurrentPage.parameters.id)}';
+                }
+            });    
+        } 
+    
+    	function removeCAPA(rowId){
+            console.log('rowId '+rowId);
+            deletedCAPAIds.push(rowId);
+            console.log(deletedCAPAIds);
+            $("#"+rowId).remove();
+        }
+
+		function removeNC(rowId){
+            console.log('rowId '+rowId);
+            deletedNCIds.push(rowId);
+            console.log(deletedNCIds);
+            $("#"+rowId).remove();
+        } 
+    
+    	var index,flag=false;
+    	function ncActions(tId,rowId){
+            console.log('rowId '+rowId);
+            if($(tId).attr('class') == 'fa fa-plus action-link'){
+            	$(tId).attr('class','fa fa-check action-link');
+                $("#ncTbody").find("#"+rowId).attr('class','warning');
+                checkedNCs.push(rowId);
+                index = deletedNCIds.indexOf(rowId);
+                console.log('index '+index);
+                if(index > -1){
+                	deletedNCIds.splice(index, 1);
+                }
+                
+            }else if($(tId).attr('class') == 'fa fa-remove action-link'){
+                $(tId).attr('class','fa fa-plus action-link');
+                flag = true;
+                checkList(flag);
+                //$("#ncTbody").find("#"+rowId).attr('class','danger');
+                deletedNCIds.push(rowId);
+                index = checkedNCs.indexOf(rowId);
+                console.log('index '+index);
+                if(index > -1){
+                	checkedNCs.splice(index, 1);
+                }
+                
+            }else if($(tId).attr('class') == 'fa fa-check action-link'){
+                $(tId).attr('class','fa fa-plus action-link');
+                $("#ncTbody").find("#"+rowId).attr('class','');
+                flag = true;
+                checkList(flag);
+                index = deletedNCIds.indexOf(rowId);
+                console.log('index '+index);
+                if(index > -1){
+                	deletedNCIds.splice(index, 1);
+                }else{
+                	deletedNCIds.push(rowId);
+                }	
+                index = checkedNCs.indexOf(rowId);
+                console.log('index '+index);
+                if(index > -1){
+                	checkedNCs.splice(index, 1);
+                }	
+                //checkedNCs.pop(rowId);
+                //deletedNCIds.pop(rowId);
+            }
+            console.log('checkedNCs');
+            console.log(checkedNCs);
+            console.log('deletedNCIds');
+            console.log(deletedNCIds);
+        }
+	
+		function capaActions(tId,rowId){
+			if($(tId).attr('class') == 'fa fa-plus action-link'){
+            	$(tId).attr('class','fa fa-check action-link');
+                $("#capaTbody").find("#"+rowId).attr('class','warning');
+                checkedCAPAs.push(rowId);
+                index = deletedCAPAIds.indexOf(rowId);
+                console.log('index '+index);
+                if(index > -1){
+                	deletedCAPAIds.splice(index, 1);
+                }
+                
+            }else if($(tId).attr('class') == 'fa fa-remove action-link'){
+                $(tId).attr('class','fa fa-plus action-link');
+                flag = true;
+                checkList(flag);
+                //$("#capaTbody").find("#"+rowId).attr('class','danger');
+                deletedCAPAIds.push(rowId);
+                index = checkedCAPAs.indexOf(rowId);
+                console.log('index '+index);
+                if(index > -1){
+                	checkedCAPAs.splice(index, 1);
+                }
+                
+            }else if($(tId).attr('class') == 'fa fa-check action-link'){
+                $(tId).attr('class','fa fa-plus action-link');
+                $("#capaTbody").find("#"+rowId).attr('class','');
+                flag = true;
+                checkList(flag);
+                index = deletedCAPAIds.indexOf(rowId);
+                console.log('index '+index);
+                if(index > -1){
+                	deletedCAPAIds.splice(index, 1);
+                }else{
+                	deletedCAPAIds.push(rowId);
+                }	
+                index = checkedCAPAs.indexOf(rowId);
+                console.log('index '+index);
+                if(index > -1){
+                	checkedCAPAs.splice(index, 1);
+                }	
+            }
+            console.log('checkedCAPAs');
+            console.log(checkedCAPAs);
+            console.log('deletedCAPAIds');
+            console.log(deletedCAPAIds);
+        }
+    </script>
+        
+        
+        </apex:outputPanel>
+ <!--End : CAPA Reference-->
+<!-- Begin : Alert,Digital Signature and Validator Components -->
+<c:wiz_alert alertId="invalidDateAlert"/>
+<c:digital_signature returl="" onSuccess="if({!$CurrentPage.parameters.pg=='capa_reference'}){saveXReferences()}else{navigateAfterDigitalSignature();}" />
+<c:wiz_validator onValid="if({!$CurrentPage.parameters.pg=='capa_resolution'}){onValidCAPAResolution(validateParams);}else if({!OR($CurrentPage.parameters.pg=='capa_init',ISNULL($CurrentPage.parameters.pg))}){onValidCAPAInit();}" ignorehidden="false" />
+<!-- End : Alert,Digital Signature and Validator Components -->
+
+
+
+</apex:page>

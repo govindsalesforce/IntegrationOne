@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Manufacturing Site</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Manufacturing Sites</value>
+    </caseValues>
+    <fields>
+        <label><!-- Active --></label>
+        <name>Active__c</name>
+    </fields>
+    <fields>
+        <label><!-- Code --></label>
+        <name>Code__c</name>
+    </fields>
+    <fields>
+        <label><!-- Organization --></label>
+        <name>Organization_del__c</name>
+        <relationshipLabel><!-- Manufacturing Sites --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Region --></label>
+        <name>Region__c</name>
+        <picklistValues>
+            <masterLabel>ASIA-PAC</masterLabel>
+            <translation><!-- ASIA-PAC --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>EMEA</masterLabel>
+            <translation><!-- EMEA --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>NORTH AMERICA</masterLabel>
+            <translation><!-- NORTH AMERICA --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Site Head --></label>
+        <name>Site_Head__c</name>
+        <relationshipLabel><!-- Manufacturing Sites --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- UDF --></label>
+        <name>UDF__c</name>
+    </fields>
+    <layouts>
+        <layout>Manufacturing Site Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <startsWith>Consonant</startsWith>
+</CustomObjectTranslation>

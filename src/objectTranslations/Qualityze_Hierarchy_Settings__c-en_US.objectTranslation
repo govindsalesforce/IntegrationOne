@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Qualityze_Hierarchy_Settings</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Qualityze_Hierarchy_Settings</value>
+    </caseValues>
+    <fields>
+        <help><!-- Set to current API Version --></help>
+        <label><!-- API_Version --></label>
+        <name>API_Version__c</name>
+    </fields>
+    <fields>
+        <help><!-- Enter OAuth Consumer Key for Connected App. --></help>
+        <label><!-- Client_Id --></label>
+        <name>Client_Id__c</name>
+    </fields>
+    <fields>
+        <help><!-- Enter OAuth Consumer Secret for Connected App. --></help>
+        <label><!-- Client_Secret --></label>
+        <name>Client_Secret__c</name>
+    </fields>
+    <fields>
+        <label><!-- Max Approvers --></label>
+        <name>Max_Approvers__c</name>
+    </fields>
+    <fields>
+        <help><!-- Server Instance (e.g. NA17, AP1, or EU4) --></help>
+        <label><!-- Server --></label>
+        <name>Server__c</name>
+    </fields>
+    <fields>
+        <help><!-- Do not modify on managed package. --></help>
+        <label><!-- namespace_setting --></label>
+        <name>namespace_setting__c</name>
+    </fields>
+    <startsWith>Consonant</startsWith>
+</CustomObjectTranslation>

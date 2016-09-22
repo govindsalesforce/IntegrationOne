@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>NC Product Lot Numbers</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>NC Product Lot Numbers</value>
+    </caseValues>
+    <fields>
+        <label><!-- Customer/Supplier --></label>
+        <name>Customer_Supplier__c</name>
+    </fields>
+    <fields>
+        <label><!-- Defect Codes --></label>
+        <name>Defect_Codes__c</name>
+    </fields>
+    <fields>
+        <label><!-- Defect Count --></label>
+        <name>Defect_Count__c</name>
+    </fields>
+    <fields>
+        <label><!-- Lot / Batch Number --></label>
+        <name>Lot_Bacth_Number__c</name>
+    </fields>
+    <fields>
+        <label><!-- Lot Quantity Affected --></label>
+        <name>Lot_Quantity_Affected__c</name>
+    </fields>
+    <fields>
+        <label><!-- NC Created Date --></label>
+        <name>NC_Created_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- NC Number --></label>
+        <name>NC_Number__c</name>
+    </fields>
+    <fields>
+        <label><!-- NC Product --></label>
+        <name>NC_Product__c</name>
+        <relationshipLabel><!-- NC Product Lot Numbers --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Non-Conformance --></label>
+        <name>Non_Conformance__c</name>
+    </fields>
+    <fields>
+        <label><!-- UOM --></label>
+        <name>UOM__c</name>
+        <picklistValues>
+            <masterLabel>EA</masterLabel>
+            <translation><!-- EA --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>GAL</masterLabel>
+            <translation><!-- GAL --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>KG</masterLabel>
+            <translation><!-- KG --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>L</masterLabel>
+            <translation><!-- L --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>LB</masterLabel>
+            <translation><!-- LB --></translation>
+        </picklistValues>
+    </fields>
+    <startsWith>Consonant</startsWith>
+    <validationRules>
+        <errorMessage><!-- Lot Quantity Affected is required. --></errorMessage>
+        <name>Lot_Quantity_affected_is_required</name>
+    </validationRules>
+</CustomObjectTranslation>

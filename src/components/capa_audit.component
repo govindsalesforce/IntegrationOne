@@ -1,0 +1,77 @@
+<apex:component controller="Component_Handler">    
+    <apex:attribute type="Id" name="cId" description="CAPA id for history " required="true" assignTo="{!capaid}"/>  
+    <apex:attribute type="CAPA__c" name="capa" description="CAPA for history "  />  
+    <button id="auditTrialBtn" class="btn btn-primary pull-right"  href="#" data-toggle="modal" data-target="#audit_trail" data-placement="top" title="Audit Trial" >
+         <span class="fa fa-history"></span>                                        
+        </button>
+    <div aria-hidden="false" style="" class="modal fade " id="audit_trail" tabindex="-1" role="dialog" aria-labelledby="audit_trail">
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+            <h4 class="modal-title" id="myModalLabel">{!capa.Name} ({!capaHistories.size} records)</h4>
+          </div>
+           <div class="modal-body">
+            <div class="row">
+              <div class="col-md-12 text-right form-group">
+                <button class="btn btn-default" onclick="window.open('/apex/audit_trail?auditid={!cId}&type=CAPA')"><i class="fa fa-print" ></i></button>
+                <button class="btn btn-default" onclick="window.open('/apex/audit_trail?auditid={!cId}&type=CAPA')"><i class="fa fa-file-pdf-o" ></i></button>
+          </div>
+            </div>
+            <div style="position: relative; overflow: hidden; width: auto; height: 450px;" class="slimScrollDiv">
+            <div style="overflow: auto; width: auto; height: 450px;" id="audit-trail-scroll">
+              <table class="table table-bordered">
+                <tbody>
+                    <tr>
+                        <th>Modified Date</th>
+                        <th>Parent</th>
+                        <th>Changed Record/Field</th>
+                        <th>Old Value</th>
+                        <th>New Value</th>
+                        <th>Action</th>
+                        <th>Modified By</th>                                                                            
+                    </tr>
+                    <apex:repeat value="{!capaHistories}" var="capahis">
+                        <tr>
+                            <td>
+                                <apex:outputText value="{0,date,dd MMM yyyy hh:mm:ss}">
+                                    <apex:param value="{!capahis.CreatedDate}" /> 
+                                </apex:outputText></td>
+                            <td>{!capahis.Parent__c}</td>
+                            <td><apex:outputPanel rendered="{!AND(capahis.FieldName__c=='Attachment',capahis.isDeleted__c)}" ></apex:outputPanel>{!capahis.FieldName__c}</td>
+                            <td>
+                                    <apex:outputPanel layout="block" style="overflow: auto;height: 40px;"  rendered="{!BEGINS(capahis.FieldName__c,'Attachment')}">
+                                        <a target="_blank" href="/servlet/servlet.FileDownload?file={!capahis.Description__c}">
+                                            <apex:outputField value="{!capahis.OldValue__c}"/>
+                                        </a>                                    
+                                    </apex:outputPanel>
+                                    <apex:outputPanel layout="block" style="overflow: auto;height: 40px;"  rendered="{!NOT(BEGINS(capahis.FieldName__c,'Attachment'))}">  
+                                        <apex:outputField value="{!capahis.OldValue__c}"/>
+                                    </apex:outputPanel>
+                            </td>
+                            <td>
+                                <apex:outputPanel layout="block" style="overflow: auto; height: 40px;" rendered="{!NOT(BEGINS(capahis.FieldName__c,'Attachment'))}">                                    
+                                    <apex:outputField value="{!capahis.NewValue__c}"/>
+                                </apex:outputPanel>
+                                <apex:outputPanel layout="block" style="overflow: auto; height: 40px;" rendered="{!BEGINS(capahis.FieldName__c,'Attachment')}"> 
+                                    <a target="_blank" href="/servlet/servlet.FileDownload?file={!capahis.Description__c}">
+                                        <apex:outputField value="{!capahis.NewValue__c}"/>
+                                    </a>
+                                </apex:outputPanel>                                
+                            </td>
+                            <td>{!if(capahis.isCreated__c,'Created',if(capahis.isDeleted__c,'Deleted','Updated'))}</td>
+                            <td>{!capahis.CreatedBy.Name}</td>  
+                        </tr>
+                    </apex:repeat>
+                </tbody>
+              </table>
+            </div><div style="background: rgb(204, 204, 204) none repeat scroll 0% 0%; width: 7px; position: absolute; top: 0px; opacity: 0.4; display: none; border-radius: 7px; z-index: 99; right: 1px; height: 314.93px;" class="slimScrollBar"></div><div style="width: 7px; height: 100%; position: absolute; top: 0px; display: none; border-radius: 7px; background: rgb(51, 51, 51) none repeat scroll 0% 0%; opacity: 0.2; z-index: 90; right: 1px;" class="slimScrollRail"></div></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+</apex:component>

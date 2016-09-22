@@ -1,0 +1,21 @@
+<apex:component layout="none">
+<apex:attribute name="FieldLabel" type="string" required="true" Description="Label"/>
+<apex:attribute name="Required" type="boolean" default="false" description="Field is Required"/>
+<apex:attribute name="Wide" type="boolean" default="false" description="Use wiz-fields-wide instead of wiz-fields class"/>
+<apex:attribute name="divclass" type="string" default="wiz-fields" description="override wiz-fields class"/>
+<apex:attribute name="JSId" type="String" required="true" description="JavaScript id"/>
+<apex:attribute name="isPopup" type="boolean"  description="spacing issue id" default="false"/>
+
+<div class="{!divclass}{!IF(wide, '-wide', '')} {!IF(wide, 'col-md-12', if((isPopup),'','col-md-6 col-sm-6 col-xs-12'))}   form-group" id="{!JSID}">
+        <apex:outputPanel rendered="{!LEN(FieldLabel)!=0}" layout="none">
+            <label for="{!JSId}">
+                <span class="{!IF(required, 'mandatory', '')}">
+                    <apex:outputtext value="*" rendered="{!Required}"/>
+                </span>{!FieldLabel}:
+            </label>
+            <br/>
+        </apex:outputPanel>
+        
+        <apex:componentbody />
+</div>
+</apex:component>

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>QC_settings</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>QC_settings</value>
+    </caseValues>
+    <fields>
+        <label><!-- Action Plan RecordTypeId --></label>
+        <name>Action_Plan_RecordTypeId__c</name>
+    </fields>
+    <fields>
+        <label><!-- AdhocTask Actions RecordTypeId --></label>
+        <name>AdhocTask_Actions_RecordTypeId__c</name>
+    </fields>
+    <fields>
+        <label><!-- AuditTrailReportId --></label>
+        <name>AuditTrailReportId__c</name>
+    </fields>
+    <fields>
+        <label><!-- CAPA Report Id --></label>
+        <name>CAPA_Report_Id__c</name>
+    </fields>
+    <fields>
+        <label><!-- CR Report Id --></label>
+        <name>CR_Report_Id__c</name>
+    </fields>
+    <fields>
+        <label><!-- Connected App consumer key --></label>
+        <name>Connected_App_consumer_key__c</name>
+    </fields>
+    <fields>
+        <label><!-- Connected App consumer secret --></label>
+        <name>Connected_App_consumer_secret__c</name>
+    </fields>
+    <fields>
+        <label><!-- Containment Action RecordTypeId --></label>
+        <name>Containment_Action_RecordTypeId__c</name>
+    </fields>
+    <fields>
+        <help><!-- To display the Document Profile reports grouped by Status --></help>
+        <label><!-- DOC Report Id --></label>
+        <name>DOC_Report_Id__c</name>
+    </fields>
+    <fields>
+        <label><!-- Disposition Section RecordTypeId --></label>
+        <name>Disposition_Section_RecordTypeId__c</name>
+    </fields>
+    <fields>
+        <label><!-- DocumentsReportList --></label>
+        <name>DocumentsReportList__c</name>
+    </fields>
+    <fields>
+        <label><!-- Enable Audit Trail --></label>
+        <name>Enable_Audit_Trail__c</name>
+    </fields>
+    <fields>
+        <label><!-- Enable CAPA --></label>
+        <name>Enable_CAPA__c</name>
+    </fields>
+    <fields>
+        <label><!-- Enable DOC --></label>
+        <name>Enable_DOC__c</name>
+    </fields>
+    <fields>
+        <label><!-- Enable Document Print --></label>
+        <name>Enable_Document_Print__c</name>
+    </fields>
+    <fields>
+        <label><!-- Enable NC --></label>
+        <name>Enable_NC__c</name>
+    </fields>
+    <fields>
+        <help><!-- Salesforce instance name (e.g. na41, ap2, eu5, etc.) --></help>
+        <label><!-- Instance Name --></label>
+        <name>Instance_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Is Digital Signature Needed --></label>
+        <name>Is_Digital_Signature_Needed__c</name>
+    </fields>
+    <fields>
+        <label><!-- Is Due Date Validation Needed --></label>
+        <name>Is_Due_Date_Validation_Needed__c</name>
+    </fields>
+    <fields>
+        <label><!-- Is External System Capa Reference Needed --></label>
+        <name>Is_External_System_Capa_Reference_Needed__c</name>
+    </fields>
+    <fields>
+        <label><!-- Max Approvers --></label>
+        <name>Max_Approvers__c</name>
+    </fields>
+    <fields>
+        <label><!-- NCReportId --></label>
+        <name>NCReportId__c</name>
+    </fields>
+    <fields>
+        <label><!-- Need Additional Resolution Codes --></label>
+        <name>Need_Additional_Resolution_Codes__c</name>
+    </fields>
+    <fields>
+        <label><!-- Number Of Days For Alerts --></label>
+        <name>Number_Of_Days_For_Alerts__c</name>
+    </fields>
+    <fields>
+        <label><!-- Root Cause RecordTypeId --></label>
+        <name>Root_Cause_RecordTypeId__c</name>
+    </fields>
+    <fields>
+        <label><!-- Verification Plan RecordTypeId --></label>
+        <name>Verification_Plan_RecordTypeId__c</name>
+    </fields>
+    <startsWith>Consonant</startsWith>
+</CustomObjectTranslation>

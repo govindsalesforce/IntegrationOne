@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Cause</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Causes</value>
+    </caseValues>
+    <fields>
+        <label><!-- Active --></label>
+        <name>Active__c</name>
+    </fields>
+    <fields>
+        <label><!-- Cause Code --></label>
+        <name>Cause_Code__c</name>
+    </fields>
+    <fields>
+        <label><!-- Cause Description --></label>
+        <name>Cause_Description__c</name>
+    </fields>
+    <fields>
+        <label><!-- Defect Count --></label>
+        <name>Defect_Count__c</name>
+    </fields>
+    <fields>
+        <label><!-- Type --></label>
+        <name>Type__c</name>
+        <picklistValues>
+            <masterLabel>CAPA</masterLabel>
+            <translation><!-- CAPA --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Process</masterLabel>
+            <translation><!-- Process --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Product</masterLabel>
+            <translation><!-- Product --></translation>
+        </picklistValues>
+    </fields>
+    <layouts>
+        <layout>Cause Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <startsWith>Consonant</startsWith>
+    <validationRules>
+        <errorMessage><!-- Type is required --></errorMessage>
+        <name>Type_Required_Validation</name>
+    </validationRules>
+</CustomObjectTranslation>

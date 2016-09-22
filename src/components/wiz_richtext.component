@@ -1,0 +1,71 @@
+<apex:component >
+    <apex:attribute name="FieldId" description="Field Id" type="string" required="true"/>
+    <apex:attribute name="FieldName" description="Field Name" type="string" required="false"  />
+    <apex:attribute name="initvalue" description="Initial Value" type="string" required="true"/>
+    <apex:attribute name="Required" description="Make Required" type="boolean" />
+    <apex:attribute name="ReadOnly" description="Read only also means no borders, just rended text" type="boolean" default="false" />
+    <apex:attribute name="maxlength" type="Integer"  description="maxlength for the input" default="32000"/>
+    <script>
+    $(document).ready(function(){
+        tinyMCE.init({
+            force_br_newlines : false,
+            force_p_newlines : false,
+            forced_root_block : '',
+            mode: "exact",
+            elements: "{!FieldId}",
+            {! IF(ReadOnly,'visual : false, readonly: 1, object_resizing : false, theme: "advanced",','theme: "simple",') }
+                     browser_spellcheck : true,
+                     onchange_callback: function(editor) {
+            tinyMCE.triggerSave();
+        },
+            // Options
+            setup : function(editor) {
+                editor.onKeyUp.add(function(editor, e) {
+                    // console.log(getStats('{!FieldId}').chars);
+                     $('#{!IF(ISBLANK(fieldId),fieldname,fieldId)}_error').empty();
+                    if (getStats('{!FieldId}').chars > {!maxlength}) {
+                        $('#{!IF(ISBLANK(fieldId),fieldname,fieldId)}_error').html('<p style="color: red;">Reached {!maxlength} character limit.</p>');
+                        //console.log($('{!FieldId}_error').html("<P>error</p>"));
+                        //console.log('inside condition');
+                        //console.log(editor);
+                        var bodycontent =getStats('{!FieldId}').text;
+                       // console.log(bodycontent);
+                        bodycontent = trim(bodycontent).substring(0,parseInt("{!maxlength}"));
+                       // console.log('after strip--->'+bodycontent);
+                        tinyMCE.get('{!FieldId}').setContent(bodycontent);
+                       // alert("You need to enter {!maxlength} characters or more.");
+                        tinyMCE.activeEditor.selection.select(tinyMCE.activeEditor.getBody(), true);
+                        tinyMCE.activeEditor.selection.collapse(false);
+                       
+                    }
+                    
+                 
+                });//ed.onKeyUp.add
+               },//setup
+                content_css: "{!URLFOR($Resource.bt_static,  '/static/stylesheets/tiny_mce.css')}"
+                
+    });
+    if ({!Required}) {
+        $('#{!FieldId}').attr('required', true);
+        $('#{!FieldId}').attr('aria-required', true);
+    } else {
+        $('#{!FieldId}').removeAttr('required');
+        $('#{!FieldId}').removeAttr('aria-required');
+    }
+    
+    
+    });
+   
+    function getStats(id) {
+        var body = tinymce.get(id).getBody(), text = tinymce.trim(body.innerText || body.textContent);
+        
+        return {
+            text:text,
+            chars: text.length,
+            words: text.split(/[\w\u2019\'-]+/).length
+        };
+    }
+    </script>
+    <textarea style="width:100%;" id="{!FieldId}" class="form-control" name="{!if(FieldName=='',FieldId,FieldName)}" maxlength="{!maxlength}" required="{!Required}">{!InitValue}</textarea>
+    <div id="{!FieldId}_error" class="help-block with-errors"></div>
+</apex:component>

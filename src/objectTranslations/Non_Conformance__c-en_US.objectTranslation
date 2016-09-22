@@ -1,0 +1,581 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Non-Conformance</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Non-Conformances</value>
+    </caseValues>
+    <fields>
+        <label><!-- Age --></label>
+        <name>Age__c</name>
+    </fields>
+    <fields>
+        <label><!-- Age for Reporting --></label>
+        <name>Age_for_Reporting__c</name>
+    </fields>
+    <fields>
+        <label><!-- Approval Required --></label>
+        <name>Approval_Required__c</name>
+    </fields>
+    <fields>
+        <label><!-- Approver --></label>
+        <name>Approver__c</name>
+        <relationshipLabel><!-- Non-Conformances (Approver) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Audit Number --></label>
+        <name>Audit__c</name>
+    </fields>
+    <fields>
+        <label><!-- Business Unit --></label>
+        <name>BusinessUnit__c</name>
+        <picklistValues>
+            <masterLabel>Unit 1</masterLabel>
+            <translation><!-- Unit 1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Unit 4</masterLabel>
+            <translation><!-- Unit 4 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>unit2</masterLabel>
+            <translation><!-- unit2 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>unit3</masterLabel>
+            <translation><!-- unit3 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- CAPA Number --></label>
+        <name>CAPA_Number__c</name>
+    </fields>
+    <fields>
+        <label><!-- CAPA Required --></label>
+        <name>CAPA_Required__c</name>
+        <picklistValues>
+            <masterLabel>No</masterLabel>
+            <translation><!-- No --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Yes</masterLabel>
+            <translation><!-- Yes --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Can Reopen --></label>
+        <name>Can_Reopen__c</name>
+    </fields>
+    <fields>
+        <label><!-- Closed --></label>
+        <name>Closed__c</name>
+    </fields>
+    <fields>
+        <label><!-- Containment --></label>
+        <name>Containment__c</name>
+    </fields>
+    <fields>
+        <label><!-- Customer --></label>
+        <name>Customer_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Customer --></label>
+        <name>Customer__c</name>
+        <relationshipLabel><!-- Customer Non-Conformances --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Defect --></label>
+        <name>Defect_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Defect --></label>
+        <name>Defect__c</name>
+        <relationshipLabel><!-- Non-Conformances --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Department --></label>
+        <name>Department2__c</name>
+        <picklistValues>
+            <masterLabel>Department 1</masterLabel>
+            <translation><!-- Department 1 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Department --></label>
+        <name>Department_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Department --></label>
+        <name>Department__c</name>
+        <relationshipLabel><!-- Non-Conformances --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Disposition --></label>
+        <name>Disposition__c</name>
+    </fields>
+    <fields>
+        <label><!-- Followers --></label>
+        <name>Followers__c</name>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Defect Statement --></label>
+        <name>Full_Description__c</name>
+    </fields>
+    <fields>
+        <label><!-- Initiating Site --></label>
+        <name>Initiating_Site__c</name>
+        <relationshipLabel><!-- Non-Conformances (Initiating Site) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Initiating Site --></label>
+        <name>Initiating_Site_name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Justification for CAPA/no CAPA --></label>
+        <name>Justification_for_CAPA_no_CAPA__c</name>
+    </fields>
+    <fields>
+        <label><!-- Logged In user --></label>
+        <name>Logged_In_user__c</name>
+    </fields>
+    <fields>
+        <label><!-- MPN Number --></label>
+        <name>MPN_Number__c</name>
+    </fields>
+    <fields>
+        <label><!-- Manufacturer / Supplier --></label>
+        <name>Manufacturer_Supplier_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Manufacturer / Supplier --></label>
+        <name>Manufacturer_Supplier__c</name>
+        <relationshipLabel><!-- Manufactuer / Supplier Non-Conformances --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- NC Owner --></label>
+        <name>NC_Owner_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- NC Owner --></label>
+        <name>NC_Owner__c</name>
+        <relationshipLabel><!-- Non-Conformances (NC Owner) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- NC Resolution Code --></label>
+        <name>NC_Resolution_Code__c</name>
+        <picklistValues>
+            <masterLabel>Addressed through CAPA</masterLabel>
+            <translation><!-- Addressed through CAPA --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Discarded</masterLabel>
+            <translation><!-- Discarded --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>NC Workflow</masterLabel>
+            <translation><!-- NC Workflow --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>No Action Required</masterLabel>
+            <translation><!-- No Action Required --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- NC Source --></label>
+        <name>NC_Source__c</name>
+        <picklistValues>
+            <masterLabel>Audit</masterLabel>
+            <translation><!-- Audit --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Customer</masterLabel>
+            <translation><!-- Customer --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Internal</masterLabel>
+            <translation><!-- Internal --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Manufacturer</masterLabel>
+            <translation><!-- Manufacturer --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Other</masterLabel>
+            <translation><!-- Other --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Supplier</masterLabel>
+            <translation><!-- Supplier --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- NC Status --></label>
+        <name>NC_Status__c</name>
+        <picklistValues>
+            <masterLabel>Closed</masterLabel>
+            <translation><!-- Closed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>NC Workflow</masterLabel>
+            <translation><!-- NC Workflow --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Open</masterLabel>
+            <translation><!-- Open --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Reopened</masterLabel>
+            <translation><!-- Reopened --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Void</masterLabel>
+            <translation><!-- Void --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <help><!-- Select either Product or Process to categorize the event. Based on this field, either &apos;Select Product&apos; or &apos;Select Process&apos; field is displayed. --></help>
+        <label><!-- NC Type --></label>
+        <name>NC_Type__c</name>
+        <picklistValues>
+            <masterLabel>Process</masterLabel>
+            <translation><!-- Process --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Product</masterLabel>
+            <translation><!-- Product --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- NC Workflow Status --></label>
+        <name>NC_Workflow_Status__c</name>
+        <picklistValues>
+            <masterLabel>Closed</masterLabel>
+            <translation><!-- Closed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>In Review</masterLabel>
+            <translation><!-- In Review --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Open</masterLabel>
+            <translation><!-- Open --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- New Capa Number --></label>
+        <name>New_Capa_Number__c</name>
+    </fields>
+    <fields>
+        <label><!-- Occurrence Date --></label>
+        <name>Occurance_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Other NC Against --></label>
+        <name>Other_NC_Against__c</name>
+    </fields>
+    <fields>
+        <label><!-- Other Source --></label>
+        <name>Other_Source__c</name>
+    </fields>
+    <fields>
+        <label><!-- Owner Name --></label>
+        <name>Owner_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- PO Number --></label>
+        <name>PO_Number__c</name>
+    </fields>
+    <fields>
+        <label><!-- Priority --></label>
+        <name>Priority2__c</name>
+        <picklistValues>
+            <masterLabel>High</masterLabel>
+            <translation><!-- High --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Low</masterLabel>
+            <translation><!-- Low --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Medium</masterLabel>
+            <translation><!-- Medium --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Urgent</masterLabel>
+            <translation><!-- Urgent --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Priority --></label>
+        <name>Priority__c</name>
+        <picklistValues>
+            <masterLabel>High</masterLabel>
+            <translation><!-- High --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Low</masterLabel>
+            <translation><!-- Low --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Medium</masterLabel>
+            <translation><!-- Medium --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Urgent</masterLabel>
+            <translation><!-- Urgent --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Process --></label>
+        <name>Process_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Process --></label>
+        <name>Process__c</name>
+        <relationshipLabel><!-- Non-Conformances --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Product --></label>
+        <name>Product_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Product --></label>
+        <name>Product__c</name>
+        <relationshipLabel><!-- Non-Conformances --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Reopen By --></label>
+        <name>Reopen_By__c</name>
+        <relationshipLabel><!-- Non-Conformances (Reopen By) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Reopen Date --></label>
+        <name>Reopen_Date__c</name>
+    </fields>
+    <fields>
+        <help><!-- Reported date Should not be future date and should not be less than Occurrence Date. --></help>
+        <label><!-- Reported Date --></label>
+        <name>Reported_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Reporter --></label>
+        <name>Reporter_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Reporter --></label>
+        <name>Reporter__c</name>
+        <relationshipLabel><!-- Non-Conformances (Reporter) --></relationshipLabel>
+    </fields>
+    <fields>
+        <help><!-- Enter comments regarding the CAPA here. --></help>
+        <label><!-- Resolution CAPA Comment --></label>
+        <name>Resolution_CAPA_Comment__c</name>
+    </fields>
+    <fields>
+        <help><!-- Couldn&apos;t help but notice that you&apos;re not going to do anything about this issue.  May I ask why? --></help>
+        <label><!-- Resolution Closed Comment --></label>
+        <name>Resolution_Closed_Comment__c</name>
+    </fields>
+    <fields>
+        <label><!-- Risk Assessment Required --></label>
+        <name>Risk_Assessment_Required__c</name>
+        <picklistValues>
+            <masterLabel>No</masterLabel>
+            <translation><!-- No --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Yes</masterLabel>
+            <translation><!-- Yes --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Risk Description --></label>
+        <name>Risk_Description__c</name>
+    </fields>
+    <fields>
+        <label><!-- Risk Occurrence --></label>
+        <name>Risk_Occurrence_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Risk Occurrence --></label>
+        <name>Risk_Occurrence__c</name>
+        <relationshipLabel><!-- Non-Conformances --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Risk Priority --></label>
+        <name>Risk_Priority__c</name>
+        <relationshipLabel><!-- Non-Conformances --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Risk Severity --></label>
+        <name>Risk_Severity__c</name>
+        <relationshipLabel><!-- Non-Conformances --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Status Is Open --></label>
+        <name>Status_Is_Open__c</name>
+    </fields>
+    <fields>
+        <label><!-- Supplier / Manufacturer Part # --></label>
+        <name>Supplier_Manufacturer_Part__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD_Date10 --></label>
+        <name>UD_Date10__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD_Date9 --></label>
+        <name>UD_Date9__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD_Long_Text_Area7 --></label>
+        <name>UD_Long_Text_Area7__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD_Long_Text_Area8 --></label>
+        <name>UD_Long_Text_Area8__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD_Picklist3 --></label>
+        <name>UD_Picklist3__c</name>
+        <picklistValues>
+            <masterLabel>FPV1</masterLabel>
+            <translation><!-- FPV1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>FPV2</masterLabel>
+            <translation><!-- FPV2 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>FPV3</masterLabel>
+            <translation><!-- FPV3 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- UD_Picklist4 --></label>
+        <name>UD_Picklist4__c</name>
+        <picklistValues>
+            <masterLabel>SPV1</masterLabel>
+            <translation><!-- SPV1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>SPV2</masterLabel>
+            <translation><!-- SPV2 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>SPV3</masterLabel>
+            <translation><!-- SPV3 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>SPV4</masterLabel>
+            <translation><!-- SPV4 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- UD_Text1 --></label>
+        <name>UD_Text1__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD_Text2 --></label>
+        <name>UD_Text2__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD_Text_Area5 --></label>
+        <name>UD_Text_Area5__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD_Text_Area6 --></label>
+        <name>UD_Text_Area6__c</name>
+    </fields>
+    <fields>
+        <label><!-- Workflow --></label>
+        <name>Workflow__c</name>
+    </fields>
+    <layouts>
+        <layout>Non-Conformance Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <recordTypes>
+        <label><!-- Non-Conformance --></label>
+        <name>Non_Conformance</name>
+    </recordTypes>
+    <startsWith>Consonant</startsWith>
+    <validationRules>
+        <errorMessage><!-- Defect Statement is required. --></errorMessage>
+        <name>Defect_Statement_is_required</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- Defect is required. --></errorMessage>
+        <name>Defect_is_required</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- NC Source is required. --></errorMessage>
+        <name>NC_Source_is_required</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- NC Type is required. --></errorMessage>
+        <name>NC_Type_is_required</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- Occurance Date Required --></errorMessage>
+        <name>Occurance_Date_Required</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- Occurrence Date cannot be a future date. --></errorMessage>
+        <name>Occurance_Date_not_future</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- Occurrence Date cannot be greater than the Reported Date --></errorMessage>
+        <name>Occurence_Date_greater_than_Reported</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- Other Source field is required because NC Source value is Other. --></errorMessage>
+        <name>Other_Source_is_required</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- Process is required as NC type is Process. --></errorMessage>
+        <name>Process_is_required</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- Product is required as NC type is product. --></errorMessage>
+        <name>Product_is_required</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- Reporter Required --></errorMessage>
+        <name>Reported_By_Required</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- Reported Date cannot be a future date --></errorMessage>
+        <name>Reported_Date_Not_Future</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- Reported Date Required --></errorMessage>
+        <name>Reported_Date_Required</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- Reported Date cannot be less than Occurrence Date --></errorMessage>
+        <name>Reported_Date_cannot_be_before_Occurance</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- Risk Description is required. --></errorMessage>
+        <name>Risk_Description_required</name>
+    </validationRules>
+    <webLinks>
+        <label><!-- Edit_Standard --></label>
+        <name>Edit_Standard</name>
+    </webLinks>
+    <webLinks>
+        <label><!-- Edit_version_1 --></label>
+        <name>Edit_version_1</name>
+    </webLinks>
+</CustomObjectTranslation>

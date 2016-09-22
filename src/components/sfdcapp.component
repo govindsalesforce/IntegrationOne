@@ -1,0 +1,1447 @@
+<!-- v1.0.1 Qualityze Inc(SB)      12-jul-2016  
+                                     function showHideBasedOnDOCResolutionCode
+     
+     v1.0.2 Qualityze Inc(TS)      08-AUG-2016  Remove the error depends pg parameter       
+    
+     v1.0.3 Qualityze Inc(TS)      22-SEP-2016  Header Search for Document Module 
+-->
+
+<apex:component controller="QC_custom_settings">
+    <script>
+    
+    // Global vars
+    var areWeThereYet = {setPicklistsDONE:false, setTextAreaDONE:false, setRadioButtonsDONE:false, setDatePickersDONE:false};
+    var arraySearchBarResults = null;
+    var function_updateRiskPriority_calledThisManyTimes = 0;
+    var function_showHideCapaDescription_calledThisManyTimes = 0;
+    var _globalIsDirty = false;
+    var isTasksExistWithSameSequence=false;
+    var fromResCodeDropDown=false;
+    var capaRequiredButtonAlreadyClicked=false;
+    var searchObject='{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Non_Conformance__c';
+    $( document ).ready(function() {
+        $('[data-toggle="tooltip"]').tooltip();
+        //v1.0.2 start
+        var pg=$("#page").val();
+        if(pg){
+            if($("#page").val().includes("capa")){
+                searchObject='{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA__c';
+            }
+        }
+        //v1.0.2 end
+        //v1.0.3 start
+        var pageName = '{!JSENCODE($CurrentPage.Name)}';
+        var listName = '{!JSENCODE($CurrentPage.parameters.list)}';
+        
+        if(pageName){
+            if(pageName.toLowerCase()=='changemanagement' || pageName.toLowerCase()=='changemanagementtask' || listName =='CM'){
+                searchObject='{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Change_Management__c';
+            }
+            if(pageName.toLowerCase()=='documentprofile' || pageName.toLowerCase()=='documentprofiletask' || listName =='DP'){
+                searchObject='{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Profile__c';
+            }
+            if(pageName.toLowerCase()=='documenttype' || listName =='DT'){
+                searchObject='{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Type__c';
+            }
+        
+        }
+        //v1.0.3 End
+
+    })
+
+    function updateRiskPriority() {
+        function_updateRiskPriority_calledThisManyTimes++;
+        if (typeof riskPriorityGridAll === 'undefined') {
+            return;
+        }
+        if (!riskPriorityGridAll) {
+            return;
+        }
+        var risk_severity_id = $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Risk_Severity__c').val();
+        var risk_occurrence_id = $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Risk_Occurrence__c').val();
+        if(!riskPriorityGridAll[risk_severity_id]) {
+            return;
+        }
+        var currentRiskPriority = riskPriorityGridAll[risk_severity_id][risk_occurrence_id];
+        /* COMMENTED ON 01-MAR-2016
+         if (!currentRiskPriority) {
+            return;
+        }*/
+        
+        $('#riskpriority span').last().text(currentRiskPriority?currentRiskPriority.Name:'');
+        
+         if($('[data-fieldname="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Required__c"]').attr("data-initvalue")== 'No'){
+            return;
+        }
+        
+
+        var updateCAPARequiredRadio = true;
+        if (function_updateRiskPriority_calledThisManyTimes == 1 //this is the first run
+            && ($('[data-fieldname="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Required__c"]').attr("data-initvalue") != '')//and there is an init value
+        ) { // then don't update capa required
+            updateCAPARequiredRadio = false;
+        }
+        
+        if (updateCAPARequiredRadio) {
+
+            if(currentRiskPriority){
+                switch(currentRiskPriority.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Threshold_Action__c) {
+                        case "Default to No CAPA Required":
+                            console.log('sfdcapp.vfc::updateRiskPriority(): entered \'case "Default to No CAPA Required":\'');
+                            $('[Name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Required__c"]').each(function(idx, elm) {
+                                //console.log('sfdcapp.vfc::updateRiskPriority(): entered $(\'[Name="QPMS__CAPA_Required__c"]\').each(function(idx, elm) {})');
+                                //console.log('   $(elm).val() = "' + $(elm).val() + '"');
+                                $(elm).parent().removeClass('disabled');
+                                if ($(elm).val() == "No") {
+                                    $(elm).click();
+                                }
+                             });
+                            break;
+                        case "Default to Yes CAPA Required":
+                           console.log('sfdcapp.vfc::updateRiskPriority(): entered \'case "Default to Yes CAPA Required":\'');
+                            $('[Name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Required__c"]').each(function(idx, elm) {
+                                $(elm).parent().removeClass('disabled');
+                                if ($(elm).val() == "Yes") {
+                                    $(elm).click();
+                                }
+                             });
+                            break;
+                        case "Force Yes CAPA Required":
+                            console.log('sfdcapp.vfc::updateRiskPriority(): entered \'case "Force Yes CAPA Required":\'');
+                            $('[Name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Required__c"]').each(function(idx, elm) {
+                                console.log('sfdcapp.vfc::updateRiskPriority(): entered $(\'[Name="QPMS__CAPA_Required__c"]\').each(function(idx, elm) {})');
+                                if ($(elm).val() == "Yes") {
+                                    $(elm).click();
+                                } else {
+                                    $(elm).parent().addClass('disabled');
+                                }
+                             });
+                            break;
+                }
+          }
+          else{
+            $('[Name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Required__c"]').each(function(idx, elm) {
+                                //console.log('sfdcapp.vfc::updateRiskPriority(): entered $(\'[Name="QPMS__CAPA_Required__c"]\').each(function(idx, elm) {})');
+                                //console.log('   $(elm).val() = "' + $(elm).val() + '"');
+                                $(elm).parent().removeClass('disabled');
+                                if ($(elm).val() == "No") {
+                                    $(elm).click();
+                                }
+           });
+          }
+        }
+    }
+
+
+    function yesWeAreThereNow() {
+        for (var property in areWeThereYet) {
+            if (areWeThereYet.hasOwnProperty(property)) {
+                if (false == areWeThereYet[property]) {
+                    return; // someone's not done yet
+                }
+            }
+        }
+        // Now we know that creating page elements has finished
+        updateRiskPriority();
+        $(":input").change(function(){
+          _globalIsDirty = true;
+        });
+    }
+    
+       // Function for showing and hiding AddActionPlanTask fields in Investigation
+    function showHideActionplanTaskFields(isSelected, fieldValue){
+        
+        if (fieldValue.toLowerCase() == "yes" && isSelected){
+            $('#completedDate').show();
+            $('#completioncomments').show();
+            $('#completed_by').show();
+        }
+        if (fieldValue.toLowerCase() == "no" && isSelected){
+            $('#completedDate').hide();
+            $('#completioncomments').hide();
+            $('#completed_by').hide();
+        }
+    
+    }
+    
+    // Function for showing and hiding product or process field 
+    function showHideCapaDescription(isSelected, fieldValue) {
+        function_showHideCapaDescription_calledThisManyTimes++;
+        console.log("showHideCapaDescription("+isSelected+", "+fieldValue+") was called");
+        
+        if (fieldValue.toLowerCase() == "yes" && isSelected){
+            $('label[for="capa_justification"] span').attr('hidden','true');
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Justification_for_CAPA_no_CAPA__c').removeAttr('required');
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Justification_for_CAPA_no_CAPA__c').removeAttr('aria-required');
+            if(!fromResCodeDropDown){
+                capaRequiredButtonAlreadyClicked=true;
+                if (function_showHideCapaDescription_calledThisManyTimes > 2) {
+                    $("[name='{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}NC_Resolution_Code__c']").val('Addressed through CAPA');
+                }
+                $("[name='{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}NC_Resolution_Code__c']").change();
+           }
+            
+        }
+        
+        if (fieldValue.toLowerCase() == "no" && isSelected) {
+            $('label[for="capa_justification"] span').removeAttr('hidden');
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Justification_for_CAPA_no_CAPA__c').attr('required', true);
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Justification_for_CAPA_no_CAPA__c').attr('aria-required', true);
+            if(!fromResCodeDropDown){
+                capaRequiredButtonAlreadyClicked=true;
+                if (function_showHideCapaDescription_calledThisManyTimes > 2) {
+                    $("[name='{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}NC_Resolution_Code__c']").val('Select Resolution');
+                }
+                $("[name='{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}NC_Resolution_Code__c']").change();
+            }
+        }
+        fromResCodeDropDown=false;
+    }
+    
+    function setPicklists(){
+        $('.selectlist').each(function(i, r) {
+            //console.log("setPicklists(): r = ", r);
+            var $r = $(r);
+            var val= $r.data('value');
+            var objectname = $r.data('objectname');
+            var fieldname = $r.data('api');
+            var unSelectedDisplayText = $(r).data('unselecteddisplaytext');
+            var url = '/apex/vfsearch';
+            //console.log("setPicklists(): url = ", url);
+            var dataToSend = {
+                objectname: objectname,
+                fieldname: fieldname,
+                type: 'picklist'
+            };
+            //console.log("setPicklists(): dataToSend = ", dataToSend);
+            var request = $.ajax({
+                url: url,
+                method: "GET",
+                data: dataToSend,
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('Authorization', "OAuth " + getSessionId());
+                    xhr.setRequestHeader('Accept', "application/json");
+                }
+            });
+            
+            request.fail(function(jqXHR, textStatus, errorThrown ) {
+            //console.log("QPMS_ERROR: Request for picklist data failed.  Error returned is next log:")
+            //console.log(jqXHR);
+            
+            });
+
+            request.done(function(dataString) {
+                //console.log("setPicklists().ajax.done: dataToSend = ", dataToSend);
+                //console.log("setPicklists().ajax.done: dataString = ", dataString);
+                var data = JSON.parse(dataString);
+                //console.log("setPicklists().ajax.done: data = ", data);
+                var h='';
+
+                
+                if(val == "" && unSelectedDisplayText != "") {
+                    //h+= '<option disabled selected>' + unSelectedDisplayText + '</option>';
+                     h+= '<option disabled selected>' + escapeHtml(escapeHtml(unSelectedDisplayText)) + '</option>';
+                    
+                }
+                
+                var addTaskSeq=$(r).attr('isAddTaskSequence'),leastSeq=$(r).attr('leastSeq');
+                //console.log('setPickList addTaskSeq '+addTaskSeq+' leastSeq   '+leastSeq);
+                for (var key in data) {
+                    if(addTaskSeq=='true'){
+                       if(parseInt(leastSeq)<parseInt(key)){
+                        h+= '<option ';
+                        if(escapeHtml(key) == escapeHtml(val)){
+                            h += ' selected="selected"';
+                        }
+                        h += '>' + escapeHtml(key) + '</option>';
+                        
+                       }
+                   }else{
+                    h+= '<option ';
+                    if(escapeHtml(key) == escapeHtml(val)){
+                        h += ' selected="selected"';
+                    }
+                    h += '>' + escapeHtml(key) + '</option>';
+                  }
+                }
+                $(r).html(h);
+                var disable = $(r).prop('disabled');
+                $(r).select2({placeholder: 'Select ...', allowClear:true, disabled:disable});
+                $(r).change();
+                areWeThereYet.setPicklistsDONE = true;
+                yesWeAreThereNow();
+            });
+        });
+    }
+    
+    function remove__c(stringWithPossible__c){
+        return stringWithPossible__c.replace(/__c$/,"");
+    }
+    
+    function removeQPMS__(stringWithPossibleQPMS__){
+        return stringWithPossibleQPMS__{!IF(NOT(ISBLANK(Prefix)),'.replace(/^'+Prefix+'__/,"");',';')}
+    }
+    
+    function removeFluf(stringWithTooMuchFluf) {
+        return remove__c(removeQPMS__(stringWithTooMuchFluf));
+    }
+    
+    function getCustomFieldDataAndDoStuff(
+        sourceInfoForCallback, // info the caller would like to be passed into callback function
+        customFieldName,
+        customObjectThatContainsField,
+        stuffToDoWithData //callback function in form of functionName(sourceInfoForCallback, fieldData)
+    ) {        
+        var objectname = customObjectThatContainsField;
+        var fieldname = customFieldName;
+        var url = '/apex/vfsearch';
+        //console.log("getCustomFieldDataAndDoStuff(): url = ", url);
+        var dataToSend = {
+            objectname: objectname,
+            fieldname: fieldname,
+            type: 'picklist'
+         };        
+        //console.log("getCustomFieldDataAndDoStuff(): dataToSend = ", dataToSend);
+        var request = $.ajax({
+            url: url,
+            method: "GET",
+            data: dataToSend,
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader('Authorization', "OAuth " + getSessionId());
+                xhr.setRequestHeader('Accept', "application/json");
+            }
+        });
+        
+        request.done(function(receivedData) {
+            stuffToDoWithData(sourceInfoForCallback, receivedData, dataToSend);
+        });
+        
+        request.fail(function(jqXHR, textStatus) {
+        }); 
+    }
+    
+    function setTextArea() {
+        $('.changeMe-setTextArea').each(function(i, r) {
+            var onchangefunction = $(r).data("onchangefunction");
+        });
+        areWeThereYet.setTextAreaDONE = true;
+        yesWeAreThereNow();
+    }
+    
+    function setRadioButtons() {
+        //alert("Entered setRadioButtons()");
+        $('.RadioSet').each(function(i, r) {
+            // alert("Entered setRadioButtons()");
+            var onchangefunction = $(r).data("onchangefunction"); /// onChange function to be called when any radio is clicked
+            var customFieldName = $(r).data("fieldname");
+            var customObjectName = $(r).data("objectname");
+            var initialValueGiven = $(r).data("initvalue");
+            var shouldbedisabled = $(r).data("disabled");
+            //console.log(customFieldName);
+            //console.log(customObjectName);
+            
+            var sourceInfoToPass = { //source information that you need when the callback is called
+                jQuerySelector : $(r),
+                onchangefunction : onchangefunction,
+                customFieldName : customFieldName,
+                initialValueGiven : initialValueGiven,
+                shouldbedisabled : shouldbedisabled
+            };
+            
+            getCustomFieldDataAndDoStuff(
+                sourceInfoToPass, // sourceInfo
+                customFieldName, // customFieldName
+                customObjectName, // customObjectThatContainsField
+                function(sourceInfo, dataAsString, dataToSend){ // stuffToDoWithData
+                    //console.log("setRadioButtons().getCustomFieldDataAndDoStuff().callback: dataToSend = ", dataToSend);
+                    //console.log("setRadioButtons().getCustomFieldDataAndDoStuff().callback: dataAsString = ", dataAsString);
+                    var data = JSON.parse(dataAsString);
+                    //console.log("setRadioButtons().getCustomFieldDataAndDoStuff().callback: data = ", data);
+                    var h = '';
+                    var r = sourceInfo.jQuerySelector;
+                    //console.log(data);
+                    //console.log(sourceInfo);
+                    for (var key in data) {
+                    //for (var j = 0; j < data.length; j++) {
+                        var shouldBeCheckedOn =                         
+                            (sourceInfo.initialValueGiven == '' && data[key] === 'default') // init value empty then use default
+                        ||
+                            (sourceInfo.initialValueGiven == key)
+                        ;
+                        h += '<label class="btn btn-primary ';
+                        
+                        if (shouldBeCheckedOn) {
+                            h += ' active';
+                        }
+                        
+                        if (sourceInfo.shouldbedisabled) {
+                            h += ' disabled ';
+                        }
+                        
+                        h += '">'; // end tag
+                        
+                        h += '<input type="radio" onChange="' + onchangefunction + '(this.checked, \'' 
+                        + key
+                        + '\')" name="' 
+                        
+                        + sourceInfo.customFieldName + '" value="' +
+                            key + '"  autocomplete="off" ';
+                        
+                        if (shouldBeCheckedOn)  // init value given
+                        {
+                            h += ' checked="true" ';
+                        }
+                        h += '/>' + escapeHtml(key) + '</label>';
+                   }
+                    
+                    r.html(h);
+                    r.find('input').each(function(){
+                        $(this).change();
+                    });
+                    areWeThereYet.setRadioButtonsDONE = true;
+                    yesWeAreThereNow();
+                });
+        });
+    }
+    
+    function setDatePickers(){
+
+        $('.datepicker').each(function(i, r) {
+            var maxdateallowed = $(r).data("maxdateallowed");
+            var setmaxdateallowed = false;
+            if (maxdateallowed != '') {
+                setmaxdateallowed = maxdateallowed; 
+            }
+            var maxDateAllowedAsMoment = moment(setmaxdateallowed, "mm/DD/yyyy"); // WARNING: This format must be set each time a wiz_date field is used. 
+            $(r).datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY", maxDate: maxDateAllowedAsMoment});
+            $(r).datetimepicker()
+            .on('dp.change', function(e){
+                $('input[name=' + $(this).attr('Id') + ']').val(e.date.format());
+            });
+        });
+    
+        //$('.datepicker').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY"});
+        //$('.datepicker').datetimepicker()
+        //.on('dp.change', function(e){
+        //  console.log("e.date.format() = " + e.date.format());
+        //  console.log($('input[name=' + $(this).attr('Id') + ']'));
+        //    $('input[name=' + $(this).attr('Id') + ']').val(e.date.format());
+        //});
+        areWeThereYet.setDatePickersDONE = true;
+        yesWeAreThereNow();
+    }
+    
+    // Onload function
+    $(function() {
+        setRadioButtons();
+        setTextArea();
+        setPicklists();
+        setDatePickers();
+        
+        /// TODO: Need to find a better way to do this
+        $('#risk_assessment_required').change();
+    });
+    
+    // Function for calling select pane
+    function callSelectPane(callersThis) {
+        // VisaulForce wraps the output of the component in a span element
+        // therefore the id to pass should be of the parent because the selectPane()
+        // function adds or removes a class from three anscestors above
+        // something like $("#"+which_pane).greatGrandParent().addClass('panel-info');
+        var idToPass = $("#"+callersThis.id).parent().attr('id');
+        
+        // the VisualForce added span element contains colons and these must be escaped
+        // before getting passed to jQuery (which is was selectPane() does)
+        idToPass = idToPass.replace(/:/g, "\\:");
+        
+        // Call selectPane() like the original static UI did
+        selectPane(idToPass, callersThis.checked);
+    }
+    
+    //Function used to disable sequence in capa resollution page
+    function callCAPAResPane(callersThis){
+          callSelectPane(callersThis);
+          $("#capaInv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c").prop('disabled',true)
+          $("#capaImpl{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c").prop('disabled',true)
+          $("#capaER{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c").prop('disabled',true)
+    }
+   //Function used to disable sequence in capa Add task popup
+    function callCAPAGenPane(callersThis){
+          callSelectPane(callersThis);
+          $("#gencapaInv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c").prop('disabled',true)
+          $("#gencapaImpl{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c").prop('disabled',true)
+          $("#gencapaER{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c").prop('disabled',true)
+    }
+   
+    // Function for showing and hiding product or process field 
+    function showNcField(isSelected, ncType) {
+        
+        
+        if(isSelected){
+            var whichField = "select_" + ncType;
+            $("#select_Product, #select_Process").hide();
+            //$("#select_Product, #select_Process").css("visibility","hidden");
+            //$('#Product__c_hidden, #Process__c_hidden').removeClass('required');
+           // $('#Product__c_hidden, #Process__c_hidden').removeAttr('required');
+            $('#' + ncType + '__c_hidden').addClass('required');
+            $('#' + ncType + '__c_hidden').attr('required', true);
+            $("#" + whichField).show();
+            //$("#" + whichField).css("visibility","visible");;
+            $('label[for="'+whichField+'"] span').addClass('mandatory');
+            $('label[for="'+whichField+'"] span').text('* ');
+
+            if(whichField == "select_Product")
+            {
+                $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Product__c').removeClass('form-control  select2-hidden-accessible').addClass('form-control required select2-hidden-accessible');
+                $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Process__c').removeClass('form-control required select2-hidden-accessible').addClass('form-control  select2-hidden-accessible');
+            }
+            if(whichField == "select_Process")
+            {
+                $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Process__c').removeClass('form-control  select2-hidden-accessible').addClass('form-control required select2-hidden-accessible');
+                $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Product__c').removeClass('form-control required select2-hidden-accessible').addClass('form-control  select2-hidden-accessible');
+            }
+        }
+    }
+    
+    // Show/hide based on 'Risk Assessment Required?'
+    function showHideRiskAssessment(callersThis) {
+        //console.log('BEGIN showHideRiskAssessment()');
+        //console.log('callersThis follows on next log:');
+        //console.log(callersThis);
+        //console.log('END showHideRiskAssessment()');
+        
+        /// At this writing the expandAssesment() function is in app.js and was part of the original static UI.
+        /// Call expandAssesment() like the original static UI did
+        expandAssesment(callersThis.checked);
+
+        $('#assesment_pane [name]').each(
+            function(index, element){
+                if(callersThis.checked) { // set back to required
+                    if($(element).attr('temp-not-required')) {
+                        $(element).attr('required',$(element).attr('temp-not-required'));
+                        $(element).removeAttr('temp-not-required');
+                    }
+                    if($(element).attr('temp-not-aria-required')) {
+                        $(element).attr('aria-required',$(element).attr('temp-not-aria-required'));
+                        $(element).removeAttr('temp-not-aria-required');
+                    }
+                    if($(element).hasClass('temp-not-required')) {
+                        $(element).removeClass('temp-not-required').addClass('required');
+                    }
+                } else { // set to not required
+                    if($(element).attr('required')) {
+                        $(element).attr('temp-not-required',$(element).attr('required'));
+                        $(element).removeAttr('required');
+                    }
+                    if($(element).attr('aria-required')) {
+                        $(element).attr('temp-not-aria-required',$(element).attr('aria-required'));
+                        $(element).removeAttr('aria-required');
+                    }
+                    if($(element).hasClass('required')) {
+                        $(element).removeClass('required').addClass('temp-not-required');
+                    }
+                }
+            }
+        );
+
+        if (callersThis.checked) {
+            $(callersThis).prev().attr('value','Yes');
+        } else {
+            $(callersThis).prev().attr('value','No');
+        }
+    } 
+    
+     // v1.0.1 Qualityze Inc(SB)  --- start
+    
+        
+                       
+                        
+    
+     function  disableElements(appChk){
+        
+        
+        if( appChk.checked){
+
+            
+            $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c").attr('disabled',true);
+            $("#docWorkflowDiv").attr('disabled',true);
+            $("#docAdhocBtn").attr('disabled',true);
+            $("#docWorkflowDiv").removeClass('panel-info');
+            $("#closurePanel").removeClass('panel-info');
+            $("#closApprTab_appr_note").attr('disabled', true);
+            toggleNCWorkFlow(true);
+            $("#closApprTab_link").hide();
+            $("#closApprTab_chk").addClass('hidden');
+            $("#doc_resolution_closed_comments").hide();
+            $("#Resolution_Closed_Comment__c").removeClass('form-control changeMe-setTextArea required');
+            $("#Resolution_Closed_Comment__c").attr('disabled',true);
+        }
+        if( !appChk.checked){
+
+
+            
+            $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c").attr('disabled',false);
+            $("#docWorkflowDiv").attr('disabled',false);
+            
+            $("#docWorkflowDiv").addClass('panel-info');
+            $("#docAdhocBtn").attr('disabled',false);
+            
+            $("#closurePanel").addClass('panel-info');
+            $("#closApprTab_appr_note").attr('disabled', false);
+            toggleNCWorkFlow(false);
+            $("#docInv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c").prop('disabled',true)
+            $("#closApprTab_link").show();   
+            $("#closApprTab_chk").removeClass('hidden'); 
+            $("#WizTaskPanel").addClass('panel-info');
+            $("#Resolution_Closed_Comment__c").addClass('form-control changeMe-setTextArea required');
+            $("#Resolution_Closed_Comment__c").attr('disabled',false);
+            
+        }
+        
+        if( appChk.checked && $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c').val()=='No Action Required'){
+
+            
+            
+            $("#doc_resolution_closed_comments").attr('disabled', true).hide();
+            
+            
+            
+        }
+        
+        if( !appChk.checked && $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c').val()=='No Action Required'){
+ 
+            $("#doc_resolution_closed_comments").attr('disabled', true).show();
+             $("#Resolution_Closed_Comment__c").show();
+            
+        }
+        
+    }
+    
+     
+    
+    
+     // function for document change order   
+
+        function showHideBasedOnDOCResolutionCode(){
+            
+           
+            var fieldValue=$("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c").val();
+            var CmStatus=$('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Status__c').val();
+            var cmphase =$('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Phase__c').val();
+            
+            showHideBasedOnDOCResolutionCode2();
+            
+            
+           if(fieldValue=='No Action Required'){
+                 $("#docWorkflowDiv").hide();
+                $("#docAdhocBtn").hide();
+                $("#closurePanel").hide();
+                 $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Closed_Comment__c").attr('disabled',false);
+                 $("#doc_resolution_closed_comments").show();
+                if($("#chApprTab_CK").is(':checked') && cmphase=='Draft'){
+                            $("#chApprTab_tble").find("input,select").each(function(){
+                                $(this).attr('disabled', false);
+                            });
+                        }
+                 if($("#chApprTab_CK").is(':checked') &&  CmStatus=='Pending Approval'){
+                    
+                      $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c").attr('disabled', true);
+                     
+                      $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Closed_Comment__c").attr('disabled',true);
+                     }
+                
+             }
+            
+           
+            if(fieldValue=='Document Change Order'  ){
+                //     alert('ok1');
+               $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Closed_Comment__c").attr('disabled',true);
+                $("#doc_resolution_closed_comments").hide();
+                toggleNCWorkFlow(false); 
+                $(".workflow-panel").addClass('panel-info');
+                $("#docWorkflowDiv").show();
+                $("#docAdhocBtn").show();
+                $("#closurePanel").show();
+                
+
+                
+              
+                                
+                if(CmStatus=='Void' || CmStatus=='Closed' ){
+                    // alert('ok2');
+                    toggleNCWorkFlow(true);
+                    var apprCnt=$("#closApprTab_appr_cnt").val();
+                    console.log('showHideBasedOnResolutionCode   apprCnt    '+apprCnt);
+                    $("#closurePanel").removeClass('panel-info');
+                    $("#closApprTab_link").hide();
+                    $('#PageSubmitButton').hide();
+                    $('#PageSaveButton').hide();
+                    //    $("#chApprTab_lin").hide(); 
+                    
+                    
+                } 
+                 
+               
+                    
+               
+                           
+                
+                 else if(CmStatus=='Document Change Order'){
+                     //  alert('ok3');
+                      toggleNCWorkFlow(true);
+                       $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c").attr('disabled', true);
+                    
+                    $("#closurePanel").removeClass('panel-info');
+                    $("#closApprTab_link").hide();
+                    $('#PageSubmitButton').hide();
+                    $('#PageSaveButton').hide();
+                     $('#PageCancelButton').hide();
+                     $('#docAdhocBtn').attr('disabled',true);
+                       $("#chApprTab_lin").hide();
+
+                   
+                     
+                }
+                else if(cmphase=='Workflow'){
+                    
+                     $("#chApprTab_lin").hide();
+                    
+                    
+                    }
+                
+                
+             else if (CmStatus=='Pending Approval' || CmStatus=='pending' || CmStatus=='Document Change Order'){
+                 // alert('ok4');
+                  $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Closed_Comment__c").attr('disabled',true);
+                   $("#closurePanel").removeClass('panel-info');
+                  $("#closApprTab_link").hide();
+                 $("#closApprTab_chk").attr('disabled', true);
+                 $("#closApprTab_appr_note").attr('disabled', true);
+
+                  $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c").attr('disabled', true);
+                   toggleNCWorkFlow(true);
+                   $("#docAdhocBtn").attr('disabled',true);
+                 }
+                
+              
+                
+                    else{
+                        //  alert('ok5');
+                        $(".workflow-panel").find('.checkbox').find("input").each(function(){
+                            if(this.id.indexOf('ALWAYS_CHECKED_but_CHANGED_BY_id_')==-1){
+
+                            }
+                        });
+                        
+
+                        if($("#closApprTab_chk").is(':checked')){
+                            //     alert('ok6');
+                            $("#closApprTab_table").find("input,select").each(function(){
+                                $(this).attr('disabled', false);
+                            });
+                            
+                            
+                            
+                            }
+                    }
+                
+                //  alert('ok7');
+                $("#docInv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c").prop('disabled',true)
+                
+                
+            }
+            
+        }
+    
+    // v1.0.1 Qualityze Inc(SB)  --- end
+         
+        function escapeallquotes(str){
+            var toreturn = toreturn.replace(/'/g, "\\\'");
+            return toreturn;
+        }
+        
+    
+    
+        // function to call selectpane
+        
+        function callCAPAResPane(callersThis){
+            callSelectPane(callersThis);
+            $("#capaInv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c").prop('disabled',true)
+            
+        }
+        
+    
+    
+    
+    
+    
+     // Show/hide based on resolution code
+    function showHideBasedOnResolutionCode(isSelected, fieldValue) {
+         console.log('BEGIN showHideBasedOnResolutionCode() fieldValue  '+fieldValue);
+         var ncStatus=$("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}NC_Status__c").val();
+         var ncResCode=$("#ncResCode").val();
+        
+        //console.log('isSelected follows on next log:');
+        //console.log(isSelected);
+        //console.log('fieldValue follows on next log:');
+        //console.log(fieldValue);
+        
+               $('#PageSubmitButton').show();
+               $('#PageSaveButton').show();
+               $('#single-next').hide();
+               $('#btn-group').hide();
+               $("#resolution_closed_comments").hide();
+               $('#address_through_capa_tab').hide();
+               $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Number__c").attr('disabled',true);
+               toggleNCWorkFlow(true);
+       if($("#risk_assessment_required").prop('checked') && fieldValue != 'Addressed through CAPA' && !capaRequiredButtonAlreadyClicked){
+          fromResCodeDropDown=true;
+           $('[Name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Required__c"]').each(function(idx, elm) {
+                               // $(elm).parent().removeClass('disabled');
+                                if ($(elm).val() == "No") {
+                                    $(elm).click();
+                                }
+            });
+       }
+               
+        /*if($("#risk_assessment_required").prop('checked')){
+                console.log('Risk Assesment Checked  showHideBasedOnResolutionCode  ');
+                $('[Name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Required__c"]').each(function(idx, elm) {
+                          if($(elm).val()=='No'){
+                            //$(elm).parent().removeClass('active');
+                            console.log($(elm).parent());//.addClass('active');
+                            $(elm).attr('checked',true);
+                            $('label[for="capa_justification"] span').removeAttr('hidden');
+                            //$('label[for="capa_justification"]').show();
+                            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Justification_for_CAPA_no_CAPA__c').attr('required');
+                            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Justification_for_CAPA_no_CAPA__c').attr('aria-required');
+                            //$('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Justification_for_CAPA_no_CAPA__c').show();
+                          }
+                          else{
+                            $(elm).parent().removeClass('active');
+                            $(elm).removeAttr('checked');
+                          }
+                });        }*/
+                
+        if(fieldValue == 'No Action Required' || fieldValue == 'Discarded') {
+            $("#PageSaveButton").show();
+            $("#PageSubmitButton").show();
+            //showResolution('#closed');
+            $("#createadhoctask").hide();
+            $("#workflow_tab").hide();
+            $("#pageAdhoc").hide();
+            $('#create_capa_button').parent().hide();
+            $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Number__c").attr('disabled',true);
+            $("#resolution_closed_comments").show();
+            $('#address_through_capa_tab').hide();
+            toggleNCWorkFlow(true);
+        }
+        else if(fieldValue == 'Addressed through CAPA') {
+            $("#createadhoctask").hide();
+            $("#workflow_tab").hide();
+            $("#pageAdhoc").hide();
+            $("#resolution_closed_comments").hide();
+            toggleNCWorkFlow(true);
+            if(ncStatus!='Closed' && ncStatus!='Void'){
+               $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Number__c").attr('disabled',false);
+            }
+            /*if($("#risk_assessment_required").prop('checked')){
+                console.log('Risk Assesment Checked  In Addressed Through CAPA');
+                //$('[data-fieldname="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Required__c"]').attr("data-initvalue","Yes")
+               $('[Name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Required__c"]').each(function(idx, elm) {
+                          if($(elm).val()=='Yes'){
+                            //$(elm).parent().removeClass('active');
+                            //$(elm).parent().addClass('active');
+                            $(elm).attr('checked',true);
+                            $('label[for="capa_justification"] span').attr('hidden','true');
+                            //$('label[for="capa_justification"]').hide();
+                            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Justification_for_CAPA_no_CAPA__c').removeAttr('required');
+                            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Justification_for_CAPA_no_CAPA__c').removeAttr('aria-required');
+                            //$('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Justification_for_CAPA_no_CAPA__c_ifr').hide();
+                            //Justification_for_CAPA_no_CAPA__c_ifr
+                          }
+                          else{
+                            $(elm).parent().removeClass('active');
+                            $(elm).removeAttr('checked');
+                          }
+                });
+            }*/
+            if($("#risk_assessment_required").prop('checked') && !capaRequiredButtonAlreadyClicked ){
+                fromResCodeDropDown=true;
+                $('[Name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Required__c"]').each(function(idx, elm) {
+                                    //$(elm).parent().removeClass('disabled');
+                                    if ($(elm).val() == "Yes") {
+                                        $(elm).click();
+                                    }
+                });
+            } 
+            $('#address_through_capa_tab').show();
+        } 
+        else if(fieldValue == 'NC Workflow') {
+            //alert(fieldValue+'  '+isSelected);
+            //showResolution('#workflow_tab');
+            //alert('fieldValue  '+fieldValue);
+            $("#resolution_closed_comments").hide();
+            $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Number__c").attr('disabled',true);
+            $('#create_capa_button').parent().hide();
+            $('#address_through_capa_tab').hide();
+            $("#workflow_tab").show();
+            $("#pageAdhoc").show();
+            $("#createadhoctask").show();
+            toggleNCWorkFlow(false);
+            $(".workflow-panel").addClass('panel-info');
+            $("#closurePanel").addClass('panel-info');
+            $("#closApprTab_link").show();
+            //alert('closure panel activate  cloApprTablink shown');
+            
+            console.log('ncStatus    '+ncStatus);
+            console.log('ncResCode    '+ncResCode);
+            //$('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}NC_Status__c').val('NC Workflow');
+            //$('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}NC_Workflow_Status__c').val('Open');
+            //alert ('chkboxes  '+$(".workflow-panel").find('.checkbox').find("input").length)
+          if(ncStatus=='NC Workflow' || ncStatus=='Closed' || ncStatus=='Void' || (ncResCode=='NC Workflow'&&ncStatus=='Reopened')){
+              toggleNCWorkFlow(true);
+              var apprCnt=$("#closApprTab_appr_cnt").val();
+              console.log('showHideBasedOnResolutionCode   apprCnt    '+apprCnt);
+              $("#closurePanel").removeClass('panel-info');
+              $("#closApprTab_link").hide();
+              $('#PageSubmitButton').hide();
+              $('#PageSaveButton').hide();
+              console.log('isTasksExistWithSameSequence    '+isTasksExistWithSameSequence);
+              if(isTasksExistWithSameSequence)
+                $('#btn-group').show();
+              else
+                $('#single-next').show();
+          }
+          else{
+               $(".workflow-panel").find('.checkbox').find("input").each(function(){
+                   if(this.id.indexOf('ALWAYS_CHECKED_but_CHANGED_BY_id_')==-1){
+                         callSelectPane(this)
+                   }
+               });
+            
+              //$("#cloUser").attr('disabled',false);
+                if($("#closApprTab_chk").is(':checked')){
+                   $("#closApprTab_table").find("input,select").each(function(){
+                             $(this).attr('disabled', false);
+                   });
+               }
+               
+          }
+       }
+        
+       capaRequiredButtonAlreadyClicked=false;
+        //console.log("END   showHideBasedOnResolutionCode()");
+    }
+    
+      function toggleNCWorkFlow(togFlag){
+       
+         $(".workflow-panel").removeClass('panel-info').children().find('table').find("input,select,.glyphicon").each(function(){
+                                                                                      $(this).attr('disabled', togFlag);
+                     //console.log(this);
+                 });
+          //$("#cloUser").attr('disabled',togFlag);
+         $("#closurePanel").find('table').find("input,select,.glyphicon").each(function(){
+                                                          $(this).attr('disabled', togFlag);
+                     //console.log(this);
+         });
+         $("#closApprTab_table").find("input,select").each(function(){
+                                      $(this).attr('disabled', togFlag);
+         });
+    }
+    
+     function showHideBasedOnCAPAResolutionCode(){
+       var fieldValue=$("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Code__c").val();
+       var capaStatus=$('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Status__c').val();
+       var capaResCode=$('#capaResCode').val();
+       console.log('showHideBasedOnCAPAResolutionCode   fieldValue   '+fieldValue+'   capaStatus    '+capaStatus+'  capaResCode   '+capaResCode);
+       if(fieldValue=='CAPA Workflow'){
+         $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Closed_Comment__c").attr('disabled',true);
+         $("#capa_resolution_closed_comments").hide();
+           /*if($('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Status__c').val()!='Inworks' && $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Status__c').val()!='Closed'){
+                $("#capaInvTaskTable").find("input,select").each(function(){
+                                             $(this).attr('disabled',false);
+                });
+         }
+         $("#capaInvTask").show();*/
+           
+         toggleNCWorkFlow(false);
+         $(".workflow-panel").addClass('panel-info');
+         $("#capaWorkflowDiv").show();
+         $("#capaAdhocBtn").show();
+         $("#closurePanel").show();
+           // || (capaResCode=='CAPA Workflow'&&capaStatus=='Reopened')
+           //if(capaStatus=='Inworks' || capaStatus=='Closed' || capaStatus=='Void'|| (capaResCode=='CAPA Workflow'&&capaStatus=='Reopened')){
+            if(capaStatus=='Inworks' || capaStatus=='Closed' || capaStatus=='Void'){
+              toggleNCWorkFlow(true);
+              var apprCnt=$("#closApprTab_appr_cnt").val();
+              console.log('showHideBasedOnResolutionCode   apprCnt    '+apprCnt);
+              $("#closurePanel").removeClass('panel-info');
+              $("#closApprTab_link").hide();
+              $('#PageSubmitButton').hide();
+              $('#PageSaveButton').hide();
+              
+          }else if(capaResCode=='CAPA Workflow'&&capaStatus=='Reopened'){
+              toggleNCWorkFlow(true);
+              var apprCnt=$("#closApprTab_appr_cnt").val();
+              console.log('showHideBasedOnResolutionCode   apprCnt    '+apprCnt);
+              $("#closurePanel").removeClass('panel-info');
+              $("#closApprTab_link").hide();
+              $('#PageSubmitButton').hide();
+              $('#PageSaveButton').show();
+          }
+          else{
+               $(".workflow-panel").find('.checkbox').find("input").each(function(){
+                   if(this.id.indexOf('ALWAYS_CHECKED_but_CHANGED_BY_id_')==-1){
+                         callCAPAResPane(this)
+                   }
+               });
+            
+              //$("#cloUser").attr('disabled',false);
+                if($("#closApprTab_chk").is(':checked')){
+                   $("#closApprTab_table").find("input,select").each(function(){
+                             $(this).attr('disabled', false);
+                   });
+               }
+          }
+          $("#capaInv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c").prop('disabled',true)
+          $("#capaImpl{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c").prop('disabled',true)
+          $("#capaER{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c").prop('disabled',true)
+         
+         
+       }
+       else if(fieldValue=='Discarded' || fieldValue=='No Action Required'){
+           toggleNCWorkFlow(true);
+           $("#capaWorkflowDiv").hide();
+           $("#capaAdhocBtn").hide();
+           $("#closurePanel").hide();
+           /*$("#capaInvTaskTable").find("input,select").each(function(){
+                                      $(this).attr('disabled',true);
+                           });
+         $("#capaInvTask").hide();*/
+           $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Resolution_Closed_Comment__c").attr('disabled',false);
+           $("#capa_resolution_closed_comments").show();
+           $("#capaClosurePanel").hide();
+       }
+       
+    }
+    
+    function escapeallquotes(str){
+        var toreturn = toreturn.replace(/'/g, "\\\'");
+        return toreturn;
+    }
+    
+    /*   function ncSourceSelection(isSelected, fieldValue){
+        if(fieldValue == "Other") {
+            $("#audit").hide();
+            //$("#audit").css("visibility","hidden");
+            $("#ponum").hide();
+            $("#part").hide();
+            $("#customer").hide();
+            $("#man").hide();
+            $('label[for="other"] span').addClass('mandatory');
+            $('label[for="other"] span').text('* ');
+            //$('#otherSource').removeClass('form-control').addClass('form-control required');
+        }
+        else
+        {
+            $('label[for="other"] span').text('');
+        }
+        if(fieldValue == "Supplier" || fieldValue == "Manufacturer")
+        {
+            $("#audit").hide();
+            $("#man").show();
+            $("#ponum").show();
+            $("#part").show();
+            $("#customer").hide();
+        }
+        if(fieldValue == "Audit")
+        {
+            $("#audit").show();
+            $("#ponum").hide();
+            $("#part").hide();
+            $("#customer").hide();
+            $("#man").hide();
+        }
+        if(fieldValue == "Customer")
+        {
+            $("#audit").hide();
+            $("#ponum").hide();
+            $("#part").hide();
+            $("#customer").show();
+            $("#man").hide();
+        }
+        if(fieldValue == "Internal")
+        {
+            $("#audit").hide();
+            $("#ponum").hide();
+            $("#part").hide();
+            $("#customer").hide();
+            $("#man").hide();
+        }
+    }*/
+    
+    //===================================
+    
+   function capaSourceSelection(isSelected, fieldValue){
+       console.log(isSelected+' ' +fieldValue);
+         if(fieldValue != "Supplier"){
+             console.log('show source number only');
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Customer__c').attr('name','');
+            $("#man").hide();
+          }
+         if(fieldValue == "Supplier"){
+             console.log('show manufacturer');
+             $("#man").show();
+             $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Manufacturer_Supplier__c').attr('name','{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Manufacturer_Supplier__c');
+
+             }
+        }
+    
+    
+    function ncSourceSelection(isSelected, fieldValue){
+        if(fieldValue == "Other") {
+            $("#audit").hide();
+            //$("#audit").css("visibility","hidden");
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Audit__c').attr('name','');
+            $("#ponum").hide();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}PO_Number__c').attr('name','');
+            $("#part").hide();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Supplier_Manufacturer_Part__c').attr('name','');
+            $("#customer").hide();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Customer__c').attr('name','');
+            $("#man").hide();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Manufacturer_Supplier__c').attr('name','');
+            $('label[for="other"] span').addClass('mandatory');
+            $('label[for="other"] span').text('* ');
+            //$('#otherSource').removeClass('form-control').addClass('form-control required');
+        }
+        else
+        {
+            $('label[for="other"] span').text('');
+        }
+        if(fieldValue == "Supplier" || fieldValue == "Manufacturer")
+        {
+            $("#audit").hide();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Audit__c').attr('name','');
+            $("#man").show();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Manufacturer_Supplier__c').attr('name','{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Manufacturer_Supplier__c');
+            $("#ponum").show();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}PO_Number__c').attr('name','{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}PO_Number__c');
+            $("#part").show();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Supplier_Manufacturer_Part__c').attr('name','{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Supplier_Manufacturer_Part__c');
+            $("#customer").hide();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Customer__c').attr('name','');
+         
+        }
+        if(fieldValue == "Audit")
+        {
+            $("#audit").show();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Audit__c').attr('name','{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Audit__c');
+            $("#ponum").hide();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}PO_Number__c').attr('name','');
+            $("#part").hide();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Supplier_Manufacturer_Part__c').attr('name','');
+            $("#customer").hide();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Customer__c').attr('name','');
+            $("#man").hide();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Manufacturer_Supplier__c').attr('name','');
+        }
+        if(fieldValue == "Customer")
+        {
+            $("#audit").hide();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Audit__c').attr('name','');
+            $("#ponum").hide();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}PO_Number__c').attr('name','');
+            $("#part").hide();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Supplier_Manufacturer_Part__c').attr('name','');
+            $("#customer").show();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Customer__c').attr('name','{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Customer__c');
+            $("#man").hide();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Manufacturer_Supplier__c').attr('name','');
+        }
+        if(fieldValue == "Internal")
+        {
+            $("#audit").hide();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Audit__c').attr('name','');
+            $("#ponum").hide();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}PO_Number__c').attr('name','');
+            $("#part").hide();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Supplier_Manufacturer_Part__c').attr('name','');
+            $("#customer").hide();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Customer__c').attr('name','');
+            $("#man").hide();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Manufacturer_Supplier__c').attr('name','');
+        }
+    }
+    //===========================
+    function getSearchContext(contextString, singleSearchBarResultObject) {
+        var numCharactersBefore = 25;
+        var numCharactersAfter = 25;
+        var strSpacesBefore = "                         "; // 25 spaces
+        var strSpacesAfter = "                         "; // 25 spacess
+        var combinedStringResults = "";
+        console.log(' getSearchContext singleSearchBarResultObject   ' + singleSearchBarResultObject);
+        console.log(singleSearchBarResultObject);
+        for (var property in singleSearchBarResultObject) {
+            if (singleSearchBarResultObject.hasOwnProperty(property)) {
+                /*if (property.substring(0,("QPMS__").length) == "QPMS__") {
+                    combinedStringResults += strSpacesBefore + singleSearchBarResultObject[property] + strSpacesAfter;
+                }*/
+                if(typeof property != 'object'){
+                     combinedStringResults += strSpacesBefore + singleSearchBarResultObject[property] + strSpacesAfter;
+                }
+            }
+        }
+        //console.log("combinedStringResults = '" + combinedStringResults + "'");
+        combinedStringResults = combinedStringResults.replace(/<[^>]+>/g,''); // remove richtext tags
+        var regExCaptureContext = new RegExp('(.{0,' + numCharactersBefore + '}'+contextString+'.{0,' + numCharactersAfter + '})', 'gi');
+        var arrayOfContexts = regExCaptureContext.exec(combinedStringResults);
+        
+        var stringWithContext = "";
+        if(arrayOfContexts[0]) {
+            stringWithContext += arrayOfContexts[0].trim() + "...";
+        }
+        //if(arrayOfContexts[1]) {
+        //  stringWithContext += arrayOfContexts[1].trim() + "...";
+        //}
+        //if(arrayOfContexts[2]) {
+        //  stringWithContext += arrayOfContexts[2].trim() + "...";
+        //}
+        return stringWithContext;
+    }
+    
+
+
+    var sfObjectMatcher = function() {
+        return function findMatches(q, cb, asyncCb) {   
+            console.log('search page searchObject  '+searchObject); 
+            var type = 'sosl';
+            var allStringsInOne = searchObject;
+            
+            var qsearchterm = q;
+
+            var ps = {
+                type: type,
+                allstringsinone: allStringsInOne,
+                qsearchterm: qsearchterm
+            };
+            
+            $.ajax({
+                url: '/apex/vfsearch',
+                data: ps})
+                .done( 
+                    function( data, textStatus, jqXHR){
+                        //console.log("BEN_WUZ_HERE: textStatus = '" + textStatus + "'");
+                        //console.log("The following is the return from data:");
+                        //console.log(data);
+                        arraySearchBarResults = $.parseJSON(data);
+                        //console.log("The following log is arraySearchBarResults:");
+                        //console.log(arraySearchBarResults);
+                        var stringArrayForReturing = [];
+                        for (i = 0; i < arraySearchBarResults.length; i++) {
+                            // WARNING: The colon ':' after the Name is used by function executing the search (keyup function using var regExTextBeforeFirstColon = /^[^:]+(?=:)/;)
+                            stringArrayForReturing.push(arraySearchBarResults[i].Name + ":" + getSearchContext(q, arraySearchBarResults[i]));
+                            if(i>10) {
+                                break;
+                            }
+                        }
+                        asyncCb(stringArrayForReturing);
+                      })
+                .fail( function(jqXHR, textStatus, errorThrown) {
+                        console.log("QPMS_ERROR: textStatus = '" + textStatus + "'");
+                        console.log("QPMS_ERROR: The following log is errorThrown:");
+                        console.log(errorThrown);
+                });
+        }
+    };
+    
+    function requestNavigationToPage(pageName, recordId) {
+        var destinationPage = "";
+        var needToSaveSomething = true; 
+
+        if (pageName === "SAME__PAGE") {
+            var regExPageWithoutQuery = /^[^\?]+/;
+            destinationPage = regExPageWithoutQuery.exec(window.location.href);
+        } else {
+            destinationPage = pageName;
+        }
+        
+       
+        
+        var regExPageOnlyWithoutQuery = /\/([^\?\/]+)$/;
+        var pageNameOnly = regExPageOnlyWithoutQuery.exec(destinationPage)[1];
+        if (pageNameOnly == "nc_list") {
+            var regExHostNameOnly = /https:\/\/[^\?\/]+\//;
+            destinationPage = regExHostNameOnly.exec(destinationPage);
+            needToSaveSomething = false;
+        }
+        
+        if (recordId) {
+            if (String(destinationPage).slice(-1) == "/") {
+                destinationPage += recordId;
+            } else {
+                destinationPage += "?id=" + recordId;
+            }
+        }
+        
+        var needToConfirmWithUser = false;
+        if ($('label:contains("NC Status:")').next().text() != "Closed") {
+            needToConfirmWithUser = true;
+        }
+
+        if (needToConfirmWithUser &&  needToSaveSomething) {
+            // Make the "Yes" button redirect navigation
+            var YESButtonInRedirectModalOnClick = function () {
+                window.location.href = destinationPage;
+            };
+            $('#redirectDialog .btn-primary').bind( "click", YESButtonInRedirectModalOnClick);
+            
+            // Show the redirect dialog
+            $('#redirectDialog').modal('show');
+            
+            // Remove the onClick event
+            $('#redirectDialog').on('hidden.bs.modal', function () {
+                $('#redirectDialog .btn-primary').unbind( "click", YESButtonInRedirectModalOnClick);
+            })
+        } else {
+            window.location.href = destinationPage;
+        }
+    }
+    
+    $('#navbar .typeahead').typeahead({
+            hint: true,
+            highlight: true,
+            minLength: 3
+        },
+        {
+            name: 'non-conformances',
+            source: sfObjectMatcher(),
+            limit: 10
+     });
+        
+    $('#navbar .typeahead').keyup(function(event){
+        if(event.keyCode == 13) {;
+            var textInSearchField = $('#navbar .typeahead.tt-input').val();
+            var regExTextBeforeFirstColon = /^[^:]+(?=:)/;
+            var recordName = regExTextBeforeFirstColon.exec(textInSearchField);
+            if (recordName) {
+                var recordIdCorrespondingToRecordName = null;
+                for (i = 0; i < arraySearchBarResults.length; i++) {
+                     if (arraySearchBarResults[i].Name == recordName) {
+                        recordIdCorrespondingToRecordName = arraySearchBarResults[i].Id;
+                        break;
+                     }
+                }
+                if (recordIdCorrespondingToRecordName) {
+                    requestNavigationToPage("SAME__PAGE", recordIdCorrespondingToRecordName);
+                } else {
+                    console.log("QPMS_ERROR: Unable to associate recordName '" + recordName + "' with and id'");
+                }
+            }
+        }
+    });
+    
+       //============================================================================================ TODO-written to use in NC_Investigation -Root cause form
+    
+    function showRootcauseField(isSelected, ncType) {
+        
+        console.log("fron sfdc appc select rootcause");
+        if(isSelected){
+            console.log("fron sfdc appc select rootcause inside if");
+            var whichField = "select_" + ncType;
+            $("#select_Product, #select_Process").hide();
+            //$("#select_Product, #select_Process").css("visibility","hidden");
+            //$('#Product__c_hidden, #Process__c_hidden').removeClass('required');
+           // $('#Product__c_hidden, #Process__c_hidden').removeAttr('required');
+            $('#' + ncType + '__c_hidden').addClass('required');
+            $('#' + ncType + '__c_hidden').attr('required', true);
+            $("#" + whichField).show();
+            //$("#" + whichField).css("visibility","visible");;
+            $('label[for="'+whichField+'"] span').addClass('mandatory');
+            $('label[for="'+whichField+'"] span').text('* ');
+
+            if(whichField == "select_Product")
+            {
+                console.log("fron sfdc appc select rootcause inside if inside product select");
+                $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Product__c').removeClass('form-control  select2-hidden-accessible').addClass('form-control required select2-hidden-accessible');
+                $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Process__c').removeClass('form-control required select2-hidden-accessible').addClass('form-control  select2-hidden-accessible');
+            }
+            if(whichField == "select_Process")
+            {
+                 console.log("fron sfdc appc select rootcause inside if inside process select");
+                $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Process__c').removeClass('form-control  select2-hidden-accessible').addClass('form-control required select2-hidden-accessible');
+                $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Product__c').removeClass('form-control required select2-hidden-accessible').addClass('form-control  select2-hidden-accessible');
+            }
+        }
+    }
+    //====================================================================
+    
+    
+  // BEGIN Obtained from https://github.com/janl/mustache.js/blob/master/mustache.js#L82 on 23FEB2016  
+  var entityMap = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+    "(": '&#40;',
+    ")": '&#41;',
+    '.': '&#46;',
+    '/': '&#x2F;',
+    '`': '&#x60;',
+    ';': '&#59;',
+    '.': '&#46;',
+    '=': '&#x3D;'
+  };
+  function escapeHtml(string) {
+    return String(string).replace(/[&<>"'`=\/]/g, function fromEntityMap (s) {
+      //console.log("Function escapeHtml() saved your butt again!!!: Escaped " + s);
+      return entityMap[s];
+    });
+  }
+  // END Obtained from https://github.com/janl/mustache.js/blob/master/mustache.js#L82 on 23FEB2016
+  
+  function autoCalculateDueDate(allowDays,dueDate,ncCrDt){
+            console.log(' $(allowDays).val()  '+$(allowDays).val()+' dueDate '+dueDate+' isNaN(allowDays)   '+isNaN($(allowDays).val()));
+            var newDate=(!$(allowDays).val())?new Date():new Date(new Date(ncCrDt).getTime()+(parseInt($(allowDays).val())*24*60*60*1000));
+            newDate=newDate.getDate()+' '+months[newDate.getMonth()]+' '+newDate.getFullYear();
+            $('#'+dueDate).data({date: newDate}).datetimepicker('update').children("input").val(newDate);
+            $('#'+dueDate+'_hidden').val(newDate);
+   }
+   
+   function selectPane(which_pane, is_checked){
+        if (is_checked == true){
+            $("#"+which_pane).parent().parent().parent().addClass('panel-info').children().find('table').find("input, select").each(function(){
+               $(this).attr('disabled', false);
+            });
+        } else {
+            $("#"+which_pane).parent().parent().parent().removeClass('panel-info').children().find('table').find("input, select").each(function(){
+                $(this).attr('disabled', true);
+            });
+        }
+     }
+     
+     function sortSeq(seq1,seq2){
+        return seq1-seq2;
+     }
+    
+   function maxlengthvalidation(inputval){
+        //rcause0_dec_error
+       // console.log(inputval);
+        var inputid = $(inputval).attr('id');
+        var maxlen = $(inputval).attr('maxlength');
+        var inputerrorid= $(inputval).next().attr('id');
+        var inputText=$( "#"+inputid).val();
+       //console.log(inputid+' '+maxlen+' ' +inputerrorid);
+       //console.log(inputid+' '+maxlen+' ' +inputerrorid+'   inputText  '+inputText+' inputTextLength '+inputText.length);
+       $('#'+inputerrorid).empty();
+       
+       if (inputText.length>=parseInt(maxlen)) {
+           $('#'+inputerrorid).html('<p style="color: red;">Reached '+maxlen+' character limit.</p>');       
+       }
+        } 
+    
+    
+    </script>
+</apex:component>

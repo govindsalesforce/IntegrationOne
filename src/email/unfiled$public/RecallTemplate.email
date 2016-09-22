@@ -1,0 +1,2 @@
+Hi {!ApprovalRequest.Process_Approver},
+Approval for {!General_Task__c.Name} has been revoked sorry for the inconvenience

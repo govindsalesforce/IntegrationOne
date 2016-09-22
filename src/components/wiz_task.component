@@ -1,0 +1,143 @@
+<!--
+   v1.0     Qualityze_Inc(GP)                       Initial Version
+													
+  v1.0.1   Qualityze_Inc(SB)     26-JUL-2016        To prevent user from entering invalid data to allowdays field.
+  
+    
+ -->
+
+<apex:component controller="QC_custom_settings">
+   <apex:attribute name="task"  description="Holds the value of task" type="String" required="true"  />
+   <apex:attribute name="taskTitle"  description="Holds the title of task" type="String" required="true"  />
+   <apex:attribute name="seqFieldId"  description="Holds Id value for the sequences" type="String" required="true"  />
+   <apex:attribute name="seqInitValue"  description="Holds init value for the sequences" type="String" required="true"  />
+   <apex:attribute name="userFieldId" description="Holds Id value for the users"  type="String" required="true"/>
+   <apex:attribute name="userInitValue" description="Holds init value for the users"  type="String" required="true"/>
+   <apex:attribute name="allowDaysFieldId" description="Holds Id value for the allow days"  type="String" required="true"/>
+   <apex:attribute name="allowDaysInitValue" description="Holds init value for the allow days"  type="String" required="true"/>
+   <apex:attribute name="dueDateFieldId" description="Holds Id value for the duedate" type="String" required="true"/>
+   <apex:attribute name="dueDateInitValue" description="Holds init value for the duedate" type="Date" required="true"/>
+   <apex:attribute name="ncCrDt" description="Holds NC Creation Date" type="String" required="true"></apex:attribute>
+   <apex:attribute name="isTaskChecked" description="Checks task in selected or not" type="String" required="true"></apex:attribute>
+    <apex:attribute name="disabled" description="Flag to disable the controls" type="Boolean"></apex:attribute>
+   <apex:attribute name="typeoftaskowner" description="task owner present on the group" type="string"></apex:attribute>
+   <apex:attribute name="isAddTaskSequence" default="false" type="boolean" description="To check addTaskSequence"/>
+   <apex:attribute name="leastSeq" default="0" type="string" description="Least Sequence For Task"/>
+    <apex:attribute name="isSeqDisabled" default="false" type="boolean" description="Flag to disable the sequence"/> 
+   <apex:attribute name="onCheckBoxChange" default="callSelectPane" type="string" description="Function to be called upon onchange of checkbox"/> <!-- Modified By Sarath From New Int Org-->
+    
+   <script type="text/javascript">
+          $( document ).ready(function() {
+                 $('#{!dueDateFieldId}').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY"}).on('dp.change',function(selected){
+                                                                                                                        var difMS;
+                                                                                                                        var selectedDate=new Date(selected.date);
+                                                                                                                        selectedDate=new Date(selectedDate.getDate()+' '+months[selectedDate.getMonth()]+' '+selectedDate.getFullYear());
+                                                                                                                        //console.log('selectedDate   '+selectedDate);
+                                                                                                                        diffMS=selected.date-new Date("{!ncCrDt}");
+                                                                                                                        var difDays=Math.ceil(diffMS/(1000*60*60*24));
+                                                                                                                        $("#"+this.id.replace('Due_Date__c','Allowed_Days__c')).val(difDays);
+                                                                                                                        $('#'+this.id+'_hidden').val(selectedDate);
+                                                                                                                      }
+                                                                                                                    );
+                 $("#{!dueDateFieldId}").data("DateTimePicker").minDate(new Date("{!ncCrDt}"));  
+               
+        })
+        
+        function is{!task}Valid(){
+           console.log('is{!taskTitle}Valid  {!seqFieldId} {!userFieldId} {!allowDaysFieldId} {!dueDateFieldId} ');
+           var isValid=true;
+           if(!$('#{!seqFieldId}').val()){
+              isValid=false;
+              $('#{!seqFieldId}_error').html("<p><font color='red'>This field is required</font></p>");
+           }
+           if(!$('#{!userFieldId}').val()){
+              isValid=false;
+              $('#{!userFieldId}_error').html("<p><font color='red'>This field is required</font></p>");
+           }
+           if(!$('#{!allowDaysFieldId}').val()){
+              isValid=false;
+              $('#{!allowDaysFieldId}_error').html("<p><font color='red'>This field is required</font></p>");
+           }
+            // v1.0.1 start
+           if($('#{!allowDaysFieldId}').val()<0){
+              isValid=false;
+              $('#{!allowDaysFieldId}_error').html("<p><font color='red'>Invalid value for this field</font></p>");
+              
+            }
+            if($('#{!allowDaysFieldId}').val()>9999999){
+              isValid=false;
+              $('#{!allowDaysFieldId}_error').html("<p><font color='red'>Invalid value for this field</font></p>");
+              
+            }
+            // v1.0.1 end
+           if(!$('#{!dueDateFieldId}_GRDATE').val()){
+              isValid=false;
+              $('#{!dueDateFieldId}_error').html("<p><font color='red'>This field is required</font></p>");
+           }
+           
+           return isValid;
+              
+        }
+        
+         
+   </script>
+ 
+    <!--   Selectable panes -->
+                          <div class="panel panel-default panel-info workflow-panel" id="WizTaskPanel">
+                            
+                            <div class="checkbox navbar-right">
+                              <label>
+                                 <c:wiz_checkbox FieldId="{!task}"  FieldName="{!task}" initvalue="{!isTaskChecked}"  onChangeFunction="{!onCheckBoxChange}" disabled="{!disabled}"></c:wiz_checkbox>
+                              </label>
+                            </div>
+                            <div class="panel-heading">{!taskTitle}</div>
+                            <div class="panel-body">
+															
+																<table class="table">
+																				<tbody>
+																					<thead>
+																						<tr>
+                                                                                            <td><span class="mandatory"><apex:outputtext value="*"/></span>&nbsp;&nbsp;{!$ObjectType.General_Task__c.Fields.Sequence__c.Label}</td>
+																							<td width="40%"><span class="mandatory"><apex:outputtext value="*"/></span>&nbsp;&nbsp;Owner</td>
+																							<td width="20%"><span class="mandatory"><apex:outputtext value="*"/></span>&nbsp;&nbsp;{!$ObjectType.General_Task__c.Fields.Allowed_Days__c.Label}</td>
+																							<td><span class="mandatory"><apex:outputtext value="*"/></span>&nbsp;&nbsp;{!$ObjectType.General_Task__c.Fields.Due_Date__c.Label}</td>
+                                                                                        </tr>
+																					</thead>
+
+																					<tbody>
+																						<tr>
+																							<td>
+                                                                                               <c:wiz_select FieldId="{!seqFieldId}"
+                                                                                                       developername="Sequence__c" 
+                                                                                                       ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}General_Task__c"
+                                                                                                       FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c"
+                                                                                                       required="true"  
+                                                                                                       initvalue="{!seqInitValue}"
+                                                                                                       width="100%"
+                                                                                                       unSelectedDisplayText="Select"
+                                                                                                       disabled="{!disabled}"
+                                                                                                       isAddTaskSequence="{!isAddTaskSequence}"
+                                                                                                       leastSeq="{!leastSeq}"
+                                                                                                  />
+                                                                                                
+																							</td>
+																							<td>
+																							       <c:wiz_multi width="100%" required="true" FieldId="{!userFieldId}" multiple="false" queryFields="Name" querytable="User"
+                                                                                                                 queryorderby="Id"
+                                                                                                    initvalues="{!userInitValue}"
+                                                                                                    disabled="{!disabled}" typeofuser="{!typeoftaskowner}"/>
+                                                                                               
+																							</td>
+																							<td>
+																								<c:wiz_input disabled="{!disabled}" required="true" min="0" type="number" fieldname="{!allowDaysFieldId}" initvalue="{!allowDaysInitValue}"  onblur="autoCalculateDueDate(this,'{!dueDateFieldId}','{!ncCrDt}')"></c:wiz_input>
+                                                                                            </td>
+																							<td>
+																							    <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())+100}" FieldId="{!dueDateFieldId}" initdate="{!dueDateInitValue}" updateable="{!NOT(disabled)}"/>
+                                                                                            </td>
+																						</tr>
+																					</tbody>
+																				</tbody>
+																			</table>
+                                </div>
+                          </div>
+</apex:component>

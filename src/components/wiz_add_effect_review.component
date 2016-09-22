@@ -1,0 +1,292 @@
+<apex:component >
+    <apex:attribute name="divId"  description="Holds the id value for div" type="String" required="true"/>
+    <apex:attribute name="effectTask" description="General Task record of type Effectiveness Review" type="General_Task__c" required="true"/>
+    <apex:attribute name="effectReviewTask" description="General Sub Task records of type Verification Plan associated to Effectiveness Review" type="General_Sub_Task__c[]" required="true"/>
+    <apex:attribute name="effectiveCheckPlan" description="General Sub Task records of type Verification Plan associated to Implementation" type="General_Sub_Task__c[]" required="true"/>
+    <apex:attribute name="Capa" description="holds record details of CAPA object" type="CAPA__c"/>
+    <script>
+    	$( document ).ready(function() {
+            var loggedInUser = "{!JSENCODE($User.id)}";
+            var capaOwner = "{!JSENCODE(Capa.Ownerid)}";
+            var taskOwner = "{!JSENCODE(effectTask.Ownerid)}";
+            var profile = "{!JSENCODE($Profile.Name)}";
+            var effectCheckPlan = [];
+            console.log('capaOwner '+capaOwner+' taskOwner '+taskOwner+' loggedInUser '+loggedInUser+' profile '+profile);
+            <apex:repeat value="{!effectiveCheckPlan}">
+                effectCheckPlan.push('{!effectiveCheckPlan}');
+            </apex:repeat>
+            var minDate = dateFormat(new Date("{!effectTask.CreatedDate}"));
+            console.log('minimumDate '+minDate);
+           
+            $("#completed_Date").datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY",maxDate: new Date(),minDate: new Date(minDate)});
+            /*$("#completed_Date").find('.datepicker').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY",maxDate: new Date(),minDate: new Date(minDate)}).on('dp.change', function(e){
+                $('input[name=' + $(this).attr('name') + ']').val(e.date.format());
+            });*/
+            $("#{!divId}").hide();
+            if($('#effectivenessReviewSection').children().length == 0 && effectCheckPlan.length == 0){
+                //$("#{!divId}").hide();
+                $("#{!divId}").clone().prependTo("#effectivenessReviewSection").show();
+                //assignDynamicIdsToEffectiveReview();
+                //$("#completed_Date").val('{!effectTask.Completed_Date__c}');
+            }//else{
+                //assignDynamicIdsToEffectiveReview();
+                //$("#completed_Date").val('{!effectTask.Completed_Date__c}');
+                //$("#{!divId}").hide();
+            	assignDynamicIdsToEffectiveReview();
+                if('{!JSENCODE(effectTask.Status__c)}' == 'Pending Approval' || '{!JSENCODE(effectTask.Status__c)}' == 'Closed' || '{!JSENCODE(effectTask.Status__c)}' == 'Void' || '{!JSENCODE(effectTask.ChangeFieldApprovalStatus__c)}' == 'Pending' || (loggedInUser != taskOwner && profile != 'System Administrator' && loggedInUser != capaOwner)){
+                    disableVerificationPlans();
+                }   
+            //}
+            //assignDynamicIdsToEffectiveReview();
+            //$("#completed_Date").val('{!effectTask.Completed_Date__c}');
+        });
+    	
+    	function dateFormat(date){
+            var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun","Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            var day = date.getDate();
+            if(day<10){
+                day = '0'+day;
+            }
+            var month = monthNames[date.getMonth()];
+            var year = date.getFullYear().toString();
+            return day + ' ' + month + ' ' + year;
+    	}
+    
+    	function disableVerificationPlans(){
+            $('#add_effect_review_task').attr('disabled','true');
+            $('#effectivenessReviewSection *').attr('disabled','true');
+            $("a[href$='_href']").removeAttr('disabled');
+            $("a[id$='_Cancel']").hide();
+            $("#objectiveEvidence").attr('disabled','true');
+        }    
+    
+    	function cancelPopup()
+        {
+           var YESButtonInRedirectModalOnClick = function () {
+               window.location.href = '/apex/capa_effect_review?id={!JSENCODE($CurrentPage.parameters.id)}';
+           };
+           var NOButtonInRedirectModalOnClick = function () {
+               
+           };
+           $('#redirectDialog .btn-primary').bind( "click", YESButtonInRedirectModalOnClick);
+           $('#redirectDialog .btn-default').bind( "click", NOButtonInRedirectModalOnClick);
+           
+           // Show the redirect dialog
+           $('#redirectDialog').modal('show');
+           
+           // Remove the onClick event
+           $('#redirectDialog').on('hidden.bs.modal', function () {
+               $('#redirectDialog .btn-primary').unbind( "click", YESButtonInRedirectModalOnClick);
+               $('#redirectDialog .btn-default').unbind( "click", NOButtonInRedirectModalOnClick);
+           })
+        }
+    	
+    	function removeEffectiveReview(loc){
+            var divId = $(loc).attr('id').split('_');
+            $("#"+divId[0]).remove();
+            if($('#effectivenessReviewSection').children().length == 0 && effectCheckPlan.length == 0){
+                window.location.href = '/apex/capa_effect_review?id={!JSENCODE($CurrentPage.parameters.id)}';
+            }else{    
+            	assignDynamicIdsToEffectiveReview();
+            }    
+        }
+    	
+    	var isSave = false,isAdd=false;
+    	function effectivenessReviewValidation(){
+            $("div[id$='_error']").empty();
+            isApproversValid=false;
+            var id_start = 0;
+            var isValid = true,divId,planStmt,completedDate,ObjectiveEvidence,completedBy;
+            ObjectiveEvidence = $("#objectiveEvidence").val();
+            completedDate = $("#completed_Date_GRDATE").val();
+            completedBy = $("#completedBy").val();
+            if($("#effectivenessReviewSection>div").length>0){
+                $("#effectivenessReviewSection>div").each(function() {
+                    divId = '{!divId}' + (id_start++);
+                    planStmt = $("#"+divId+"_PlanStmt").val();
+                    if(planStmt == '' || planStmt == undefined){
+                        $("#"+divId+"_PlanStmt_error").append('This Field is Required').css('color','red');
+                        isValid = false;
+                    }
+                    return isValid;
+                });
+            }    
+            
+            if(isSave){
+                if(ObjectiveEvidence == '' || ObjectiveEvidence == undefined){
+                    $("#objectiveEvidence_error").append('This Field is Required').css('color','red');
+                    isValid = false;
+                }
+                if(completedDate == '' || completedDate == undefined){
+                    $("#completed_Date_error").append('This Field is Required').css('color','red');
+                    isValid = false;
+                }
+                if(completedBy == '' || completedBy == undefined){
+                    $("#completedBy_error").append('This Field is Required').css('color','red');
+                    isValid = false;
+                }
+                
+            }
+            validate(null,afterValidate,'Taskapproval');
+            if(!isApproversValid){                        
+                return false;
+            }
+            return isValid;
+        }    
+    	
+    	function assignDynamicIdsToEffectiveReview(){
+            var id_start = 0,divId;
+            $("#effectivenessReviewSection>div").each(function(){
+                divId = '{!divId}' + (id_start++);
+                $(this).attr('id',divId);
+                $("#"+divId).find('a').eq(0).attr('href','#'+divId+'_href');
+                $("#"+divId).find('a').eq(1).attr('id',divId+'_Cancel');
+                $("#"+divId).find('a').eq(2).attr('href','#'+divId+'_href');
+                $("#"+divId+">div").find('div').eq(1).attr('id',divId+'_href');
+                $("#"+divId).find('textarea').attr('id',divId+'_PlanStmt');
+				$("#"+divId+">div").find('div').eq(4).attr('id',divId+'_PlanStmt_error');				                
+            });    
+        }
+    
+    	function addEffectivenessReviewTask(flag){
+            if(flag){
+                isSave = false;
+            }    
+            if(effectivenessReviewValidation()){
+                $("#{!divId}").clone().prependTo("#effectivenessReviewSection").show();
+                assignDynamicIdsToEffectiveReview();
+            }    
+            
+        }    
+    </script>
+    <div class="button-bar text-right">
+        <h4 class="pull-left task-title"></h4>
+        <button id="add_effect_review_task" type="button" class="btn btn-primary" onclick="addEffectivenessReviewTask('true');"><span class="fa fa-plus-square-o"></span> Add</button>
+    </div>
+    
+    <p class="clearfix"></p>   
+    
+    <div class="" id="{!divId}" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingOne">
+                <h4 class="panel-title">
+                    <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" data-parent="#ver_plan_accordion" href="#{!divId}verplan_1" aria-expanded="true" aria-controls="collapseOne"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                    </a>
+                    <a href="#{!divId}ver_plan_1" id="cancel" class="btn-link pull-right" onclick = "removeEffectiveReview(this)">Cancel </a>&nbsp;
+                    <a data-toggle="collapse" data-parent="#accordion" href="#{!divId}ver_plan_1" aria-expanded="true" aria-controls="collapseOne" class="">
+                        Verification Plan
+                    </a>
+                </h4>
+            </div>
+            <div id="{!divId}ver_plan_1" class="panel-collapse out collapse in" role="tabpanel" aria-labelledby="headingOne" aria-expanded="true">
+                <div class="panel-body">
+                    <!--<div class="row"><!-- row start -->
+                        <!--<div class="col-md-12">-->
+                            <div class="wiz-fields-wide">
+                                <label for="exampleInputEmail1"><span class="mandatory">*</span> Plan Statement:</label>
+                                <textarea type="text" class="form-control" id="{!divId}PlanStmt" maxlength="255"  oninput="maxlengthvalidation(this)"></textarea>
+                                <div id="{!divId}PlanStmt_error"></div>
+                            </div>
+                        <!--</div>
+                    </div> <!-- Row Ends -->
+                </div>
+            </div>
+        </div>
+    </div> <!-- pannel end -->
+    
+    <!-- effectiveness verification plan section -->
+    <apex:repeat value="{!effectiveCheckPlan}" var="ecp">
+        <div class="">
+            <div class="panel-group col-md-12" id="act_plan_accordion" role="tablist" aria-multiselectable="true">
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="headingOne">
+                        <h4 class="panel-title">
+                            <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" data-parent="#ver_plan_accordion" href="#{!ecp.Id}_ver_plan" aria-expanded="true" aria-controls="collapseOne"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                            </a>
+                            <a href="#" class="btn-link pull-right" ></a>&nbsp;
+                            <a data-toggle="collapse" data-parent="#accordion" href="#{!ecp.Id}_ver_plan" aria-expanded="true" aria-controls="collapseOne" class="" id="{!ecp.Id}_href">
+                            </a>
+                            <script type="text/javascript">
+                               	var str = '{!JSENCODE(ecp.Plan_Statement__c)}'
+                            	$('#{!ecp.Id}_href').text('Verification Plan: '+str.substring(0,20)+'...');
+                            </script>
+                        </h4>
+                    </div>
+                    <div id="{!ecp.Id}_ver_plan" class="panel-collapse out collapse in" role="tabpanel" aria-labelledby="headingOne" aria-expanded="true">
+                        <div class="panel-body">
+                            <div class="wiz-fields-wide">
+                                <label for="exampleInputEmail1"><span class="mandatory"></span> Plan Statement:</label>
+                                <textarea type="text" class="form-control" disabled="disabled" id="{!ecp.Id}_planStmt" style="overflow: auto; height: 100px;" maxlength="255"  oninput="maxlengthvalidation(this)"></textarea>
+                                <script type="text/javascript">
+                                $('#{!ecp.Id}_planStmt').html('{!JSENCODE(ecp.Plan_Statement__c)}');
+                                </script>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- pannel end -->
+        </div> 
+    </apex:repeat>
+    <!-- end -->
+    
+    
+    <!-- effectiveness review task Section -->
+    <div id="effectivenessReviewSection" class="col-md-12">
+        <apex:repeat value="{!effectReviewTask}" var="ert">
+            <div class="{!ert}" id="" role="tablist" aria-multiselectable="true">
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="headingOne">
+                        <h4 class="panel-title">
+                            <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" data-parent="#ver_plan_accordion" href="#{!ert}verplan" aria-expanded="true" aria-controls="collapseOne"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                            </a>
+                            <a href="#{!ert}ver_plan" id="Cancel" class="btn-link pull-right" onclick ="deleteVerificationPlan(this)">Delete </a>&nbsp;
+                            <a data-toggle="collapse" data-parent="#accordion" href="#{!ert}ver_plan" aria-expanded="true" aria-controls="collapseOne" class="" id="{!ert.Id}_href">
+                            </a>
+                            <script type="text/javascript">
+                               	var str = '{!JSENCODE(ert.Plan_Statement__c)}'
+                            	$('#{!ert.Id}_href').text('Verification Plan: '+str.substring(0,20)+'...');
+                            </script>
+                        </h4>
+                    </div>
+                    <div id="{!ert}ver_plan" class="panel-collapse out collapse in" role="tabpanel" aria-labelledby="headingOne" aria-expanded="true">
+                        <div class="panel-body">
+                            <div class="wiz-fields-wide">
+                                <label for="exampleInputEmail1"><span class="mandatory">*</span> Plan Statement:</label>
+                                <textarea type="text" class="form-control" id="{!ert}_planStmt" style="overflow: auto; height: 100px;" maxlength="255"  oninput="maxlengthvalidation(this)"></textarea>
+                                <script type="text/javascript">
+                                $('#{!ert.Id}_planStmt').html('{!JSENCODE(ert.Plan_Statement__c)}');
+                                </script>
+                                <div id="{!ert}planStmt_error"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </apex:repeat>
+    </div>
+    <!-- end -->
+    
+    <div class="panel-group">
+        <div class="wiz-fields-wide col-md-12">
+            <label for="exampleInputEmail1"><span class="mandatory">*</span> Objective Evidence:</label>
+            <textarea type="text" class="form-control col-md-12" id="objectiveEvidence" style="overflow: auto; height: 100px;" maxlength="255" oninput="maxlengthvalidation(this)"></textarea>
+             <div id="objectiveEvidence_error"></div>
+            <script type="text/javascript">
+            	$('#objectiveEvidence').html('{!JSENCODE(effectTask.Objective_Evidence__c)}');
+            </script>
+           
+        </div>
+        <p class="clearfix"></p>
+        <c:wiz_field FieldLabel="Completed By" JSId="completed_by" Required="true" Wide="false">
+            <c:wiz_multi width="100%" required="true" FieldId="completedBy" multiple="false" queryFields="Name" 
+            	querytable="User" queryorderby="Id" initvalues="{value:'{!JSENCODE(effectTask.Completed_By__c)}', label:'{!JSENCODE(effectTask.Completed_By__r.Name)}'}" typeofuser="CAPA_Task_Owner"
+            disabled="{!OR(effectTask.Status__c == 'Pending Approval',effectTask.Status__c == 'Closed',effectTask.Status__c == 'Void',effectTask.ChangeFieldApprovalStatus__c=='Pending',AND($User.Id != effectTask.ownerid,$Profile.Name != 'System Administrator',$User.Id != Capa.Ownerid))}"/>
+        </c:wiz_field>
+            
+        <c:wiz_field FieldLabel="Completed Date" JSId="completed_date" Required="true" Wide="false">
+        	<c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"  FieldId="completed_Date"  initdate="{!IF(ISBLANK(effectTask.Completed_Date__c),today(),effectTask.Completed_Date__c)}" updateable="{!NOT(OR(effectTask.Status__c == 'Pending Approval',effectTask.Status__c == 'Closed',effectTask.Status__c == 'Void',effectTask.ChangeFieldApprovalStatus__c=='Pending',AND($User.Id != effectTask.ownerid,$Profile.Name != 'System Administrator',$User.Id != Capa.Ownerid)))}"/>
+        </c:wiz_field>
+        
+    </div>
+
+</apex:component>

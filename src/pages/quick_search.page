@@ -1,0 +1,639 @@
+<!--
+v1.0   Qualityze Inc                                   Initial Version.
+
+v1.1   Qualityze Inc(TS)          7-Sept-2016               Global Search
+
+-->
+<apex:page sidebar="false" controller="quickSearchController" readOnly="true" showHeader="true" standardStylesheets="false" docType="html-5.0">
+<style>
+.dataTables_filter label {
+  width: 100%;
+  }
+.dataTables_filter label input {
+  width: 90%
+  }
+</style>
+    <head>
+       <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/app.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.bt_static, '/static/stylesheets/dataTables.bootstrap.css')}"  />
+    <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/font-awesome.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/bootstrap-datepicker.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/javascripts/select2-4.0.0/dist/css/select2.min.css')}" /> 
+        
+        <title>Qualityze</title>
+    </head>
+
+    <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/bootstrap.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/moment.js')}" />
+   <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/bootstrap-datetimepicker.js')}" />
+   <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.slimscroll.min.js')}" />
+   <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/select2-4.0.0/dist/js/select2.min.js')}" />
+   <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.form.min.js')}" />
+   <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.validate.min.js')}" />
+   <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/tiny_mce/tiny_mce.js')}" />
+   
+
+    <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.dataTables.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/dataTables.bootstrap.js')}"/> 
+
+    <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/typeahead.bundle.js')}" />
+   <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/app.js')}" />
+
+    <style>
+        .error {
+            color: #F0493E !important;
+        }
+    </style>
+    <body>
+ <c:drawer_menu />
+
+<div class="well well-sm">
+    <apex:Form >
+    <div id="overlay" style="background-color: rgba(0, 0, 0, 0.15);z-index: 999;position: absolute;left: 0;top: 0;width: 100%;height: 200%;"></div>
+    <div id="loading" style="height: 64px;width: 64px;align:center; position: absolute;margin: -100px 0 0 -200px;top: 80%;left: 50%;z-index:1000">
+       <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i> <span class="sr-only">Loading...</span>
+       
+    </div>
+    <div class="row">
+        <div class="col-md-2">
+            <select id="sObjectID" class="form-control" onchange="searchServer(this.value);">
+              <option value="--Select--">--Select--</option>
+             <apex:outputpanel rendered="{!$Setup.QC_settings__c.Enable_DOC__c}">  <option value="Documents">Documents</option> </apex:outputPanel>
+             <apex:outputpanel rendered="{!$Setup.QC_settings__c.Enable_CAPA__c}"> <option value="CAPA">CAPA</option></apex:outputPanel>
+             <apex:outputpanel rendered="{!$Setup.QC_settings__c.Enable_NC__c}"> <option value="NC">NC</option></apex:outputPanel>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+                
+              <!--  <apex:actionFunction name="searchServerDoc" action="{!searchDPList}" rerender="docProfileSearchListTable,ncSearchListTable,InfoMessage" oncomplete="rerenderJS('Documents');"> -->
+              <apex:actionFunction name="searchServerDoc" action="{!searchDPList}" rerender="docProfileSearchListTable,InfoMessage" oncomplete="rerenderJS('Documents');hideloading();" > 
+                  <apex:param name="docPrereleaseFilter" value="" assignTo="{!docPrereleaseFilter}"/>
+                  <apex:param name="docCurrentFilter" value="" assignTo="{!docCurrentFilter}"/>
+                  <apex:param name="docBookmarkFilter" value="" assignTo="{!docBookmarkFilter}"/>
+                  <apex:param name="sObjName" value="" assignTo="{!sObjectName}"/>
+                </apex:actionFunction>
+
+                <!--
+                <apex:actionFunction name="bookMark" action="{!bookMarkDoc}" rerender="docProfileSearchListTable,InfoMessage" oncomplete="rerenderJS('Documents');hideloading();" > 
+                  <apex:param name="docprofileId" value="" assignTo="{!docProfileID}"/>
+                </apex:actionFunction>
+               -->
+                <apex:outputpanel >
+                <div id="docFilters" class="form-group" style="margin-bottom: 0; margin-top: 6px;">
+                  <label class="checkbox-inline">
+                        <input type="checkbox" id="bookmarkedCheck" value="" onclick="searchDoc();"> Book Marked</input>
+                  </label>
+                  <label class="checkbox-inline">
+                    <input type="checkbox" id="PreReleaseCheck" value="option1" onclick="searchDoc();"> Prerelease</input>
+                  </label>
+                  <label class="checkbox-inline">
+                    <input type="checkbox" id="currentCheck" value="" onclick="searchDoc();"> Current</input>
+                  </label>
+                </div>
+                </apex:outputpanel>
+
+            <!--    <apex:actionFunction name="searchServerNC" action="{!searchDPList}" rerender="docProfileSearchListTable,ncSearchListTable,InfoMessage" oncomplete="rerenderJS('NC');"> -->
+            <apex:actionFunction name="searchServerNC" action="{!searchDPList}" rerender="ncSearchListTable,InfoMessage" oncomplete="rerenderJS('NC');hideloading();" >
+                  <apex:param name="openNCValue" value="" assignTo="{!openNCFilter}"/>
+                  <apex:param name="workflowNCValue" value="" assignTo="{!workflowNCFilter}"/>
+                  <apex:param name="sObjName" value="" assignTo="{!sObjectName}"/>
+                </apex:actionFunction>
+                
+                <apex:outputpanel >
+                <div id="ncFilters" class="form-group" style="margin-bottom: 0; margin-top: 6px;">
+                 <label class="checkbox-inline">
+                    NC Status :
+                  </label>
+                  <label class="checkbox-inline">
+                    <input type="checkbox" id="OpenNCCheck" value="option1" onclick="searchNC();"> Open</input>
+                  </label>
+                  <!--<label class="checkbox-inline">
+                    <input type="checkbox" id="ClosedNCCheck" value="" onclick="searchNC();">Workflow</input>
+                  </label> -->
+                </div>
+                </apex:outputpanel>
+
+
+                <apex:actionFunction name="searchServerCAPA" action="{!searchDPList}" rerender="capaSearchListTable,InfoMessage" oncomplete="rerenderJS('CAPA');hideloading();" >
+                  <apex:param name="openCAPAValue" value="" assignTo="{!openCAPAFilter}"/>
+                  <apex:param name="sObjName" value="" assignTo="{!sObjectName}"/>
+                </apex:actionFunction>
+                
+                <apex:outputpanel >
+                <div id="capaFilters" class="form-group" style="margin-bottom: 0; margin-top: 6px;">
+                 <label class="checkbox-inline">
+                    CAPA Status :
+                  </label>
+                  <label class="checkbox-inline">
+                    <input type="checkbox" id="OpenCapaCheck" value="option1" onclick="searchCAPA();"> Open</input>
+                  </label>
+                </div>
+                </apex:outputpanel>
+        </div>
+    </div>
+    <div class="row">
+        
+    </div>
+    </apex:Form>
+</div>
+   
+
+<apex:outputPanel id="docProfileSearchListTable" > 
+              <div id="docProfileSearchListTableId" class="table-responsive">
+              
+              <!--
+                  <table class="table table-hover" id="docProfSearchListID">
+                      <thead style="background-color:#D8DDEA">
+                             <apex:repeat value="{!$ObjectType.Document_Profile__c.FieldSets.Document_Search_List_Fields}" var="dpL">
+                                <th><apex:outputText >{!dpL.label}</apex:outputText></th>
+                             </apex:repeat>
+                          <th width="7%"></th>
+                      </thead>
+                      <apex:repeat value="{!DPList}" var="dp">
+                          <tr class="list-row">
+                              <apex:repeat value="{!TableFieldAPINames}" var="dpAPI">
+                                <td>
+                                    <apex:outputPanel rendered="{!If(dpAPI == 'Name', true,false)}">
+                                        <a href="/{!dp['Id']}">
+                                        <apex:outputField value="{!dp[dpAPI]}"/>
+                                        </a>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!If(dpAPI == 'Name', false,true)}">
+                                        <apex:outputField value="{!dp[dpAPI]}"/>
+                                    </apex:outputPanel>
+                                </td>
+                             </apex:repeat>
+                                                      
+                          <td>
+                                <div class="search-icons">
+                                 <!-- <a href="#" class="ico-hint"><i class="fa fa-ellipsis-h "></i></a> -->
+                              <!--   <span class="act-icons"> 
+                                       <apex:outputPanel rendered="{!IF(dp.SecondaryContentVersionId__c =='' && dp.ContentVersionId__c=='', false, true)}">
+                                        <a href="#" title="View Document" onclick="OpenDoc('{!IF(ISBLANK(dp.SecondaryContentVersionId__c),dp.ContentVersionId__c,dp.SecondaryContentVersionId__c)}','{!IF(ISBLANK(dp.Secondary_File_Name__c),dp.Primary_File_Name__c,dp.Secondary_File_Name__c)}')">
+                                        <i class="fa fa-eye"></i>
+                                        </a>
+                                             <apex:outputPanel rendered="{!$Setup.QC_settings__c.Enable_Document_Print__c}">
+                                                <a href="https://c.{!JSENCODE($Setup.QC_settings__c.Instance_Name__c)}.content.force.com/sfc/servlet.shepherd/version/download/{!IF(ISBLANK(dp.SecondaryContentVersionId__c),dp.ContentVersionId__c,dp.SecondaryContentVersionId__c)}?asPdf=true&operationContext=CHATTER" title="Print" target="_blank"><i class="fa fa-print"></i></a>
+                                            </apex:outputPanel>
+                                        </apex:outputPanel>
+                                        
+                                         <apex:outputPanel rendered="{!NOT(Contains(dp.Followers__c,$User.Id))}">
+                                            <a href="#" title="Bookmark" onClick="showloading(); bookMarkremotefunc('{!dp.Id}','bookmark');"><i class="fa fa-bookmark-o" ></i></a>
+                                         </apex:outputPanel>
+                                         <apex:outputPanel rendered="{!IF(Contains(dp.Followers__c,$User.Id),true,false)}">
+                                            <a href="#" title="Remove Bookmark" onClick="showloading(); bookMarkremotefunc('{!dp.Id}','remove');"><i class="fa fa-bookmark"></i></a>
+                                         </apex:outputPanel>
+                                 </span> 
+                                </div>
+                              </td>
+                          </tr>
+                      </apex:repeat>
+                </table>
+                -->
+                
+                <table class="table table-hover" cellspacing="5" id="docProfSearchListID" width="100%" >
+                                <thead>
+                                    <tr>
+                                        <th width="8%">Document Number</th>
+                                        <th width="8%">Current Revision </th>
+                                        <th width="8%">Title</th>
+                                        <th width="8%">Document Type</th>
+                                        <th width="8%">Owner</th>
+                                        <th width="8%">Product</th>
+                                        <th width="8%">Process</th>
+                                        <th width="8%">Status</th>
+                                        <th width="12%">Effective Date</th>
+                                        <th width="8%">Expiration Date</th>
+                                        
+                                        <apex:repeat value="{!HeaderLabels}" var="dpL">
+                                            <th><apex:outputText >{!dpL}</apex:outputText></th>
+                                         </apex:repeat>
+                                         
+                                        <th width="8%"></th>
+                                    </tr>
+                                </thead>
+                          
+                                <apex:repeat value="{!DPList}" var="dp">
+                                    <tr class="list-row">
+                                        <td width="8%"><a href="/{!dp.id}">{!dp.Name}</a></td>
+                                        <td width="8%"><apex:outputLabel value="{!dp.Current_Rev__c}"/></td>
+                                        <td width="8%"><apex:outputLabel value="{!dp.Title__c}"/></td>
+                                        <td width="8%">{!dp.Document_Type_Name__c}</td>
+                                        <td width="8%">{!dp.Owner_Name__c}</td>
+                                        <td width="8%">{!dp.Product_Name__c}</td>
+                                        <td width="8%">{!dp.Process_Name__c}</td>
+                                        <td width="8%">{!dp.Status__c}</td>
+                                        <td width="12%"><apex:outputField value="{!dp.Effective_Date__c}"/></td>
+                                        <td width="8%"><apex:outputField value="{!dp.Expiration_Date__c}"/></td>
+                                        
+                                        <apex:repeat value="{!TableFieldAPINames}" var="dpAPI">
+                                          <td>
+                                              <apex:outputPanel rendered="{!If(dpAPI == 'Name', true,false)}">
+                                                  <a href="/{!dp['Id']}">
+                                                  <apex:outputField value="{!dp[dpAPI]}"/>
+                                                  </a>
+                                              </apex:outputPanel>
+                                              <apex:outputPanel rendered="{!If(dpAPI == 'Name', false,true)}">
+                                                  <apex:outputField value="{!dp[dpAPI]}"/>
+                                              </apex:outputPanel>
+                                          </td>
+                                        </apex:repeat>
+                                        
+                                        <td>
+                                          <div class="search-icons">
+                                          <span class="act-icons"> 
+                                                 <apex:outputPanel rendered="{!IF(dp.SecondaryContentVersionId__c =='' && dp.ContentVersionId__c=='', false, true)}">
+                                                  <a href="#" title="View Document" onclick="OpenDoc('{!IF(ISBLANK(dp.SecondaryContentVersionId__c),dp.ContentVersionId__c,dp.SecondaryContentVersionId__c)}','{!IF(ISBLANK(dp.Secondary_File_Name__c),dp.Primary_File_Name__c,dp.Secondary_File_Name__c)}')">
+                                                  <i class="fa fa-eye"></i>
+                                                  </a>
+                                                       <apex:outputPanel rendered="{!$Setup.QC_settings__c.Enable_Document_Print__c}">
+                                                          <a href="https://c.{!JSENCODE($Setup.QC_settings__c.Instance_Name__c)}.content.force.com/sfc/servlet.shepherd/version/download/{!IF(ISBLANK(dp.SecondaryContentVersionId__c),dp.ContentVersionId__c,dp.SecondaryContentVersionId__c)}?asPdf=true&operationContext=CHATTER" title="Print" target="_blank"><i class="fa fa-print"></i></a>
+                                                      </apex:outputPanel>
+                                                  </apex:outputPanel>
+                                                  
+                                                   <apex:outputPanel rendered="{!NOT(Contains(dp.Followers__c,$User.Id))}">
+                                                      <a href="#" title="Bookmark" onClick="showloading(); bookMarkremotefunc('{!dp.Id}','bookmark');"><i class="fa fa-bookmark-o" ></i></a>
+                                                   </apex:outputPanel>
+                                                   <apex:outputPanel rendered="{!IF(Contains(dp.Followers__c,$User.Id),true,false)}">
+                                                      <a href="#" title="Remove Bookmark" onClick="showloading(); bookMarkremotefunc('{!dp.Id}','remove');"><i class="fa fa-bookmark"></i></a>
+                                                   </apex:outputPanel>
+                                           </span> 
+                                          </div>
+                                    </td>
+                                    </tr>
+                                </apex:repeat>
+                         
+                            </table>
+                            
+         </div>
+    </apex:outputPanel> 
+
+
+
+<apex:outputPanel id="ncSearchListTable" >
+
+<div id="ncSearchListTableId" class="table-responsive">
+
+<table class="table table-hover" cellspacing="5" id="ncSearchListID" width="100%" >
+                  <thead style="background-color:#D8DDEA">
+                    <tr>
+                      <th width="8%">NC Number</th>
+                      <th width="8%">NC Type</th>
+                      <th width="8%">NC Source</th>
+                      <th width="8%">Product</th>
+                      <th width="8%">Process</th>
+                      <th width="8%">Defect</th>
+                      <th width="8%">NC Owner</th>
+                      <th width="8%">Business Unit</th>
+                      <th width="8%">Initiating Site</th>
+                      <th width="8%">Occurance Date</th>
+                      <th width="12%">Created Date</th>
+                      <th width="8%">Created By</th>
+                    </tr>
+                  </thead>
+
+                    <apex:repeat value="{!NCList}" var="nc">
+                      <tr class="list-row">
+                        <td width="8%"><a href="/{!nc.id}">{!nc.Name}</a></td>
+                        <td width="8%">{!nc.NC_Type__c}</td>
+                        <td width="8%">{!nc.NC_Source__c}</td>
+                        <td width="8%">{!nc.Product_Name__c}</td>
+                        <td width="8%">{!nc.Process_Name__c}</td>
+                        <td width="8%">{!nc.Defect_Name__c}</td>
+                        <td width="8%">{!nc.Owner.Name}</td>
+                        <td width="8%">{!nc.BusinessUnit__c}</td>
+                        <td width="8%">{!nc.Initiating_Site_name__c}</td>
+                        <td width="8%"><apex:outputField value="{!nc.Occurance_Date__c}"/></td>
+                        <td width="12%"><apex:outputField value="{!nc.CreatedDate}"/></td>
+                        <td width="8%">{!nc.CreatedBy.Name}</td>
+                      </tr>
+                    </apex:repeat>
+
+                </table>
+    <!--    
+
+    <table class="table table-hover" cellspacing="5" id="ncSearchListID" width="100%" >
+                  <thead style="background-color:#D8DDEA">
+                    <tr>
+                      <apex:repeat value="{!ncHeaderLabels}" var="NCL">
+                        <th><apex:outputText >{!NCL}</apex:outputText></th>
+                       </apex:repeat>
+                    </tr>
+                  </thead>
+
+                    <apex:repeat value="{!NCList}" var="nc">
+                      <tr class="list-row">
+                        <apex:repeat value="{!ncTableFieldAPINames}" var="ncAPI">
+                                <td>
+                                    <apex:outputPanel rendered="{!If(ncAPI == 'Name', true,false)}">
+                                        <a href="/{!nc['Id']}">
+                                        <apex:outputField value="{!nc[ncAPI]}"/>
+                                        </a>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!If(ncAPI == 'Name', false,true)}">
+                                        <apex:outputField value="{!nc[ncAPI]}"/>
+                                    </apex:outputPanel>
+                                </td>
+                             </apex:repeat>
+                      </tr>
+                    </apex:repeat>
+
+                </table>
+-->
+    </div>                           
+ </apex:outputPanel>
+ 
+
+
+ <apex:outputPanel id="capaSearchListTable" >
+
+    <div id="capaSearchListTableId" class="table-responsive">
+         <table class="table table-hover" cellspacing="5" id="capaSearchListID" width="100%" >
+              <thead>
+                <tr>
+                  <th width="8%">CAPA Number</th>
+                  <th width="8%">CAPA Title </th>
+                  <th width="8%">CAPA Source</th>
+                  <th width="8%">Site(s) Impacted</th>
+                  <th width="8%">Department</th>
+                  <th width="8%">CAPA Owner</th>
+                  <th width="8%">Criticality</th>
+                  <th width="8%">Reported By</th>
+                  <th width="8%">Reported Date</th>
+                  <th width="8%">Occurance Date</th>
+                  <th width="12%">Created Date</th>
+                  <th width="8%">Created By</th>
+                </tr>
+              </thead>
+                <apex:repeat value="{!CAPAList}" var="capa">
+                  <tr class="list-row">
+                    <td width="8%"><a href="/{!capa.id}">{!capa.Name}</a></td>
+                    <td width="8%">{!capa.Title__c}</td>
+                    <td width="8%">{!capa.CAPA_Source__c}</td>
+                    <td width="8%">{!capa.Sites_Impacted__c}</td>
+                    <th width="8%">{!capa.Department__c}</th>
+                    <td width="8%">{!capa.Owner.Name}</td>
+                    <td width="8%">{!capa.Criticality__c}</td>
+                    <td width="8%">{!capa.Reported_By__r.name}</td>
+                    <td width="8%"><apex:outputField value="{!capa.Reported_Date__c}"/></td>
+                    <td width="8%"><apex:outputField value="{!capa.Occurance_Date__c}"/></td>
+                    <td width="12%"><apex:outputField value="{!capa.CreatedDate}"/></td>
+                    <td width="8%">{!capa.CreatedBy.Name}</td>
+                  </tr>
+                </apex:repeat>
+
+           </table>
+    </div>                           
+ </apex:outputPanel>
+
+ <apex:outputPanel id="InfoMessage" >
+        <div id="INFOMESSAGE" class="alert alert-warning alert-dismissible" role="alert" style="padding: 8px 35px 8px 15px">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">×</span>
+            </button>
+                Select object to search.... 
+        </div>
+      <!--  <apex:outputText value="Select object to search....."/> -->
+   </apex:outputPanel>
+
+   <div id="primaryFileView" class="modal fade" role="dialog">
+                 <div class="modal-dialog">
+                    
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title" id="fileViewTitle"></h4>
+                          </div>
+                          <div class="modal-body">
+                            <div style="position: relative; overflow: hidden; width: auto; height: 450px;" class="slimScrollDiv">
+                                
+                                    <div  class="centerContent" id="fileViewDiv"></div>
+                                
+                            </div>
+                         
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                          </div>
+                        </div>
+                  </div>
+             </div> 
+
+        <!-- V1.2 ENDS-->
+     <c:static_footer />
+     
+     <c:sfdcapp />
+     <script src="../../soap/ajax/34.0/connection.js" type="text/javascript"></script>
+    </body>
+     <script>
+    $(document).ready(function() {
+        $('#ncFilters').removeClass('form-group').addClass('form-group hidden');
+        $('#docFilters').removeClass('form-group').addClass('form-group hidden');
+        $('#capaFilters').removeClass('form-group').addClass('form-group hidden');
+        $('#docProfileSearchListTableId').removeClass('table-responsive').addClass('table-responsive hidden');
+        $('#ncSearchListTableId').removeClass('table-responsive').addClass('table-responsive hidden');
+        $('#capaSearchListTableId').removeClass('table-responsive').addClass('table-responsive hidden');
+        $("#loading").hide();
+        $("#overlay").hide();
+        });
+function rerenderJS(type)
+{
+    if(type == 'Documents')
+    {
+        $('#ncSearchListTableId').removeClass('table-responsive').addClass('table-responsive hidden');
+        $('#capaSearchListTableId').removeClass('table-responsive').addClass('table-responsive hidden');
+        $('#INFOMESSAGE').removeClass('alert alert-warning alert-dismissible').addClass('alert alert-warning alert-dismissible hidden');
+        $('#docProfSearchListID').dataTable();
+        $('#docProfSearchListID_wrapper').removeClass('dataTables_wrapper form-inline dt-bootstrap no-footer').addClass('dataTables_wrapper dt-bootstrap no-footer');
+    }
+    if(type== 'NC')
+    {
+        $('#docProfileSearchListTableId').removeClass('table-responsive').addClass('table-responsive hidden');
+        $('#capaSearchListTableId').removeClass('table-responsive').addClass('table-responsive hidden');
+        $('#INFOMESSAGE').removeClass('alert alert-warning alert-dismissible').addClass('alert alert-warning alert-dismissible hidden');
+        $('#ncSearchListID').dataTable();
+        $('#ncSearchListID_wrapper').removeClass('dataTables_wrapper form-inline dt-bootstrap no-footer').addClass('dataTables_wrapper dt-bootstrap no-footer');
+    }
+    if(type== 'CAPA')
+    {
+        $('#docProfileSearchListTableId').removeClass('table-responsive').addClass('table-responsive hidden');
+        $('#ncSearchListTableId').removeClass('table-responsive').addClass('table-responsive hidden');
+        $('#INFOMESSAGE').removeClass('alert alert-warning alert-dismissible').addClass('alert alert-warning alert-dismissible hidden');
+        $('#capaSearchListID').dataTable();
+        $('#capaSearchListID_wrapper').removeClass('dataTables_wrapper form-inline dt-bootstrap no-footer').addClass('dataTables_wrapper dt-bootstrap no-footer');
+    }
+}
+function OpenDoc(docId,title){
+           //alert(docId);
+            //alert(title);
+            $("#fileViewTitle").text(title);
+            var htmlString = '<div style="height:100%;width:100%" id="dpvPreviewWrapper"><div class="chatterFileViewerPanel" style="height:100%;width:100%" id="chatterFileViewerPanel"><embed src="/_swf/196007/sfc/flex/DocViewer.swf" flashvars="shepherd_prefix=/sfc/servlet.shepherd&amp;v="+docId+"&amp;mode=chatterfilepreview&amp;in_tests=false" width="100%" height="500px" align="middle" id="renditionLarge" quality="high" bgcolor="#f3f3f3" name="renditionLarge" allowscriptaccess="sameDomain" allowfullscreen="true" pluginspage="http://www.adobe.com/go/getflashplayer" wmode="opaque" type="application/x-shockwave-flash"></div></div>';
+            $("#fileViewDiv").html(htmlString);
+            PrepareFlexComponent(docId);
+            $('#primaryFileView').modal('show');
+        }
+function PrepareFlexComponent(docId){
+
+        insertFlexComponent('/_swf/196007/sfc/flex/DocViewer', 'shepherd_prefix=/sfc/servlet.shepherd&v='+docId+'&mode=chatterfilepreview&in_tests=false', '100%', '450px', '#f3f3f3', 'chatterFileViewerPanel', 'renditionLarge', false, { adobeFlashVersionLbl : 'You must enable or download Adobe Flash Player version 9.0.115 or later to use this feature.', downloadAdobeLbl : 'Download Adobe Flash Player', downloadAdobeLinkLbl : 'Click the link below to download the Adobe Flash Player:', closeDialogLbl : 'Cancel'}); 
+   
+        
+ }
+
+function searchServer(searchVal)
+{
+    if(searchVal == '--Select--')
+    {
+        
+        $('#INFOMESSAGE').removeClass('alert alert-warning alert-dismissible hidden').addClass('alert alert-warning alert-dismissible');
+        $('#ncFilters').removeClass('form-group').addClass('form-group hidden');
+        $('#docFilters').removeClass('form-group').addClass('form-group hidden');
+        $('#docProfileSearchListTableId').removeClass('table-responsive').addClass('table-responsive hidden');
+        $('#ncSearchListTableId').removeClass('table-responsive').addClass('table-responsive hidden');
+    }
+    else
+        $('#INFOMESSAGE').removeClass('alert alert-warning alert-dismissible').addClass('alert alert-warning alert-dismissible hidden');
+
+    if(searchVal == 'Documents')
+    {   
+         $('#ncFilters').removeClass('form-group').addClass('form-group hidden');
+         $('#docFilters').removeClass('form-group hidden').addClass('form-group');
+         $('#capaFilters').removeClass('form-group').addClass('form-group hidden');
+         $('#OpenNCCheck').prop("checked", false);
+         $('#workflowNCValue').prop("checked", false);
+         $('#OpenCapaCheck').prop("checked", false);
+         $('#currentCheck').prop("checked", true);
+         $('#ncSearchListTableId').removeClass('table-responsive').addClass('table-responsive hidden');
+         $('#capaSearchListTableId').removeClass('table-responsive').addClass('table-responsive hidden');
+         //$('#docProfileSearchListTableId').removeClass('table-responsive hidden').addClass('table-responsive');
+        searchDoc();
+    }
+    if(searchVal == 'NC')
+    {
+        $('#docFilters').removeClass('form-group').addClass('form-group hidden');
+        $('#capaFilters').removeClass('form-group').addClass('form-group hidden');
+        $('#ncFilters').removeClass('form-group hidden').addClass('form-group');
+        $('#PreReleaseCheck').prop("checked", false);
+        $('#currentCheck').prop("checked", false);
+        $('#bookmarkedCheck').prop("checked", false);
+        $('#OpenCapaCheck').prop("checked", false);
+         $('#OpenNCCheck').prop("checked", true);
+
+        $('#docProfileSearchListTableId').removeClass('table-responsive').addClass('table-responsive hidden');
+        $('#capaSearchListTableId').removeClass('table-responsive').addClass('table-responsive hidden');
+        //$('#ncSearchListTableId').removeClass('table-responsive hidden').addClass('table-responsive');
+        searchNC();
+    }
+     if(searchVal == 'CAPA')
+    {
+        $('#docFilters').removeClass('form-group').addClass('form-group hidden');
+        $('#ncFilters').removeClass('form-group').addClass('form-group hidden');
+        $('#capaFilters').removeClass('form-group hidden').addClass('form-group');
+        $('#PreReleaseCheck').prop("checked", false);
+        $('#currentCheck').prop("checked", false);
+        $('#bookmarkedCheck').prop("checked", false);
+        $('#OpenNCCheck').prop("checked", false);
+        $('#workflowNCValue').prop("checked", false);
+         $('#OpenCapaCheck').prop("checked", true);
+        $('#docProfileSearchListTableId').removeClass('table-responsive').addClass('table-responsive hidden');
+        $('#ncSearchListTableId').removeClass('table-responsive').addClass('table-responsive hidden');
+        //$('#ncSearchListTableId').removeClass('table-responsive hidden').addClass('table-responsive');
+        searchCAPA();
+    }
+}
+ function searchDoc()
+ {
+    var PrereleaseVal;
+    var CurrentVal;
+    var bookmark;
+    if($('#PreReleaseCheck').is(":checked"))
+        PrereleaseVal = 'Prerelease';
+    else
+        PrereleaseVal = '';
+    if($('#currentCheck').is(":checked"))
+        CurrentVal = 'Current';
+     else
+        CurrentVal = '';
+    if($('#bookmarkedCheck').is(":checked"))
+        bookmark = 'true';
+     else
+        bookmark = '';
+
+    showloading();
+    searchServerDoc(
+        PrereleaseVal,
+        CurrentVal,
+        bookmark,
+        document.getElementById("sObjectID").options[document.getElementById("sObjectID").selectedIndex].value
+    );
+ }
+
+ 
+ function searchNC()
+ {
+    var openNC;
+    var workflowNC;
+    if($('#OpenNCCheck').is(":checked"))
+        openNC = 'Open';
+    else
+        openNC = '';
+    if($('#workflowNCValue').is(":checked"))
+        workflowNC = 'NC Workflow';
+     else
+        workflowNC = '';
+    showloading();
+    searchServerNC(
+        openNC,
+        workflowNC,
+        document.getElementById("sObjectID").options[document.getElementById("sObjectID").selectedIndex].value
+    );
+ }
+
+ function searchCAPA()
+ {
+    var openCAPA;
+    if($('#OpenCapaCheck').is(":checked"))
+        openCAPA = 'Open';
+    else
+        openCAPA = '';
+    showloading();
+    searchServerCAPA(
+        openCAPA,
+        document.getElementById("sObjectID").options[document.getElementById("sObjectID").selectedIndex].value
+    );
+ }
+
+function bookMarkremotefunc(docProfileId,boomarkedValue){
+          Visualforce.remoting.Manager.invokeAction(
+                             // @RemoteAction
+                             '{!$RemoteAction.quickSearchController.bookMarkdocremotefunc}',docProfileId,boomarkedValue,
+                             // Callback
+                             function(result, event){
+                                    console.log('Doc has bookamrked Successfully.');
+                                    $("#docProfSearchListID").load();
+                                    $('#docProfSearchListID').dataTable();
+                                    hideloading();
+                                   
+                             },
+                             // Don't know, couldn't find docs
+                             {escape: true}
+                         
+                         );
+        
+      } 
+ function showloading(){
+         $("#loading").show();
+         $("#overlay").show();
+      }
+  function hideloading(){
+     $("#loading").hide();
+     $("#overlay").hide();
+  }
+    </script>
+</apex:page>

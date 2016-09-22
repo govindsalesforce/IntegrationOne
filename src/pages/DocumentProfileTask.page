@@ -1,0 +1,2383 @@
+<!--
+v1.0    Qualityze Inc(SG)      25-Sep-2016      Initial Version.
+                                                This Page contains all Document Profile general task related code.
+!-->
+
+
+
+<apex:page standardController="Document_Profile__c" extensions="DocumentProfileControllerExt,QC_custom_settings,Approvalclass,GeneralTaskController" sidebar="false" showHeader="false" standardStylesheets="false" docType="html-5.0">
+   <div id="overlay" style="background-color: rgba(0, 0, 0, 0.15);z-index: 999;position: absolute;left: 0;top: 0;width: 100%;height: 200%;"></div>
+    <div id="loading" style="height: 64px;width: 64px;align:center; position: absolute;margin: -100px 0 0 -200px;top: 80%;left: 50%;z-index:1000">
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i> <span class="sr-only">Loading...</span>
+        
+    </div>
+    <script type="text/javascript">
+    
+    
+    $( document ).ready(function() {
+        setTimeout(show(), 1000);
+      }); 
+    
+    function show(){
+        $("#loading").hide();
+        $("#overlay").hide();
+    }
+    
+                                                     
+                                      
+    </script>
+    <script>
+         $( document ).ready(function() {
+                            
+                
+                     $('.doVerifyUserNameButton').hide(); 
+                     $('#ApprovaButtonIdNcContainment').hide(); 
+                     var flag=false;
+                
+                    var taskId="{!JSENCODE($CurrentPage.parameters.gtid)}";
+                     Visualforce.remoting.Manager.invokeAction(
+                            // @RemoteAction
+                            '{!$RemoteAction.Approvalclass.getApprover}',taskId,function(result, event){
+                                if(result.length!=0){
+                                        if(result[0].hasOwnProperty('Workitems')){
+                                            
+                                            
+                                                    $.each(result[0].Workitems,function(i, record) {
+                                                        if(record.ActorId=='{!JSENCODE($User.id)}')
+                                                        {
+                                                        
+                                                            flag=true;
+                                                        }
+                                                        }); 
+                                                    if(flag){
+                                                        
+                                                        $('.LI_decision').show();
+                                                        $('.doVerifyUserNameButton').show();
+                                                        $('#ApprovaButtonIdNcContainment').show(); 
+                                                    }
+                                                 
+                                                    if(result[0].SubmittedById=='{!JSENCODE($User.id)}'){
+                                                        $('#javascriptidForApprovalbutton_decision_wiz-fields-wide').hide();  
+                                                        $('#javascriptidForApprovalbutton_Comment_Required').show(); 
+                                                        $('#javascriptidForApprovalbutton__ApprovalRescomment').addClass('javascriptidForApprovalbutton_required');   
+                                                        recall=true;
+                                                    
+                                                    }
+             
+                                                    }
+                                                 else{
+                                                        $('.LI_decision').hide();
+                                                        $('.doVerifyUserNameButton').hide();  
+                                                        $('#ApprovaButtonIdNcContainment').show();
+                                                        
+                                                     }  
+                                    
+                                        }
+                                    else{                                       
+                                        $('.LI_decision').hide();
+                                        $('.doVerifyUserNameButton').hide(); 
+                                        $('#ApprovaButtonIdNcContainment').hide();
+                                    }
+                                });
+                         });
+    
+    
+    
+                    function ApprovePopupModal(){
+                      if('{!$CurrentPage.parameters.type}'=='EffectivenessReview')
+                     {
+                        $('#ahrefjavascriptidForApprovalbutton_LI_decision').html('Effectiveness Review');
+                     }
+                     else if('{!$CurrentPage.parameters.type}'=='CollaborationReview')
+                     {
+                        $('#ahrefjavascriptidForApprovalbutton_LI_decision').html('Review');
+                     }
+                    else
+                    {
+                     $('#ahrefjavascriptidForApprovalbutton_LI_decision').html('Approve');
+                    }
+                    $('.LI_decision').show();
+                    $('#javascriptidForApprovalbutton_decision_wiz-fields-wide').show();  
+                    $('#javascriptidForApprovalbutton_header').html('Approve {!JSENCODE($CurrentPage.Parameters.type)} Approval');
+                    $('#javascriptidForApprovalbutton_Comment_Required').hide(); 
+                    $('.doVerifyUserNameButton').show();
+                    $('#ApprovaButtonIdNcContainment').show(); 
+                    $('#javascriptidForApprovalbutton__ApprovalRescomment').removeClass('javascriptidForApprovalbutton_required');
+                    $('#javascriptidForApprovalbutton').modal('show');
+                    $('#javascriptidForApprovalbutton_user_name').val('');
+                    $('#javascriptidForApprovalbutton_password').val('');       
+                    $('#javascriptidForApprovalbutton__ApprovalRescomment').val('');
+                    recall=false;
+                }  
+                function RecallPopupModal(){
+                    $('.LI_decision').hide();
+                    $('.doVerifyUserNameButton').hide(); 
+                    $('#ahrefjavascriptidForApprovalbutton_LI_decision').html('Recall');
+                    $('#javascriptidForApprovalbutton_decision_wiz-fields-wide').hide();  
+                    $('#javascriptidForApprovalbutton_header').html('Recall {!JSENCODE($CurrentPage.Parameters.type)} Approval');
+                    $('#javascriptidForApprovalbutton_Comment_Required').show(); 
+                    $('#javascriptidForApprovalbutton__ApprovalRescomment').addClass('javascriptidForApprovalbutton_required');   
+                    $('#javascriptidForApprovalbutton').modal('show');
+                    $('#javascriptidForApprovalbutton_user_name').val('');
+                    $('#javascriptidForApprovalbutton_password').val('');  
+                    $('#javascriptidForApprovalbutton__ApprovalRescomment').val('');                    
+                    recall=true
+                   
+                }
+                    function SubmitApprovalRequest(RecordId,UserId,listid,ApprovalReqcomment,FieldId,TochangeFieldName,newDueDate){
+                         Visualforce.remoting.Manager.invokeAction(
+                                    // @RemoteAction
+                                    '{!$RemoteAction.Approvalclass.submitApprovalRequest}',RecordId,UserId,listid,ApprovalReqcomment,FieldId,TochangeFieldName,newDueDate,function(result, event){
+                                                                                                    if(event.status){
+                                               
+                                                                                                        //location.reload();
+                                                                                                        window.location.href = '/apex/DocumentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_er={!JSENCODE($CurrentPage.parameters.gtid_er)}&type=EffectivenessReview';
+                                                                                                    }
+                                        });
+
+                }
+
+                function ApprovalResponse(RecordId,ApprovalRescomment,approved,FieldId){
+                            Visualforce.remoting.Manager.invokeAction(
+                            // @RemoteAction
+                            '{!$RemoteAction.Approvalclass.submitApprovalResponse}',RecordId,ApprovalRescomment,approved,FieldId,function(result, event){
+                                                                                            if(event.status){
+                                                                                                // alert('sucess');
+                                                                                                //location.reload();
+                                                                                                if({!gTask.Record_Type_Name__c=='EffectivenessReview'})
+                                                                                                {
+                                                                                                
+                                                                                                window.location.href = '/apex/DocumentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_er={!JSENCODE($CurrentPage.parameters.gtid_er)}&type=EffectivenessReview';
+                                                                                                }
+                                                                                                if({!gTask_cr.Record_Type_Name__c=='CollaborationReview'})
+                                                                                               {
+                                                                                                 window.location.href = '/apex/DocumentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_cr={!JSENCODE($CurrentPage.parameters.gtid_cr)}&type=CollaborationReview';
+
+                                                                                               }
+                                                                                            
+                                                                                            
+                                                                                            
+                                                                                            }
+                                });
+                }
+                            
+       
+       
+                      
+    </script>
+     <div id="container">
+        <apex:composition template="qualityze_app_layout">
+            <apex:define name="header_bar_component">           
+                <!--Begin : Header Bar With Search Option -->               
+                <c:header_bar ObjectType="{!$ObjectType.Document_Profile__c}" ObjectTypeLinkTitle="Document Profile"/>                
+                <!--End  : Header Bar With Search Option -->
+            </apex:define> 
+            
+            <apex:define name="theheader">
+                <c:DocumentProfile_Header docrecordID="{!Document_Profile__c.Id}" rendered="{!NOT(ISBLANK(Document_Profile__c.Id))}"></c:DocumentProfile_Header>
+                 
+                <!--Message(Start)-->
+                
+                <div id="Tempnewmessage" class="alert alert-warning alert-dismissible" role="alert" style="{!IF(gtask.status__c=='Void','display:visible','display:none')}">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">×</span>
+              </button>
+              <strong>Warning !</strong> This is a Temporary Deviated document.
+                </div>
+                <!--Message(End)-->
+                
+                 <!--Message(Start)-->
+                <div id="Tempoldmessage" class="alert alert-warning alert-dismissible hidden" role="alert" style="padding: 8px 35px 8px 15px">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">×</span>
+              </button>
+              <strong>Warning !</strong> Temporary Deviation of this document exists.
+                </div>
+                <!--Message(End)-->
+            </apex:define>
+            
+            <apex:define name="wizsteps">
+                <!-- To do   -->
+                <!--temporary by balu start-->
+                
+                <c:Document_Steps DocumentProfiles="{!Document_Profile__c}" rendered="{!NOT(ISBLANK(Document_Profile__c.Id))}" subTask="{!Document_Profile__c.General_Tasks__r}"></c:Document_Steps>
+                <div class="clearfix"></div>   
+                <!--temp by balu end-->
+            </apex:define> 
+            
+            <apex:define name="from-holder-title">
+                <apex:outputText value="{!IF($CurrentPage.parameters.type=='EffectivenessReview','Effectiveness Review','Collaboration Review')}" />
+                
+             </apex:define>
+            
+            <apex:define name="theform">
+              <apex:outputPanel rendered="{!AND($CurrentPage.parameters.id!=null,$CurrentPage.parameters.type!='CollaborationReview',OR($CurrentPage.parameters.gtid_er==gTask.id,$CurrentPage.parameters.gtid_er=='gt_init', $CurrentPage.parameters.type=='EffectivenessReview'))}">
+    <div align="Right">
+      <apex:outputPanel layout="none"  rendered="{!AND((NewBtfg==true),($CurrentPage.parameters.gtid_er!='gt_init'))}">
+      <div class="button-bar text-right">
+              <button type="button" onclick=" window.location = '/apex/documentProfiletask?id={!$CurrentPage.parameters.id}&gtid_er=gt_init&type=EffectivenessReview';" class="btn btn-primary dont-allow-multiple-clicks" >Add Effectiveness Review</button>
+        
+          </div>
+        </apex:outputPanel>
+      </div>
+      <div class="wiz-field nc-resolution">
+        <div class="col-md-12">
+          <div class="panel-group" id="accordion1" role="tablist" aria-multiselectable="false">
+            <div class="panel panel-default panel-select">
+              <div class="panel-heading" role="tab" id="headingOne">
+              
+                <div class="row">
+                  <div class="col-md-6 col-sm-6 col-xs-6">
+                    <h4 class="panel-title">
+                      <a role="button" data-toggle="collapse" data-parent="#accordion"  aria-expanded="true" aria-controls="collapseEffRevOne">
+                        <apex:outputText value="Effectiveness Review({!IF($CurrentPage.parameters.gtid_er=='gt_init','New',gTask.Status__c)})" >
+                        </apex:outputText>
+                      </a>
+                    </h4>
+                  </div>
+                  <div class="col-md-3 col-sm-6 col-xs-6 text-right" id="add_approval_link">
+                      
+                    
+                  </div>
+                </div>
+              </div>
+              <div id="collapseEffRevOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingEffRevOne">
+               <div class="panel-body">
+                <div class="row">
+              <apex:outputPanel rendered="true">
+              <apex:outputpanel rendered="{!IF($CurrentPage.parameters.gtid_er=='gt_init',false,true)}" >
+              <br></br>
+                        <input type="hidden" id="page" name="page" value="ca"/>
+                        <input type="hidden" id="stepName" name="stepName" value="Effectiveness Review" />
+                      <c:wiz_change_field typeofApprover="Document Owner" GT="{!gTask}" isLock="{!OR(gTask.Status__c=='Pending Approval',gTask.Status__c=='Pending ActionPlan',gTask.Status__c=='Closed',gTask.Status__c=='Void',NOT(OR(DocumentProfile.Ownerid=$User.Id,gTask.Ownerid==$User.Id,isApprover,$Profile.Name=='System Administrator')))}"  RecordId="{!gTask.id}" TochangeFieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c" Required="true" FieldId="OwnerId" FieldName="Owner"   FieldValue="{!IF($CurrentPage.parameters.gtid_er=='gt_init',DocumentProfile.owner.name,gTask.Owner.Name)}" ModalId="ImplementationFieldName" rendered="{!$ObjectType.General_Task__c.Fields.New_Owner__c.Accessible}">
+                        <c:wiz_form recordid="{!gTask.Id}" formclass="OwnerId_NCTaskform validate" formid="OwnerId_NCTaskform" submitpage="stringify_sobject"  postsavejs="window.location.href = '/apex/documentProfiletask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_er={!JSENCODE($CurrentPage.parameters.gtid_er)}&type=\' EffectivenessReview\'';">  
+                          <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.New_Owner__c.Label}"   required="true" jsid="change_owner" rendered="{!$ObjectType.General_Task__c.Fields.New_Owner__c.Accessible}">                            
+                            <c:wiz_multi width="100%" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c" Required="true" initValues="{value:'{!JSENCODE(genTask.New_Owner__c)}', label:'{!JSENCODE(genTask.New_Owner__r.Name)}'}"  querytable="User" queryfields="Name" disabled="{!AND(if(genTask.ChangeFieldApprovalStatus__c=='Pending',true,false),$ObjectType.General_Task__c.Fields.New_Owner__c.updateable)}" typeofuser="Document_Task_Owner" />                                
+                            </c:wiz_field>
+                            <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}general_task__c"/>
+                        </c:wiz_form>
+                    </c:wiz_change_field> 
+                    <c:wiz_change_field GT="{!gTask}" typeofApprover="Document Owner" isLock="{!OR(gTask.Status__c=='Pending Approval',gTask.Status__c=='Pending ActionPlan',gTask.Status__c=='Closed',gTask.Status__c=='Void',NOT(OR(DocumentProfile.Ownerid=$User.Id,genTask.Ownerid==$User.Id,isApprover,$Profile.Name=='System Administrator')),DocumentProfile.Status__c == 'Closed')}" RecordId="{!gTask.id}" TochangeFieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c" Required="true" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c1" FieldName="{!$ObjectType.General_Task__c.Fields.Due_Date__c.Label}" FieldType="date" FieldDateValue="{!IF($CurrentPage.parameters.gtid_er=='gt_init',DocumentProfile.Expiration_Date__c,gTask.Due_Date__c)}" ModalId="DueDateid" rendered="{!$ObjectType.General_Task__c.Fields.New_Due_Date__c.Accessible}">
+                        <c:wiz_form recordid="{!gTask.Id}" formclass="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_GtTaskform validate" formid="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_NCTaskform" submitpage="stringify_sobject"  postsavejs="window.location.href = '/apex/documentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_er={!JSENCODE($CurrentPage.parameters.gtid_er)}&type=\'EffectivenessReview\'';">    
+                            <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.New_Due_Date__c.label}"  required="true" jsid="change_date" rendered="{!$ObjectType.General_Task__c.Fields.New_Due_Date__c.Accessible}">
+                                <c:wiz_date placeholder="DD/MM/YYYY" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c" initdate="{!genTask.New_Due_Date__c}"  updateable="{!AND(if(genTask.ChangeFieldApprovalStatus__c=='Pending',false,true),$ObjectType.General_Task__c.Fields.New_Due_Date__c.updateable)}" />
+                              <script>
+                                
+                               $( document ).ready(function() {
+                      function dateConversion(d)
+                      {
+                        
+                        var d=new Date(d)
+                        var day=d.getDate();
+                        var month=d.getMonth();
+                        var year=d.getFullYear();
+                         var date = month + "/" + day + "/" + year;
+                         return date;
+                         }
+                         
+                        
+                        $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', 
+                        format: "DD MMM YYYY",maxDate:dateConversion('{!Document_Profile__c.Expiration_Date__c}'),minDate:dateConversion(new Date())});
+                
+                  
+                  });
+                                
+                              </script>
+                            
+                            </c:wiz_field>
+                            
+                            <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}general_task__c"/>
+                        </c:wiz_form>
+                    </c:wiz_change_field>
+                    </apex:outputpanel>
+                    
+                <!--<c:wiz_form submitpage="stringify_sobject" formid="Docform" formclass="appform validate" recordid="{!DocumentProfile.Id}"
+                     postsavejs="window.location.href = '/home/home.jsp'">
+                    <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_profile__c"/>
+                    <input type="hidden" name="Id" value="{!DocumentProfile.Id}" />
+                    <input type="hidden" name="page" id="page" value="Doc_init" />
+                -->
+                    
+                      
+                   
+                                 
+                      
+                      <apex:outputpanel rendered="{!IF($CurrentPage.parameters.gtid_er=='gt_init',true,false)}" >
+                      <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.Owner__c.Label}"
+                                   required="true" 
+                                   jsid="Ownerid_new"
+                                   rendered="{!$ObjectType.General_Task__c.Fields.Owner__c.Accessible}">
+                      <c:wiz_multi width="100%" FieldId="ownerid_id" 
+                                    multiple="false"
+                                    queryFields="Name" 
+                                    querytable="User" onchange=""
+                                    initValues="{label: '{!JSENCODE(IF(NOT(ISBLANK(loggedinUserName)) , loggedinUserName, $User.FirstName + ' ' + $User.LastName))}',
+                                    value: '{!JSENCODE($User.Id)}'}" 
+                                    typeofuser="Document_Task_Owner" 
+                                    disabled="{!OR(gTask.Status__c=='Pending Approval',gTask.Status__c=='Closed',gTask.Status__c=='Void',DocumentProfile.Status__c=='Void',DocumentProfile.Effectiveness_Review_Date__c>TODAY(),IF($CurrentPage.parameters.gtid_er=='gt_init',false,true))}" />
+                           
+                     </c:wiz_field>
+                    <!-- <c:wiz_field FieldLabel="{!JSENCODE(IF(contains(customLabelKeys,'Due_date'),customLabels['Completed_Date'].Field_Label__c, $ObjectType.General_Task__c.Fields.Due_Date__c.Label))}" required="true" 
+                                  jsid="Duedate"
+                                  rendered="{!$ObjectType.General_Task__c.FIelds.Due_Date__c.Accessible}">
+                   <c:wiz_date updateable="{!AND(gTask.Status__c!='Rejected',gTask.Status__c!='Pending Approval',gTask.Status__c!='Closed')}"
+                                         FieldId="Due_Date__c1"
+                                         initdate="{!Document_Profile__c.Expiration_Date__c}" />
+                     </c:wiz_field>-->
+                        <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.Due_Date__c.label}"  
+                           jsid="" 
+                           rendered="{!$ObjectType.General_Task__c.Fields.Due_Date__c.Accessible}">
+                           <c:wiz_date placeholder="DD/MM/YYYY" 
+                             updateable="{!OR(gTask.Status__c=='Open',gTask.Status__c=='Created',IF(($CurrentPage.parameters.gtid_er=='gt_init' && DocumentProfile.Effectiveness_Review_Date__c<=TODAY() && DocumentProfile.Status__c!='Void'),true,false))}"
+                             FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c" 
+                             initdate="{!Document_Profile__c.Expiration_Date__c}" 
+                             />
+                            <script>
+                             $( document ).ready(function()
+                              {
+                                  //alert('{!Document_Profile__c.Expiration_Date__c}');
+                                function dateConversion(d)
+                               {
+                                  
+                                   var d = new Date(d);
+                                   var day = d.getDate();
+                                   var month = d.getMonth() + 1;
+                                   var year = d.getFullYear();
+                                        if (day < 10) 
+                                        {
+                                            day = "0" + day;
+                                        }
+                                      if (month < 10)
+                                      {
+                                        month = "0" + month;
+                                      }
+                                    var date = month + "/" +day  + "/" + year;
+                                    
+                                     return date;
+                                   }
+                                    $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY",
+                            maxDate:dateConversion('{!Document_Profile__c.Expiration_Date__c}'),minDate:dateConversion(new Date())});
+                                  //alert('{!Document_Profile__c.Expiration_Date__c}');
+                            
+                          
+                });
+                             </script>
+                          
+                          </c:wiz_field> 
+                          
+                        
+                                         </apex:outputpanel>
+                      
+                   <div class="col-md-12 push-down"></div>
+                   <div class="col-md-12 push-down"></div>
+                  
+                  
+                        <c:wiz_field FieldLabel="{!JSENCODE(IF(contains(customLabelKeys,'Document_status'),customLabels['Status'].Field_Label__c, $ObjectType.General_Task__c.Fields.Document_Status__c.Label))}" required="true" jsid="ds" rendered="{!$ObjectType.General_Task__c.Fields.Document_Status__c.Accessible}">
+                           <c:wiz_select width="100%" developername="Document_Status__c" ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}General_Task__c" FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_status__c" required="true"
+                               initvalue="{!gtask.Document_Status__c}" 
+                               FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Status__c"
+                               disabled="{!OR(gTask.Status__c=='Rejected',gTask.Status__c=='Pending Approval',gTask.Status__c=='Closed',gTask.Status__c=='Void',DocumentProfile.Effectiveness_Review_Date__c>TODAY())}"
+                               unSelectedDisplayText="  "/>
+                               <div id="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Status__c_error"></div>
+                           
+                       </c:wiz_field>    
+                         <script >
+                     $( "#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Status__c" ).change(function(){
+                            if(document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Status__c").value=="Keep Status Current"){
+                                //alert(document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Status__c").value);
+                                $("#change_date1").find('label').find('span').attr('class','mandatory').text('* ').show();
+                             }
+                            else
+                            {
+                            
+                                $("#change_date1").find('label').find('span').hide();
+                             }
+                             
+                           
+                        
+       
+                           if(document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Status__c").value=="Revise" && {!DocumentProfile.isRevise__c}==true  && '{!gTask.status__c}'!='Closed'){ 
+                             
+                               // alert("$$$$$$$$$$$"); 
+                               //alert('{!gTask.status__c}');                    
+                               var YESButtonInRedirectModalOnClick = function () {
+                                 // $('#revise').modal('hide');
+                                 window.location.reload();
+                                  
+                              };
+                               var NOButtonInRedirectModalOnClick = function () {
+                               $('#revise').modal('hide');
+                                   
+                               
+                                   
+                               };
+                               $('#revise').modal('show');
+                           $('#revise .btn-primary').bind( "click", NOButtonInRedirectModalOnClick);
+                           $('#revise .btn-default').bind( "click", YESButtonInRedirectModalOnClick);
+                           
+                        }         
+                             
+                    
+                    
+                        
+                    
+                      });
+                     </script>  
+          <c:wiz_field FieldLabel="{!$ObjectType.Document_Profile__c.Fields.New_Expiration_Date__c.label}"  
+                           jsid="change_date1" 
+                           rendered="{!$ObjectType.General_Task__c.Fields.New_Expiration_Date__c.Accessible}">
+                           <c:wiz_date placeholder="DD/MM/YYYY" 
+                             maxdateallowed="12/31/2018" 
+                             updateable="{!OR(gTask.Status__c=='Open',gTask.Status__c=='Created',IF($CurrentPage.parameters.gtid_er=='gt_init'&& DocumentProfile.Effectiveness_Review_Date__c<=TODAY() && DocumentProfile.Status__c!='Void',true,false))}"
+                             FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Expiration_Date__c_er" 
+                             initdate="{!gTask.New_Expiration_Date__c}" 
+                             />
+              
+                      <!--{!IF(gTask.New_Expiration_Date__c=="","",gTask.New_Expiration_Date__c)} -->
+          
+                            
+                          <script>
+                              var New_exp1;
+                              $('#New_Expiration_Date__c_er_GRDATE').click(function(){
+                                  //alert("aaaaaaaaa");
+                                          New_exp1=document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Expiration_Date__c_er_GRDATE").value;
+                                  //alert(New_exp1+'^^');
+                               }); 
+                             $('#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}New_Expiration_Date__c_er_GRDATE').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY"}).on('dp.change', function(selected){
+                               if(New_exp1!=null)
+                                   {
+                                    //alert("New exp date"+New_exp);
+                                  var YESButtonInRedirectModalOnClick = function () {
+                                      $('#newExpirationAlert').modal('hide');
+                                      
+                                  };
+                                   var NOButtonInRedirectModalOnClick = function () {
+                                       var n_exp=New_exp1
+                                    document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Expiration_Date__c_er_GRDATE").value=n_exp;
+                                       
+                                   };
+                               $('#newExpirationAlert .btn-primary').bind( "click", YESButtonInRedirectModalOnClick);
+                               $('#newExpirationAlert .btn-default').bind( "click", NOButtonInRedirectModalOnClick);
+                               $('#newExpirationAlert').modal('show');
+                                       }
+                                   
+                             });
+                             
+                             
+                                  
+                                function dateConversion(d)
+                               {  // alert('{!gTask.New_Expiration_Date__c}'+'222');
+                                  
+                                   var d = new Date(d);
+                                   var day = d.getDate();
+                                   var month = d.getMonth() + 1;
+                                   var year = d.getFullYear();
+                                        if (day < 10) 
+                                        {
+                                            day = "0" + day;
+                                        }
+                                      if (month < 10)
+                                      {
+                                        month = "0" + month;
+                                      }
+                                    var date = month + "/" +day  + "/" + year;
+                                      //alert('{!gTask.New_Expiration_Date__c}');
+                                   //alert(date);
+                                   return date;
+                                   }
+                                   $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Expiration_Date__c_er').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY",
+                            maxDate:'12/12/2020',minDate:dateConversion(new Date())});
+                                
+              //alert('{!gTask.New_Expiration_Date__c}'+'333');
+                            
+                
+                             </script>
+                              <div id="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Expiration_Date__c_er_error"></div>
+                         </c:wiz_field>
+                                             
+                       
+                       <div class="col-md-12 push-up"></div>
+                    
+                         <c:wiz_field Wide="true" 
+                           FieldLabel="{!$ObjectType.General_Task__c.Fields.Review_Description__c.label}"
+                            Required="false" 
+                            rendered="{!$ObjectType.General_Task__c.Fields.Review_Description__c.Accessible}"
+                            JSId="Review_Description" >
+                           <c:wiz_textarea FieldId="Review_Description__c" 
+                             ObjectName="General_Task__c" 
+                             initvalue="{!gTask.Review_Description__c}" 
+                             Required="true" 
+                             FieldName="Review_Description__c" 
+                             disabled="false"
+                             rendered="{!OR(gTask.Status__c=='Open',gTask.Status__c=='Created',IF(($CurrentPage.parameters.gtid_er=='gt_init' && DocumentProfile.Effectiveness_Review_Date__c<=TODAY() && DocumentProfile.Status__c!='Void'),true,false))}"/>
+                               <apex:outputpanel rendered="{!OR(gTask.Status__c=='Rejected',gTask.Status__c=='Pending Approval',gTask.Status__c=='Closed',gTask.Status__c=='Void',NOT(OR(gTask.Ownerid==$User.Id,$Profile.Name=='System Administrator')))}">
+
+                            <div class="alert alert-info">
+                                <apex:outputField value="{!gTask.Review_Description__c}" />
+                            </div>
+                        </apex:outputpanel>
+                             <div id="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Review_Description__c_error"></div>
+                           </c:wiz_field>
+                        
+                           <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.Completed_By__c.Label}"
+                             required="true" 
+                             jsid="completedby"
+                             rendered="{!$ObjectType.General_Task__c.Fields.Completed_By__c.Accessible}">
+                             <c:wiz_multi width="100%" FieldId="CreatedbyidId" 
+                                multiple="false"
+                                queryFields="Name" 
+                                querytable="User" onchange=""
+                                initValues="{label: '{!JSENCODE(IF(NOT(ISBLANK(loggedinUserName)) , loggedinUserName, $User.FirstName + ' ' + $User.LastName))}',
+                                value: '{!JSENCODE($User.Id)}'}" 
+                                typeofuser="Document_Task_Owner" 
+                                disabled="{!OR(gTask.Status__c=='Rejected',gTask.Status__c=='Pending Approval',gTask.Status__c=='Closed',gTask.Status__c=='Void',DocumentProfile.Effectiveness_Review_Date__c>TODAY(), DocumentProfile.Status__c=='Void')}" />
+                       
+                           </c:wiz_field>
+                    <c:wiz_field FieldLabel="{!JSENCODE(IF(contains(customLabelKeys,'Completed_Date'),customLabels['Completed_Date'].Field_Label__c, $ObjectType.General_Task__c.Fields.Completed_Date__c.Label))}" required="true" 
+                             jsid="comdate1"
+                             rendered="{!$ObjectType.General_Task__c.FIelds.Completed_Date__c.Accessible}">
+                             <c:wiz_date placeholder="DD/MMM/YYYY" 
+                            updateable="{!(!OR(gTask.Status__c=='Rejected',gTask.Status__c=='Pending Approval',gTask.Status__c=='Closed',gTask.Status__c=='Void',DocumentProfile.Effectiveness_Review_Date__c>TODAY() , DocumentProfile.Status__c=='Void'))}" 
+                             FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_Date__c" 
+                                         initdate="{!Today()}" 
+                             />   
+                        <script>
+                         $( document ).ready(function() {
+                         function dateConversion(d)
+                               {
+                                   //alert(document.getElementById("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_Date__c_GRDATE").Value);
+                                  
+                                   var d = new Date(d);
+                                   var day = d.getDate();
+                                   var month = d.getMonth() + 1;
+                                   var year = d.getFullYear();
+                                        if (day < 10) 
+                                        {
+                                            day = "0" + day;
+                                        }
+                                      if (month < 10)
+                                      {
+                                        month = "0" + month;
+                                      }
+                                    var date = month + "/" +day  + "/" + year;
+                                    
+                                   // return date;
+                                   }
+                         $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_Date__c').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY",
+                            maxDate:new Date(),minDate:new Date()});
+                             });
+                        </script>
+                           </c:wiz_field>
+                    
+                        <!-- **********-->
+                    
+                    
+                           
+                           <c:wiz_form FormClass="Taskapproval validate" FormId="Taskapproval" RecordId="" submitPage="">
+                           
+                           <c:wiz_approval disabled="false" 
+                                        isLocked="{!OR(gTask.Status__c=='Pending ActionPlan',genTask.Status__c=='Pending ActionPlan',genTask.ChangeFieldApprovalStatus__c=='Pending',genTask.Status__c=='Pending Approval',genTask.Status__c=='Closed',genTask.Status__c=='Void')}" 
+                                        allowDaysFieldId="allAllowed_Days__c" 
+                                        isSubmitForApproval="true" 
+                                        dueDateFieldId="allDue_Date__c" 
+                                        isReloadNeeded="false" 
+                                        taskId="{!gTask.id}" 
+                                        seqFieldId="seqFieldId" 
+                                        tableId="tableId" 
+                                        crDate="{!gTask.CreatedDate}" 
+                                        id="approvalid" 
+                                        isApproverNoteNeeded="true" 
+                                        userFieldId="userFieldId" 
+                                        rendered="{!NOT(AND(gTask.Approval_Required__c!='Yes',OR(gTask.Status__c=='Pending Approval',gTask.ChangeFieldApprovalStatus__c=='Pending',gTask.Status__c=='Closed',gTask.Status__c=='Void',
+                                        NOT(OR(DocumentProfile.OwnerId=$User.Id,gTask.Ownerid==$User.Id,$Profile.Name=='System Administrator')),gTask.Status__c=='Pending ActionPlan')))}"  
+                                        noteToApprover="{!gTask.Note_To_Approver__c}" 
+                                        typeofapprover="Document_Approvers"
+                                        Maxdate="{!Month(DocumentProfile.Expiration_Date__c)}/{!day(DocumentProfile.Expiration_Date__c)}/{!year(DocumentProfile.Expiration_Date__c)}"
+                                        
+                                        duedate_err_msg="Due date should be lessthan Doc due date" 
+                                        initjs="if({!(gTask.Approval_Required__c=='Yes')}){
+                                                                        $('#tableId_div').removeClass('hidden'); 
+                                                                        $('#tableId_link').removeClass('hidden');$('#tableId_chk').attr('checked', true);                
+                                                                        $('#tableId_table').find('input,select').each(function(){
+                                                                                                 $(this).attr('disabled', false);   
+                                                                                            });
+                                                                } 
+                                                                else{
+                                                                 $('#tableId_div').addClass('hidden'); 
+                                                                  $('#tableId_link').addClass('hidden');
+                                                                  $('#tableId_chk').attr('checked', false); 
+                                                                }"
+                                                             />    
+                               <script>
+                               var ApprovalValid=false;
+                                function ApproversValidateforeffetive(){
+                                    
+                                      ApprovalValid=true;
+                                }
+                               </script>
+                                                                    </c:wiz_form>
+                            
+                           <c:wiz_approvalbutton approvalbuttonid="ApprovaButtonIdNcContainment" 
+                           jsid="javascriptidForApprovalbutton" RecordId="{!gTask.Id}" 
+                           rendered="true"/>
+                   
+                           
+                           <script>
+                           
+                           $( document ).ready(function() {
+                           
+                               
+                           
+                             if("{!gTask.Status__c}"=='Pending Approval' || "{!gTask.Status__c}"=='Rejected' || '{!DocumentProfile.Effectiveness_Review_Date__c}'>'{!Today()}' || '{DocumentProfile.Status__c}'=='Void' || "{!gTask.Status__c}"=='Void')
+                            {  
+                            
+                                //alert("inside disabe");
+                                $("#tableId_appr_note").attr('disabled', true);
+                                $("#tableId_table").find("input,select").each(function(){
+                                $(this).attr('disabled', true);
+                                $("#tableId_chk").attr('disabled', true);
+                                $("#tableId_link").hide();
+                                
+                                });
+                            }
+                            
+                           if ("{!gTask.Status__c}"=='Closed')
+                              {   
+                              
+                                   $("#tableId_link").hide();
+                                   $("#tableId_chk").attr('disabled',true );
+                                   $("#tableId_appr_note").attr('disabled',true );
+                                    $("#tableId_table").find("input,select").each(function(){
+                                $(this).attr('disabled', true);
+                                });
+                                    
+                                    
+                              }
+                             
+                           
+                           
+                               
+                           
+                                  if($("#tableId_chk").is(':checked')) 
+                                  {  
+                                     
+                                     if ("{!gTask.Status__c}"=='open' ||"{!gTask.Status__c}"=='Created' )
+                                    { 
+                                     
+                                     $("#tableId_table").find("input,select").each(function(){
+                                     $(this).attr('disabled', false);
+                                     
+                                       });
+                                    }
+                                  
+                                  
+                                  }
+                                  
+                                  
+                                  
+                                  });
+                                  </script>
+                                  
+           <!-- newly added -->
+                        
+                        
+                         
+                    <!-- </c:wiz_form>-->
+                 </apex:outputPanel>
+                     
+                   </div>
+                 </div>
+              </div> 
+            </div> 
+          </div>
+          </div>
+          </div>
+          <!-- ******** -->
+           
+       
+          <!-- ************ rev1_er-->
+                  <input type="hidden" value="{!AppFinalHistory}"/>
+                   <apex:outputPanel layout="none" rendered="{!fg}">
+                    <div class="panel-group col-md-12" id="accordion" role="tablist"
+                        aria-multiselectable="true">
+                        <div class="panel panel-default">
+                            <div class="panel-heading" role="tab" id="headingOne">
+                                <h4 class="panel-title">
+                                    <a data-toggle="collapse" data-parent="#accordion12"
+                                        href="#collapseOne12" aria-expanded="true"
+                                        aria-controls="collapseOne" class="collapsed"> <span
+                                        class="col-exp"></span> Review&nbsp;&nbsp; <apex:outputText value="{0,date,dd MMM yyyy}">
+                                      <apex:param value="{!rev1.review}" /> 
+                                       </apex:outputText> | Expire &nbsp;&nbsp;<apex:outputText value="{0,date,dd MMM yyyy}">
+                                      <apex:param value="{!rev1.dueDate}" /> 
+                                      </apex:outputText>
+                                    </a>
+                                </h4>
+                            </div>
+                            <div id="collapseOne12" class="panel-collapse collapse out" role="tabpanel" aria-labelledby="headingOne">
+                                <div class="panel-body">
+                                
+                                <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.Owner__c.Label}"
+                                   required="true" 
+                                   jsid="Ownerid_new_v"
+                                   rendered="{!$ObjectType.General_Task__c.Fields.Owner__c.Accessible}">
+                                <c:wiz_multi width="100%" FieldId="ownerid_id1" 
+                                    multiple="false"
+                                    queryFields="Name,id" 
+                                    querytable="User" onchange=""
+                                    initValues="{label: '{!JSENCODE(IF(NOT(ISBLANK(rev1.owner)) , loggedinUserName, $User.FirstName + ' ' + $User.LastName))}',
+                                    value: '{!JSENCODE($User.id)}'}" 
+                                    typeofuser="Document_Task_Owner" 
+                                    disabled="true" />
+                                     </c:wiz_field> 
+                                                   
+                     <c:wiz_field FieldLabel="{!JSENCODE(IF(contains(customLabelKeys,'Due_date'),customLabels['Completed_Date'].Field_Label__c, $ObjectType.General_Task__c.Fields.Due_Date__c.Label))}" required="true" 
+                                   jsid="Duedate_v"
+                                   rendered="{!$ObjectType.General_Task__c.FIelds.Due_Date__c.Accessible}">
+                         <c:wiz_date maxdateallowed="12/31/2018" 
+                                         updateable="false"
+                                         FieldId="Due_Date__crev1"
+                                         initdate="{!rev1.dueDate}" />
+                                             <script>
+                               function dateConversion(d)
+                               {
+                                   //alert(document.getElementById("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_Date__c_GRDATE").Value);
+                                  
+                                   var d = new Date(d);
+                                   var day = d.getDate();
+                                   var month = d.getMonth() + 1;
+                                   var year = d.getFullYear();
+                                        if (day < 10) 
+                                        {
+                                            day = "0" + day;
+                                        }
+                                      if (month < 10)
+                                      {
+                                        month = "0" + month;
+                                      }
+                                    var date = month + "/" +day  + "/" + year;
+                                    
+                                   // return date;
+                                   }
+                         $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__crev1').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY",
+                            maxDate:dateConversion(new Date()),minDate:dateConversion(new Date())});
+                            
+                        </script>
+                         
+                                         
+                                </c:wiz_field>      
+                                        
+                           <c:wiz_field FieldLabel="{!JSENCODE(IF(contains(customLabelKeys,'Document_status'),customLabels['Status'].Field_Label__c, $ObjectType.General_Task__c.Fields.Document_Status__c.Label))}" required="true" jsid="ds" rendered="{!$ObjectType.General_Task__c.Fields.Document_Status__c.Accessible}">
+                           <c:wiz_select width="100%" developername="Document_Status__c" ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}General_Task__c" FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_status__c" required="true"
+                               initvalue="{!rev1.documentStatus}" 
+                               FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Status__c_v"
+                               disabled="true"
+                               unSelectedDisplayText="  "/>
+                               
+                           
+                       </c:wiz_field>        
+                    <c:wiz_field FieldLabel="{!$ObjectType.Document_Profile__c.Fields.New_Expiration_Date__c.label}"  
+                           jsid="change_date1" 
+                           rendered="{!$ObjectType.General_Task__c.Fields.New_Expiration_Date__c.Accessible}">
+                           <c:wiz_date placeholder="DD/MM/YYYY" 
+                             maxdateallowed="12/31/2018" 
+                             updateable="false" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Expiration_Date__c_sri" 
+                                       initdate="{!rev1.newExpirationDate}" />
+                          <script>
+                               function dateConversion(d)
+                               {
+                                   //alert(document.getElementById("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_Date__c_GRDATE").Value);
+                                  
+                                   var d = new Date(d);
+                                   var day = d.getDate();
+                                   var month = d.getMonth() + 1;
+                                   var year = d.getFullYear();
+                                        if (day < 10) 
+                                        {
+                                            day = "0" + day;
+                                        }
+                                      if (month < 10)
+                                      {
+                                        month = "0" + month;
+                                      }
+                                    var date = month + "/" +day  + "/" + year;
+                                    
+                                   // return date;
+                                   }
+                         $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Expiration_Date__c_sri').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY",
+                            maxDate:dateConversion(new Date()),minDate:dateConversion(new Date())});
+                            
+                        </script>
+                          </c:wiz_field> 
+                         <c:wiz_field Wide="true" 
+                                            FieldLabel="{!$ObjectType.General_Task__c.Fields.Review_Description__c.label}"
+                                            Required="false" 
+                                            rendered="true"
+                                            JSId="Review_Description" >
+                           <c:wiz_textarea FieldId="Review_Description__c_view" 
+                             ObjectName="General_Task__c" 
+                             initvalue="{!rev1.revDescription}" 
+                             Required="true" 
+                             FieldName="Review_Description__c" 
+                             disabled="true"
+                             rendered="true"/>
+                             </c:wiz_field>
+     <apex:outputpanel rendered="{!rev1.show}">
+       <div class="add-approver-row col-md-12" id="Review1_div">
+      <table class="table" id="Review_table">
+          <thead>
+              <tr>
+                  <td><span class="mandatory"><apex:outputtext value=""/></span>Reviewer Name</td>
+                  <td width="40%"><span class="mandatory"><apex:outputtext value=""/></span>Approval Date</td>
+                  <td width="20%"><span class="mandatory"><apex:outputtext value=""/></span>Status</td>
+   
+              </tr>
+              <tr>
+               <td>{!rev1.Reviewer_Name}
+               </td>
+               <td>
+               <apex:outputText value="{0,date,dd MMM yyyy}">
+                <apex:param value="{!rev1.Approval_Date}" /> 
+               </apex:outputText>
+               </td>
+               <td>{!rev1.status}
+               </td>
+              </tr>
+          </thead>
+          
+          <tbody>
+              <tr class="" id="row_1">
+              
+                  
+              </tr>
+        </tbody>
+    </table>
+    </div>      
+    </apex:outputpanel>
+     <apex:outputPanel rendered="{!rev1.showMsg}">
+         <apex:outputText style="font-weight:900;" value="{!rev1.mssage}"></apex:outputText>
+     </apex:outputPanel>
+                                        </div>
+                                         
+                                       
+                                        <script>
+                                         $( document ).ready(function() {
+                                         
+                                         $("#Review_Description__c_view").attr('disabled', true);
+                                          });
+                                        </script>
+                               
+                                </div>
+                                </div>
+                                </div>
+                                </apex:outputPanel>
+                <!-- Review 2-->
+                   <apex:outputPanel layout="none" rendered="{!fg1}">
+                    <div class="panel-group col-md-12" id="accordion" role="tablist"
+                        aria-multiselectable="true">
+                        <div class="panel panel-default">
+                            <div class="panel-heading" role="tab" id="headingOne">
+                                <h4 class="panel-title">
+                                    <a data-toggle="collapse" data-parent="#accordion"
+                                        href="#collapseOne" aria-expanded="true"
+                                        aria-controls="collapseOne" class="collapsed"> <span
+                                        class="col-exp"></span> Review&nbsp;&nbsp; <apex:outputText value="{0,date,dd MMM yyyy}">
+                                        <apex:param value="{!rev2.review}" /> 
+                                       </apex:outputText> | Expire &nbsp;&nbsp;<apex:outputText value="{0,date,dd MMM yyyy}">
+                                        <apex:param value="{!rev2.dueDate}" /> 
+                                       </apex:outputText>
+                                    </a>
+                                </h4>
+                            </div>
+                            <div id="collapseOne" class="panel-collapse collapse out" role="tabpanel" aria-labelledby="headingOne">
+                                <div class="panel-body">
+                               
+                                <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.Owner__c.Label}"
+                                   required="true" 
+                                   jsid="Ownerid_new_v"
+                                   rendered="{!$ObjectType.General_Task__c.Fields.Owner__c.Accessible}">
+                      <c:wiz_multi width="100%" FieldId="ownerid_id2" 
+                                    multiple="false"
+                                    queryFields="Name,id" 
+                                    querytable="User" onchange=""
+                                    initValues="{label: '{!JSENCODE(IF(NOT(ISBLANK(rev2.owner)) , loggedinUserName, $User.FirstName + ' ' + $User.LastName))}',
+                                    value: '{!JSENCODE($User.id)}'}" 
+                                    typeofuser="Document_Task_Owner" 
+                                    disabled="true" />
+                                     </c:wiz_field>  
+                                    
+                  <c:wiz_field FieldLabel="{!JSENCODE(IF(contains(customLabelKeys,'Due_date'),customLabels['Completed_Date'].Field_Label__c, $ObjectType.General_Task__c.Fields.Due_Date__c.Label))}" required="true" 
+                                   jsid="Duedate_v"
+                                   rendered="{!$ObjectType.General_Task__c.FIelds.Due_Date__c.Accessible}">
+                         <c:wiz_date placeholder="DD/MM/YYYY" maxdateallowed="12/31/2018" 
+                                         updateable="false"
+                                         FieldId="Due_Date__c2"
+                                         initdate="{!rev2.dueDate}" />
+                      <script>
+                       function dateConversion(d)
+                               {
+                                   //alert(document.getElementById("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_Date__c_GRDATE").Value);
+                                  
+                                   var d = new Date(d);
+                                   var day = d.getDate();
+                                   var month = d.getMonth() + 1;
+                                   var year = d.getFullYear();
+                                        if (day < 10) 
+                                        {
+                                            day = "0" + day;
+                                        }
+                                      if (month < 10)
+                                      {
+                                        month = "0" + month;
+                                      }
+                                    var date = month + "/" +day  + "/" + year;
+                                    
+                                    return date;
+                                   }
+                         $('#Due_Date__c2').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY",
+                            maxDate:dateConversion(new Date()),minDate:dateConversion(new Date())});
+                             
+                        </script>
+                        
+                    </c:wiz_field>    
+                                        
+                           <c:wiz_field FieldLabel="{!JSENCODE(IF(contains(customLabelKeys,'Document_status'),customLabels['Status'].Field_Label__c, $ObjectType.General_Task__c.Fields.Document_Status__c.Label))}" required="true" jsid="ds" rendered="{!$ObjectType.General_Task__c.Fields.Document_Status__c.Accessible}">
+                           <c:wiz_select width="100%" developername="Document_Status__c" ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}General_Task__c" FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_status__c" required="true"
+                               initvalue="{!rev2.documentStatus}" 
+                               FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Status__c_v2"
+                               disabled="true"
+                               unSelectedDisplayText="  "/>
+                               
+                           
+                     </c:wiz_field>        
+                      <c:wiz_field FieldLabel="{!$ObjectType.Document_Profile__c.Fields.New_Expiration_Date__c.label}"  
+                           jsid="change_date1" 
+                           rendered="{!$ObjectType.General_Task__c.Fields.New_Expiration_Date__c.Accessible}">
+                           <c:wiz_date placeholder="DD/MM/YYYY" 
+                             maxdateallowed="12/31/2018" 
+                             updateable="false"  FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Expiration_Date__c_v2" 
+                             initdate="{!rev2.newExpirationDate}" 
+                             /> 
+                          <script>
+                       function dateConversion(d)
+                               {
+                                   //alert(document.getElementById("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_Date__c_GRDATE").Value);
+                                  
+                                   var d = new Date(d);
+                                   var day = d.getDate();
+                                   var month = d.getMonth() + 1;
+                                   var year = d.getFullYear();
+                                        if (day < 10) 
+                                        {
+                                            day = "0" + day;
+                                        }
+                                      if (month < 10)
+                                      {
+                                        month = "0" + month;
+                                      }
+                                    var date = month + "/" +day  + "/" + year;
+                                    
+                                    return date;
+                                   }
+                         $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Expiration_Date__c_v2').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY",
+                            maxDate:dateConversion(new Date()),minDate:dateConversion(new Date())});
+                             
+                        </script>
+                                    </c:wiz_field>      
+                                    
+                                    
+                           
+                     
+                                <c:wiz_field Wide="true" 
+                                            FieldLabel="{!$ObjectType.General_Task__c.Fields.Review_Description__c.label}"
+                                            Required="false" 
+                                            rendered="true"
+                                            JSId="Review_Description" >
+                           <c:wiz_textarea FieldId="Review_Description__c_view1" 
+                             ObjectName="General_Task__c" 
+                             initvalue="{!rev2.revDescription}" 
+                             Required="true" 
+                             FieldName="Review_Description__c" 
+                             disabled="true"
+                             rendered="true"/>
+                             </c:wiz_field>
+                                   <script>
+                                  $( document ).ready(function() {
+                                         
+                                         $("#Review_Description__c_view1").attr('disabled', true);
+                                          });
+                                  </script>
+    <apex:outputpanel rendered="{!rev2.show}">
+      <div class="add-approver-row col-md-12" id="Review2_div">
+      <table class="table" id="Review2_table">
+          <thead>
+                      <tr>
+                          <td><span class="mandatory"><apex:outputtext value=""/></span>Reviewer Name</td>
+                          <td width="40%"><span class="mandatory"><apex:outputtext value=""/></span>Approval Date</td>
+                          <td width="20%"><span class="mandatory"><apex:outputtext value=""/></span>Status</td>
+           
+                              </tr>
+                              <tr>
+                               <td>{!rev2.Reviewer_Name}
+                               </td>
+                               <td>
+                                   <apex:outputText value="{0,date,dd MMM yyyy}">
+                                    <apex:param value="{!rev2.Approval_Date}" /> 
+                                   </apex:outputText>
+                               </td>
+                               <td>{!rev2.status}
+                               </td>
+                             </tr>
+                    </thead>
+               <tbody>
+                   <tr class="" id="row_12">
+                  </tr>
+             </tbody>
+           </table>
+          </div>
+   </apex:outputpanel> 
+    <apex:outputPanel rendered="{!rev2.showMsg}">
+         <apex:outputText style="font-weight:800;Padding :" value="{!rev2.mssage}">
+         </apex:outputText>
+    </apex:outputPanel>
+                            </div>             
+                          </div>
+                        </div>
+                     </div>
+              </apex:outputpanel>
+                <!-- Review  see more-->
+       <apex:outputPanel layout="none" rendered="{!fg2}">
+                    <div class="panel-group col-md-12" id="accordion" role="tablist"
+                        aria-multiselectable="true">
+                        <div class="panel panel-default">
+                            <div class="panel-heading" role="tab" id="headingOne">
+                                <h4 class="panel-title">
+                                    <a data-toggle="collapse" data-parent="#accordion123"
+                                        href="#collapseOne123" aria-expanded="true"
+                                        aria-controls="collapseOne" class="collapsed"> <span
+                                        class="col-exp"></span> See more({!efMaplength})
+                                    </a>
+                                </h4>
+                            </div>
+                            <div id="collapseOne123" class="panel-collapse collapse out" role="tabpanel" aria-labelledby="headingOne">
+                                <div class="panel-body">
+                                <apex:repeat value="{!AppFinalHistory}" var="actionPlan">
+                                
+                                <!-- multi panel starts -->
+                                <div class="panel panel-default">
+                                  <div class="panel-heading">Review&nbsp;&nbsp; <apex:outputText value="{0,date,dd MMM yyyy}">
+                <apex:param value="{!AppFinalHistory[actionPlan].review}" /> 
+               </apex:outputText> | Expire &nbsp;&nbsp;<apex:outputText value="{0,date,dd MMM yyyy}">
+                <apex:param value="{!AppFinalHistory[actionPlan].dueDate}" /> 
+               </apex:outputText></div>
+                                  <div class="panel-body">                              
+                                <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.Owner__c.Label}"
+                                   required="true" 
+                                   jsid="Ownerid_new_v"
+                                   rendered="{!$ObjectType.General_Task__c.Fields.Owner__c.Accessible}">
+                      <c:wiz_multi width="100%" FieldId="ownerid_id_{!AppFinalHistory[actionPlan].incrementer}" 
+                                    multiple="false"
+                                    queryFields="Name,id" 
+                                    querytable="User" onchange=""
+                                    initValues="{label: '{!JSENCODE(IF(NOT(ISBLANK(AppFinalHistory[actionPlan].owner)) , loggedinUserName, $User.FirstName + ' ' + $User.LastName))}',
+                                    value: '{!JSENCODE($User.id)}'}" 
+                                    typeofuser="Document_Task_Owner" 
+                                    disabled="true" />
+                                     </c:wiz_field>  
+                                   
+                      <c:wiz_field FieldLabel="{!JSENCODE(IF(contains(customLabelKeys,'Due_date'),customLabels['Completed_Date'].Field_Label__c, $ObjectType.General_Task__c.Fields.Due_Date__c.Label))}" required="true" 
+                                   jsid="Duedate_v"
+                                   rendered="{!$ObjectType.General_Task__c.FIelds.Due_Date__c.Accessible}">
+                         <c:wiz_date placeholder="DD/MMM/YYYY"
+                                         updateable="false"
+                                         FieldId="Due_Date__c3_{!AppFinalHistory[actionPlan].incrementer}"
+                                         initdate="{!AppFinalHistory[actionPlan].dueDate}" />
+                           <script>
+                         function dateConversion(d)
+                               {
+                                  
+                                   var d = new Date(d);
+                                   var day = d.getDate();
+                                   var month = d.getMonth() + 1;
+                                   var year = d.getFullYear();
+                                        if (day < 10) 
+                                        {
+                                            day = "0" + day;
+                                        }
+                                      if (month < 10)
+                                      {
+                                        month = "0" + month;
+                                      }
+                                    var date = month + "/" +day  + "/" + year;
+                                    
+                                     return date;
+                                   }
+                         $('#Due_Date__c3_{!AppFinalHistory[actionPlan].incrementer}').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY"});
+                        </script>
+                                                                   </c:wiz_field>      
+                                        
+                           <c:wiz_field FieldLabel="{!JSENCODE(IF(contains(customLabelKeys,'Document_status'),customLabels['Status'].Field_Label__c, $ObjectType.General_Task__c.Fields.Document_Status__c.Label))}" required="true" jsid="ds" rendered="{!$ObjectType.General_Task__c.Fields.Document_Status__c.Accessible}">
+                           <c:wiz_select width="100%" developername="Document_Status__c" ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}General_Task__c" FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_status__c" required="true"
+                               initvalue="{!AppFinalHistory[actionPlan].documentStatus}" 
+                               FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Status__c_{!AppFinalHistory[actionPlan].incrementer}"
+                               disabled="true"
+                               unSelectedDisplayText="  "/>
+                               
+                           
+                       </c:wiz_field>        
+                        <c:wiz_field FieldLabel="{!$ObjectType.Document_Profile__c.Fields.New_Expiration_Date__c.label}"  
+                           jsid="change_date1" 
+                           rendered="{!$ObjectType.General_Task__c.Fields.New_Expiration_Date__c.Accessible}">
+                           <c:wiz_date placeholder="DD/MM/YYYY" 
+                             maxdateallowed="12/31/2018" 
+                             updateable="false"  FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Expiration_Date__c_{!AppFinalHistory[actionPlan].incrementer}" 
+                             initdate="{!AppFinalHistory[actionPlan].newExpirationDate}" 
+                             /> 
+<script>
+                         function dateConversion(d)
+                               {
+                                  
+                                   var d = new Date(d);
+                                   var day = d.getDate();
+                                   var month = d.getMonth() + 1;
+                                   var year = d.getFullYear();
+                                        if (day < 10) 
+                                        {
+                                            day = "0" + day;
+                                        }
+                                      if (month < 10)
+                                      {
+                                        month = "0" + month;
+                                      }
+                                    var date = month + "/" +day  + "/" + year;
+                                    
+                                     return date;
+                                   }
+                         $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Expiration_Date__c_{!AppFinalHistory[actionPlan].incrementer}').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY"});
+                        </script>
+                        
+ </c:wiz_field> 
+
+                     
+                            
+                            
+                                  
+                                    
+                                    
+                           
+                     
+                                <c:wiz_field Wide="true" 
+                                            FieldLabel="{!$ObjectType.General_Task__c.Fields.Review_Description__c.label}"
+                                            Required="false" 
+                                            rendered="true"
+                                            JSId="Review_Description" >
+                           <c:wiz_textarea FieldId="Review_Description__c_view_{!AppFinalHistory[actionPlan].incrementer}" 
+                             ObjectName="General_Task__c" 
+                             initvalue="{!AppFinalHistory[actionPlan].revDescription}" 
+                             Required="true" 
+                             FieldName="Review_Description__c" 
+                             disabled="true"
+                             rendered="true"/>
+                             </c:wiz_field>
+                             <script>
+                                  $( document ).ready(function() {
+                                         
+                                         $("#Review_Description__c_view_{!AppFinalHistory[actionPlan].incrementer}").attr('disabled', true);
+                                          });
+                                  </script>
+            <apex:outputpanel rendered="{!AppFinalHistory[actionPlan].show}">
+                             <div class="add-approver-row col-md-12" id="Review1_div">
+      <table class="table" id="Review_table_{!AppFinalHistory[actionPlan].incrementer}">
+          <thead>
+              <tr>
+                  <td><span class="mandatory"><apex:outputtext value=""/></span>Reviewer Name</td>
+                  <td width="40%"><span class="mandatory"><apex:outputtext value=""/></span>Approval Date</td>
+                  <td width="20%"><span class="mandatory"><apex:outputtext value=""/></span>Status</td>
+   
+              </tr>
+              <tr>
+               <td>{!AppFinalHistory[actionPlan].Reviewer_Name}
+               </td>
+               <td>
+               <apex:outputText value="{0,date,dd MMM yyyy}">
+                <apex:param value="{!AppFinalHistory[actionPlan].Approval_Date}" /> 
+               </apex:outputText>
+               </td>
+               <td>{!AppFinalHistory[actionPlan].status}
+               </td>
+              </tr>
+          </thead>
+          
+          <tbody>
+              <tr class="" id="row_1">
+              
+                  
+              </tr>
+        </tbody>
+    </table>
+     </div>
+              </apex:outputpanel> 
+            <apex:outputPanel rendered="{!AppFinalHistory[actionPlan].showMsg}">
+         <apex:outputText value="{!AppFinalHistory[actionPlan].mssage}"></apex:outputText>
+     </apex:outputPanel>
+                                      
+                       
+                                </div>
+                             
+                            
+                             
+                       </div>   
+                        </apex:repeat>   
+                                        </div>
+                                         
+                                       
+                                        <script>
+                                         $( document ).ready(function() {
+                                         
+                                         $("#Review_Description__c_view3").attr('disabled', true);
+                                          });
+                                        </script>
+                               
+                                </div>
+                                </div>
+                                </div>
+                                </apex:outputPanel>
+      
+         
+                    
+                 <script type="text/javascript">
+     
+      
+      //////date conversion
+     $.date = function(dateObject) {
+    var d = new Date(dateObject);
+    var day = d.getDate();
+    var month = d.getMonth() + 1;
+    var year = d.getFullYear();
+    if (day < 10) {
+        day = "0" + day;
+    }
+    if (month < 10) {
+        month = "0" + month;
+    }
+    var date = day + "/" + month + "/" + year;
+
+    return date;
+};
+ // New Expiration DateValidation
+ function   New_Expiration_DateValidation()
+ { 
+   var isValid=true;
+   if(document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Status__c").value=='Keep Status Current')
+    {   
+      //alert(document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Expiration_Date__c_GRDATE").value);
+     if(document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Expiration_Date__c_er_GRDATE").value=='')
+      { 
+       //alert("inside expiration date");
+       $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Expiration_Date__c_er_error").append('Date is Required').css('color','red');
+       isValid=false;
+      }
+    }
+      return isValid;
+  }
+  //Review description Validation
+  function Review_des_validation()
+  {  
+     var isValid=true;
+     //alert(document.getElementById("tableId_chk").checked );
+     if(document.getElementById("tableId_chk").checked == false) 
+            {  
+            //alert("******");
+             // alert(document.getElementById("tableId_chk").checked);
+              //alert(document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Review_Description__c").value);
+              if(document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Review_Description__c").value=="")
+              {
+               $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Review_Description__c_error").append('This Field is Required').css('color','red');
+               isValid=false;
+              }
+              
+            }
+         return isValid;
+  }
+//Document Sttaus validation      
+function Document_status_validation()
+  {  
+     
+     
+     //alert(document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Status__c").value);
+     var isValid=true;
+     if(document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Status__c").value=="")
+     {
+        $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Status__c_error").append('This Field is Required').css('color','red');
+        isValid=false;
+      }
+              
+            
+         return isValid;
+  }
+     
+//save Method
+function ValidateEffectiveReview(){
+
+  
+  var Doc_status=document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Status__c").value;
+  var New_exp=document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Expiration_Date__c_er_GRDATE").value;
+  if(New_exp=='')
+  {
+   // alert('&&');
+    New_exp='{!Document_profile__c.Expiration_Date__c}';
+   // alert(New_exp);
+  }
+  var Rev_des=document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Review_Description__c").value;
+  var completedby=document.getElementById("CreatedbyidId").value;
+  var completeddate=document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_Date__c_GRDATE").value;
+  
+  
+  
+  var gtaskid="{!gTask.id}";
+ 
+
+ var cdate1=$.date(DDate);
+ var cdate=$.date(completeddate);
+ var New_exp1=$.date(New_exp);
+  var apprflagval1 = validate(null,ApproversValidateforeffetive,'Taskapproval');
+    //alert(validate(null,ApproversValidateforeffetive,'Taskapproval'));
+          
+  if(Document_status_validation() && Review_des_validation() && apprflagval1 )
+  {
+      //alert("Inside both"+apprflagval1);
+         if({!$CurrentPage.parameters.gtid_er!='gt_init'})
+         { 
+             //alert({!DocumentProfile.isRevise__c});
+             // alert(Doc_status);
+            if({!DocumentProfile.isRevise__c}==true && Doc_status=='Revise') 
+         { 
+             DigSig_onSuccess();
+          }else
+              {  
+              //  alert("inside table2 not gtinit");
+          Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.DocumentProfileControllerExt.UpdateGentask}',New_exp1,Doc_status,Rev_des,completedby,cdate,"{!$CurrentPage.parameters.id}","{!gTask.id}",function(result, event){
+                  if(event.status)
+                  {
+                     //alert("inside table1");
+                    if(document.getElementById("tableId_chk").checked)
+                    {
+                        //alert("inside table2 not gtinit");
+                        saveApprovalData('{!JSENCODE(gTask.Id)}',false,'/apex/documentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_er={!JSENCODE($CurrentPage.parameters.gtid_er)}&type=EffectivenessReview');
+                 
+                     }
+                     else
+                     {    
+                       window.location.href = '/apex/documentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_er={!JSENCODE($CurrentPage.parameters.gtid_er)}&type=EffectivenessReview';
+                     } 
+                   }
+              });
+            }
+       
+       }
+       else{
+          var DDate=document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_GRDATE").value;
+          var Ownerid=document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}ownerid_id").value;
+          var cdate1=$.date(DDate);
+          
+          if({!DocumentProfile.isRevise__c}==true && Doc_status=='Revise') 
+         { 
+             DigSig_onSuccess();
+        }
+           else
+               {
+                Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.DocumentProfileControllerExt.SaveTask}',Doc_status,Rev_des,completedby,cdate,Ownerid,cdate1,"{!$CurrentPage.parameters.id}",New_exp1,function(result, event){
+                  if(event.status)
+                  {
+                    
+                    if(document.getElementById("tableId_chk").checked)
+                    {
+                        //alert("result table2"+result);
+                       saveApprovalData(result,false,'/apex/documentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_er='+result+'&type=EffectivenessReview');
+                        
+                     }
+                     else
+                     {    
+                       window.location.href = '/apex/documentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_er='+result+'&type=EffectivenessReview';
+                     } 
+                   }
+              });
+              }
+       
+       }
+       
+     }
+  }
+  //Submit functionality
+  function onSubmit_GT()
+  {  
+      //alert("onSubmit_GT");
+      var apprflagval1 = validate(null,ApproversValidateforeffetive,'Taskapproval');
+      if(Document_status_validation() && New_Expiration_DateValidation() && Review_des_validation()&&apprflagval1)
+      {   
+        
+           var isDigSigNd='<apex:outputText value="{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}"/>'
+                if(isDigSigNd=='true')
+                {
+                    // alert('*******************');   
+                    $('#uname').val('');$('#pw').val('');$('#signature').modal('show');
+                
+                
+          
+     
+                 }
+                else{
+                             DigSig_onSuccess();
+                            
+                            
+                     }
+         
+  }
+  }
+  function DigSig_onSuccess()
+  {
+   
+          var Doc_status=document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Status__c").value;
+          var New_exp1=document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Expiration_Date__c_er_GRDATE").value;
+          if(New_exp1=='')
+          {
+              // alert('&&');
+           New_exp1='{!Document_Profile__c.Expiration_Date__c}';
+                      }
+          var Rev_des=document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Review_Description__c").value;
+          var completedby=document.getElementById("CreatedbyidId").value;
+          var completeddate=document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_Date__c_GRDATE").value;
+          var gtaskid="{!gTask.id}";
+          var cdate=$.date(completeddate);
+          var New_exp=$.date(New_exp1);
+          var chbox=document.getElementById("tableId_chk").checked;
+          //alert("we are in submit method****");
+          //alert(document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Status__c").value);
+          //alert(Rev_des);
+          var cdate=$.date(completeddate);
+          
+          if({!$CurrentPage.parameters.gtid_er!='gt_init'})
+          {
+          
+               Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.DocumentProfileControllerExt.SubmitTask}',New_exp,Rev_des,completedby,cdate,"{!gTask.id}",chbox,Doc_status,"{!DocumentProfile.id}",function(result, event){
+                  if(event.status)
+                  {
+                     
+                    if(document.getElementById("tableId_chk").checked)
+                    {
+                       
+                        saveApprovalData("{!gTask.id}",true,'/apex/documentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_er={!gtask.id}&type=EffectivenessReview');
+                        //window.location.href = '/apex/documentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_er={!gtask.id}&type={!JSENCODE($CurrentPage.parameters.type)}&pg=1';
+                     }
+                     else
+                     {    
+                       window.location.href = '/apex/documentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_er={!gtask.id}&type=EffectivenessReview';
+                     } 
+                   }
+                });
+          
+          
+          
+          
+          
+               }
+               else{
+          
+          
+                var DDate=document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_GRDATE").value;
+                var Ownerid=document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}ownerid_id").value;
+                var cdate1=$.date(DDate);
+                 //alert(DDate+'DDate0000000000000000');
+                Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.DocumentProfileControllerExt.newSubmitTask}',New_exp,Rev_des,completedby,cdate,chbox,Doc_status,"{!DocumentProfile.id}",Ownerid,cdate1,function(result, event){
+                  if(event.status)
+                  {
+                     //alert("inside table1"+result);
+                    if(document.getElementById("tableId_chk").checked)
+                    {
+                        
+                        
+                         saveApprovalData(result,true,'/apex/documentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_er='+result+'&type=EffectivenessReview');
+                     }
+                     else
+                     {   
+                      
+                     
+                       window.location.href = '/apex/documentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_er='+result+'&type=EffectivenessReview';
+                     } 
+                   }
+                });
+          }
+            
+     
+  
+  }
+   function saveApprovalFromDigitalSignature(taskid){
+                        
+                        if(SubmitwithApproval){
+                            if($('#tableId_chk').is(':checked')){
+                            if({!gTask_cr.Record_Type_Name__c=='EffectivenessReview'})
+                            {
+                                saveApprovalData("{!gTask.id}",true,'/apex/documentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_er={!gtask.id}&type=EffectivenessReview');
+                                        
+                            }
+                            else
+                            {
+                               saveApprovalData("{!gTask_cr.id}",true,'/apex/documentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_cr={!gtask_cr.id}&type={!JSENCODE($CurrentPage.parameters.type)}&pg=crpage');
+                          
+                            }
+                        }    
+                    }
+                    }
+    function cancelPopup()
+        {
+            var r = confirm('You will lose unsaved changes!');
+                if (r == true) {
+                    x = "You pressed OK!";
+                   
+                    window.location.href='/{!$ObjectType.Document_Profile__c}/o';
+                    } else
+                    x = "You pressed Cancel!";
+
+        }
+  
+                                                                              
+  
+</script>
+</apex:outputpanel>
+<apex:outputPanel rendered="{!AND($CurrentPage.parameters.id!=null,
+                                    OR($CurrentPage.parameters.gtid_cr==gTask_cr.id,$CurrentPage.parameters.gtid_cr=='gt_init_cr'),
+                                    $CurrentPage.parameters.type=='CollaborationReview')}">
+    <div align="Right">
+      <apex:outputPanel layout="none"  rendered="{!AND((NewBtcr==true),($CurrentPage.parameters.gtid_cr!='gt_init_cr'))}">
+       <div class="button-bar text-right">
+              <button type="button" onclick=" window.location = '/apex/documentProfiletask?id={!$CurrentPage.parameters.id}&gtid_cr=gt_init_cr&type=CollaborationReview';" class="btn btn-primary dont-allow-multiple-clicks" >Add Collaboration Review</button>
+       </div>
+       </apex:outputPanel>
+      </div>
+      <div class="wiz-field nc-resolution">
+        <div class="col-md-12">
+          <div class="panel-group" id="accordion1" role="tablist" aria-multiselectable="false">
+            <div class="panel panel-default panel-select">
+              <div class="panel-heading" role="tab" id="headingOne">
+               <div class="row">
+                  <div class="col-md-6 col-sm-6 col-xs-6">
+                    <h4 class="panel-title">
+                      <a role="button" data-toggle="collapse" data-parent="#accordion"  aria-expanded="true" aria-controls="collapseEffRevOne">
+                        <apex:outputText value="Collaboration Review({!IF($CurrentPage.parameters.gtid_cr=='gt_init_cr','New',if(gTask_cr.Status__c=='Pending Approval','Pending',gTask_cr.Status__c))})" >
+                        </apex:outputText>
+                      </a>
+                    </h4>
+                  </div>
+                  <div class="col-md-3 col-sm-6 col-xs-6 text-right" id="add_approval_link">
+                      
+                    
+                  </div>
+                </div>
+              </div>
+              <div id="collapseEffRevOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingEffRevOne">
+               <div class="panel-body">
+                <div class="row">
+                    <!--<chatter:feedWithFollowers entityId="{!documentprofile.Id}"/>-->
+                         <c:wiz_form FormClass="Taskapproval validate" FormId="Taskapproval" RecordId="" submitPage="">
+                             <input type="hidden" id="stepName" name="stepName" value="Collaboration Review" />
+                          <c:wiz_field Wide="true" 
+                            FieldLabel="Review Title"
+                            Required="true"  
+                            rendered="{!$ObjectType.General_Task__c.Fields.Collaboration_Title__c.Accessible}"
+                            JSId="Title" >
+                           <c:wiz_textarea FieldId="Collaboration_Title__c" 
+                             ObjectName="General_Task__c" 
+                             initvalue="{!gTask_cr.Collaboration_Title__c}" 
+                             Required="true" 
+                             FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Collaboration_Title__c" 
+                             disabled="false"
+                             rendered="true"/> 
+                          </c:wiz_field> 
+                          <script>
+                          $( document ).ready(function() {
+                           
+                               $("#tableId_cr_table").find("input,select").each(function(){
+                                $(this).attr('disabled', false);
+                                $("#tableId_cr_chk").val=false;
+                                
+                                
+                                });
+                           
+                             if("{!gTask_cr.Status__c}"=='Pending Approval' || "{!gTask_cr.Status__c}"=='Rejected' || "{!gTask_cr.Status__c}"=='Void')
+                            {
+                               $("#Collaboration_Title__c").attr('disabled', true);
+                               $("#Primary_File_Location__c").attr('disabled', true);
+                               $("#Review_Description__c_cr").attr('disabled', true);
+                                $("#tableId_cr_chk").attr('disabled', true);
+                               
+                               
+                                $("#tableId_cr_appr_note").attr('disabled', true);
+                                $("#tableId_cr_table").find("input,select").each(function(){
+                                $(this).attr('disabled', true);
+                                
+                                 $("#allDue_Date__c_cr_hidden").attr('disabled', true);
+                                 $("#allDue_Date__c_cr_GRDATE").attr('disabled', true);
+                                    
+                                    
+                                $("#tableId_cr_link").hide();
+                                
+                                });
+                            }
+                            
+                           if ("{!gTask_cr.Status__c}"=='Closed' || "{!gTask_cr.Status__c}"=='Rejected')
+                              {   
+                                   $("#Collaboration_Title__c").attr('disabled', true);
+                                   $("#Primary_File_Location__c").attr('disabled', true);
+                                   $("#Review_Description__c_cr").attr('disabled', true);
+                                   $("#tableId_cr_link").hide();
+                                   $("#tableId_cr_chk").attr('disabled',true );
+                                   $("#tableId_cr_appr_note").attr('disabled',true );
+                                    $("#tableId_cr_table").find("input,select").each(function(){
+                                $(this).attr('disabled', true);
+                                });  
+                            }
+                            });
+                          
+                          </script>  
+                    
+                         <c:wiz_field Wide="true" 
+                           FieldLabel="Primary File Location"
+                            Required="true" 
+                            rendered="{!$ObjectType.General_Task__c.Fields.Collaboration_Title__c.Accessible}"
+                            JSId="Title" >
+                           <c:wiz_textarea FieldId="Primary_File_Location__c" 
+                             ObjectName="Document_Profile__c" 
+                             initvalue="{!if($CurrentPage.parameters.gtid_cr=='gt_init_cr',documentprofile.Primary_File_Location__c,gTask_cr.Primary_File_Location__c)}" 
+                             Required="true" 
+                             FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Primary_File_Location__c" 
+                             disabled="false"
+                             rendered="true"/> </c:wiz_field>
+                     <!--&nbsp;&nbsp;&nbsp;&nbsp;<a href='https://onedrive.live.com/view.aspx?cid=a132229e684be8a8&page=view&resid=A132229E684BE8A8!26256&parId=A132229E684BE8A8!113&app=Word&wacqt=mru;' target="_blank" onclick='show_more_menu();'>File path</a> -->      
+                             
+                        
+                               
+                             
+                         <c:wiz_field Wide="true" 
+                           FieldLabel="{!$ObjectType.General_Task__c.Fields.Review_Description__c.label}"
+                            Required="true" 
+                            rendered="{!$ObjectType.General_Task__c.Fields.Review_Description__c.Accessible}"
+                            JSId="Review_Description" >
+                           <c:wiz_textarea FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Review_Description__c_cr" 
+                             ObjectName="General_Task__c" 
+                             initvalue="{!gTask_cr.Review_Description__c}" 
+                             Required="true" 
+                             FieldName="Review_Description__c" 
+                             disabled="false"
+                             rendered="true"/>
+                             </c:wiz_field>
+                    
+                          <!-- <c:wiz_form FormClass="Taskapproval validate" FormId="Taskapproval" RecordId="" submitPage="">-->
+                             <c:wiz_approval disabled="{!OR(gTask_cr.Status__c=='Rejected',gTask_cr.Status__c=='Pending Approval',gTask_cr.Status__c=='Closed',gTask_cr.Status__c=='Void')}" 
+                                        isLocked="{!OR(gTask_cr.Status__c=='Pending ActionPlan',gTask_cr.Status__c=='Pending ActionPlan',genTask.ChangeFieldApprovalStatus__c=='Pending',genTask.Status__c=='Pending Approval',genTask.Status__c=='Closed',genTask.Status__c=='Void')}" 
+                                        allowDaysFieldId="allAllowed_Days__c_cr" 
+                                        isSubmitForApproval="true" 
+                                        dueDateFieldId="allDue_Date__c_cr" 
+                                        isReloadNeeded="false" 
+                                        taskId="{!gTask_cr.id}" 
+                                        seqFieldId="seqFieldId_cr" 
+                                        tableId="tableId_cr" 
+                                        crDate="{!gTask_cr.CreatedDate}" 
+                                        id="approvalid" 
+                                        isApproverNoteNeeded="true" 
+                                        userFieldId="userFieldId" 
+                                        rendered="{!NOT(AND(gTask_cr.Approval_Required__c!='Yes',OR(gTask_cr.Status__c=='Pending Approval',gTask_cr.ChangeFieldApprovalStatus__c=='Pending',gTask_cr.Status__c=='Closed',gTask_cr.Status__c=='Void',
+                                        NOT(OR(DocumentProfile.OwnerId=$User.Id,gTask.Ownerid==$User.Id,$Profile.Name=='System Administrator')),gTask.Status__c=='Pending ActionPlan')))}"  
+                                        noteToApprover="{!gTask_cr.Note_To_Approver__c}" 
+                                        typeofapprover="Document_Approvers"
+                                        recordtype="Reviewer"
+                                        approvaRequired="false"
+                                        Maxdate="{!Maxdate}"
+                                        duedate_err_msg="{!er_message}" 
+                                        initjs="if({!(gTask_cr.Approval_Required__c=='Yes')}){
+                                                                        $('#tableId_div').removeClass('hidden'); 
+                                                                        $('#tableId_link').removeClass('hidden');$('#tableId_chk').attr('checked', true);                
+                                                                        $('#tableId_table').find('input,select').each(function(){
+                                                                                                 $(this).attr('disabled', false);   
+                                                                                            });
+                                                                } 
+                                                                else{
+                                                                 $('#tableId_div').addClass('hidden'); 
+                                                                  $('#tableId_link').addClass('hidden');
+                                                                  $('#tableId_chk').attr('checked', false); 
+                                                                }"
+                                                             />
+                              </c:wiz_form>
+                                     <script>
+                    
+                    
+                    function ApproversValidate(){
+                              ApprovalValid=true;
+                                }
+                    </script>
+                            
+                           <c:wiz_approvalbutton approvalbuttonid="ApprovaButtonIdNcContainment" 
+                           jsid="javascriptidForApprovalbutton" RecordId="{!gTask_cr.Id}" ApproveHide="false"
+                           rendered="true"/>
+                                       
+                    </div>
+                 </div>
+                </div>
+              </div>
+            </div>
+        </div>
+     </div>
+     <script>
+      
+     </script>      
+                
+                
+    
+                         
+    </apex:outputPanel>
+    <script>
+    //************************************
+    
+    function collaborationReview_submit()
+    {    
+          var apprflagval = validate(null,ApproversValidate,'Taskapproval');
+          if(apprflagval)
+          {
+             var isDigSigNd='<apex:outputText value="{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}"/>'
+                if(isDigSigNd=='true')
+                {
+                    // alert('*******************');   
+                    $('#uname').val('');$('#pw').val('');$('#signature').modal('show');
+                 }
+                 else{
+                 
+                  Digsig_onsuccess_col_rev();
+                 }
+         }
+    
+    
+       
+                      
+    }
+    function Digsig_onsuccess_col_rev()
+    {
+        var colTitle=document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Collaboration_Title__c").value;
+       var revDes_col=document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Review_Description__c_cr").value;
+       var fileLocation=document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Primary_File_Location__c").value
+      
+        
+       if({!$CurrentPage.parameters.gtid_cr=='gt_init_cr'})
+       {
+           // alert("inside  gt_init_cr");
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.DocumentProfileControllerExt.newSubmitCR}',fileLocation,colTitle,revDes_col,"{!documentprofile.id}",function(result, event){
+                  if(event.status)
+                  {
+                      // alert("inside  gt_init_cr checked");
+                      saveApprovalData(result,true,'/apex/documentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_cr='+result+'&type=CollaborationReview','CollaborationReview');
+                   
+                    }
+                     else
+                     {    
+                       window.location.href = '/apex/documentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_cr='+result+'&type=CollaborationReview';
+                     } 
+                  
+                 
+                });
+           }
+    
+       
+       else
+       {
+       
+           // alert('****');
+              Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.DocumentProfileControllerExt.SubmitCR}',"{!gTask_cr}",fileLocation,colTitle,revDes_col,"{!documentprofile.id}",function(result, event)
+                {
+                  if(event.status)
+                  {
+                       
+                      // alert('Success checked');
+                      saveApprovalData(result,true,'/apex/documentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_cr={!gTask_cr}&type={!JSENCODE($CurrentPage.parameters.type)}&pg=crpage','CollaborationReview');
+                    }
+                     else
+                     {    
+                       window.location.href = '/apex/documentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_cr={!JSENCODE($CurrentPage.parameters.gtid_cr)}&type={!JSENCODE($CurrentPage.parameters.type)}&pg=crpage';
+                     } 
+                    
+                  
+                });
+       }
+    }
+    
+       
+    
+    
+    
+    
+    
+    //*****************************
+     function collaborationReview_save()
+      { 
+          
+          var colTitle=document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Collaboration_Title__c").value;
+          var revDes_col=document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Review_Description__c_cr").value;
+          var fileLocation=document.getElementById("{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Primary_File_Location__c").value;
+          var apprflagval = validate(null,ApproversValidate,'Taskapproval');
+          
+          if(apprflagval)
+          {
+            
+                  if({!$CurrentPage.parameters.gtid_cr=='gt_init_cr'})
+                 {
+                   Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.DocumentProfileControllerExt.saveCR}',fileLocation,colTitle,revDes_col,"{!documentprofile.id}",function(result, event){
+                  if(event.status)
+                  {
+                                            
+                        
+                        saveApprovalData(result,false,'/apex/documentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_cr='+result+'&type=CollaborationReview','CollaborationReview');
+                            
+                     }
+                     else
+                     {    
+                       window.location.href = '/apex/documentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_cr='+result+'&type=CollaborationReview';
+                     } 
+                   });
+                }
+           else{
+          
+           
+                Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.DocumentProfileControllerExt.updateGentaskCR}',"{!gTask_cr.id}",fileLocation,colTitle,revDes_col,"{!documentprofile.id}",function(result, event){
+               
+                if(event.status)
+                  {
+  
+                        saveApprovalData(result,false,'/apex/documentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_cr={!JSENCODE($CurrentPage.parameters.gtid_cr)}&type={!JSENCODE($CurrentPage.parameters.type)}&pg=crpage','CollaborationReview');
+                 
+                     }
+                     else
+                     {    
+                       window.location.href = '/apex/documentProfileTask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid_cr={!JSENCODE($CurrentPage.parameters.gtid_cr)}&type={!JSENCODE($CurrentPage.parameters.type)}&pg=crpage';
+                     } 
+                 
+              }); 
+          
+           }
+         }
+     }
+    </script>
+    <!-- rev1 -->
+                
+    <apex:outputPanel layout="none" rendered="{!AND($CurrentPage.parameters.id!=null,
+                                    OR($CurrentPage.parameters.gtid_cr==gTask_cr.id,$CurrentPage.parameters.gtid_cr=='gt_init_cr'),
+                                    $CurrentPage.parameters.type=='CollaborationReview')}">
+                <apex:outputPanel rendered="{!cr}">
+                    <div class="panel-group col-md-12" id="accordion" role="tablist"
+                        aria-multiselectable="true">
+                        <div class="panel panel-default">
+                            <div class="panel-heading" role="tab" id="headingOne">
+                                <h4 class="panel-title">
+                                    <a data-toggle="collapse" data-parent="#accordion12_cr"
+                                        href="#collapseOne12_cr" aria-expanded="true"
+                                        aria-controls="collapseOne" class="collapsed"> 
+                                        <span class="col-exp"></span> Review&nbsp;&nbsp; <apex:outputText value="{0,date,dd MMM yyyy}">
+                                        <apex:param value="{!rev1_cr.Approval_Date}" /> 
+              
+                                          </apex:outputText>
+                                    </a>
+                                </h4>
+                            </div>
+                            <div id="collapseOne12_cr" class="panel-collapse collapse out" role="tabpanel" aria-labelledby="headingOne">
+                                <div class="panel-body">
+                                    <div class="row"> 
+                                      <c:wiz_field Wide="true" 
+                                        FieldLabel="Review Title"
+                                        Required="false" 
+                                        rendered="{!$ObjectType.General_Task__c.Fields.Collaboration_Title__c.Accessible}"
+                                        JSId="Title" >
+                                       <c:wiz_textarea FieldId="Collaboration_Title__c_crrev1" 
+                                         ObjectName="General_Task__c" 
+                                         initvalue="{!rev1_cr.title}" 
+                                         Required="true" 
+                                         FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Collaboration_Title__c_rev1" 
+                                         disabled="true"
+                                         rendered="true"/> 
+                                      </c:wiz_field>
+                                      <c:wiz_field Wide="true" 
+                           FieldLabel="Primary File Location"
+                            Required="false" 
+                            rendered="{!$ObjectType.General_Task__c.Fields.Collaboration_Title__c.Accessible}"
+                            JSId="Title" >
+                           <c:wiz_textarea FieldId="Primary_File_Location__c_crrev1" 
+                             ObjectName="Document_Profile__c" 
+                             initvalue="{!if($CurrentPage.parameters.gtid_cr=='gt_init_cr',documentprofile.Primary_File_Location__c,rev1_cr.primaryfilepath)}" 
+                             Required="true" 
+                             FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Primary_File_Location__c" 
+                             disabled="true"
+                             rendered="true"/> 
+                             </c:wiz_field>
+                                       
+                             <c:wiz_field Wide="true" 
+                           FieldLabel="{!$ObjectType.General_Task__c.Fields.Review_Description__c.label}"
+                            Required="false" 
+                            rendered="{!$ObjectType.General_Task__c.Fields.Review_Description__c.Accessible}"
+                            JSId="Review_Description" >
+                           <c:wiz_textarea FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Review_Description__c_crrev1" 
+                             ObjectName="General_Task__c" 
+                             initvalue="{!rev1_cr.revDescription}" 
+                             Required="true" 
+                             FieldName="Review_Description__c_crrev1" 
+                             disabled="true"
+                             rendered="true"/>
+                             </c:wiz_field>
+                             <!--table  -->
+        <div class="add-approver-row col-md-12" id="Review1_div_cr">
+      <table class="table" id="Review1_table_cr">
+          <thead>
+              <tr>
+                  <td><span class="mandatory"><apex:outputtext value=""/></span>Reviewer Name</td>
+                  <td width="40%"><span class="mandatory"><apex:outputtext value=""/></span>Approval Date</td>
+                  <td width="20%"><span class="mandatory"><apex:outputtext value=""/></span>Status</td>
+   
+              </tr>
+              <tr>
+               <td>{!rev1_cr.Reviewer_Name}
+               </td>
+               <td>
+               <apex:outputText value="{0,date,dd MMM yyyy}">
+                <apex:param value="{!rev1_cr.Approval_Date}" /> 
+               </apex:outputText>
+               </td>
+               <td>{!rev1_cr.status}
+               </td>
+              </tr>
+          </thead>
+          
+          <tbody>
+              <tr class="" id="row_12">
+              
+                  
+              </tr>
+        </tbody>
+    </table>
+                             
+            </div>                 
+                             
+                             
+                             
+                     </div>
+                   </div>
+                </div>
+               </div>
+             </div>
+                    </apex:outputPanel>
+             <script>
+                $( document ).ready(function() {
+                                         
+                                         $("#Primary_File_Location__c_crrev1").attr('disabled', true);
+                                         $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Review_Description__c_crrev1").attr('disabled', true);
+                                           $("#Collaboration_Title__c_crrev1").attr('disabled', true);
+                                          });
+             </script>
+            </apex:outputPanel>
+            <!-- Rev2 cr -->
+            <apex:outputPanel layout="none" rendered="{!AND($CurrentPage.parameters.id!=null,
+                                    OR($CurrentPage.parameters.gtid_cr==gTask_cr.id,$CurrentPage.parameters.gtid_cr=='gt_init_cr'),
+                                    $CurrentPage.parameters.type=='CollaborationReview')}">
+                <apex:outputPanel rendered="{!cr1}">
+                    <div class="panel-group col-md-12" id="accordion" role="tablist"
+                        aria-multiselectable="true">
+                        <div class="panel panel-default">
+                            <div class="panel-heading" role="tab" id="headingOne">
+                                <h4 class="panel-title">
+                                    <a data-toggle="collapse" data-parent="#accordion12_cr1"
+                                        href="#collapseOne12_cr1" aria-expanded="true"
+                                        aria-controls="collapseOne" class="collapsed"> 
+                                        <span class="col-exp"></span> Review&nbsp;&nbsp; <apex:outputText value="{0,date,dd MMM yyyy}">
+                                        <apex:param value="{!rev2_cr.Approval_Date}" /> 
+              
+                                          </apex:outputText>
+                                    </a>
+                                </h4>
+                            </div>
+                            <div id="collapseOne12_cr1" class="panel-collapse collapse out" role="tabpanel" aria-labelledby="headingOne">
+                                <div class="panel-body">
+                                    <div class="row"> 
+                                      <c:wiz_field Wide="true" 
+                                        FieldLabel="Review Title"
+                                        Required="false" 
+                                        rendered="{!$ObjectType.General_Task__c.Fields.Collaboration_Title__c.Accessible}"
+                                        JSId="Title" >
+                                       <c:wiz_textarea FieldId="Collaboration_Title__c_revcr2" 
+                                         ObjectName="General_Task__c" 
+                                         initvalue="{!rev2_cr.title}" 
+                                         Required="true" 
+                                         FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Collaboration_Title__c_crrev2" 
+                                         disabled="true"
+                                         rendered="true"/> 
+                                      </c:wiz_field>
+                                      <c:wiz_field Wide="true" 
+                           FieldLabel="Primary File Location"
+                            Required="false" 
+                            rendered="{!$ObjectType.General_Task__c.Fields.Collaboration_Title__c.Accessible}"
+                            JSId="Title" >
+                           <c:wiz_textarea FieldId="Primary_File_Location__c_crrev12" 
+                             ObjectName="Document_Profile__c" 
+                             initvalue="{!if($CurrentPage.parameters.gtid_cr=='gt_init_cr',documentprofile.Primary_File_Location__c,rev2_cr.primaryfilepath)}" 
+                             Required="true" 
+                             FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Primary_File_Location__c" 
+                             disabled="true"
+                             rendered="true"/> </c:wiz_field> 
+                             <c:wiz_field Wide="true" 
+                           FieldLabel="{!$ObjectType.General_Task__c.Fields.Review_Description__c.label}"
+                            Required="false" 
+                            rendered="{!$ObjectType.General_Task__c.Fields.Review_Description__c.Accessible}"
+                            JSId="Review_Description" >
+                           <c:wiz_textarea FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Review_Description__c_crrev12" 
+                             ObjectName="General_Task__c" 
+                             initvalue="{!rev2_cr.revDescription}" 
+                             Required="true" 
+                             FieldName="Review_Description__c" 
+                             disabled="true"
+                             rendered="true"/>
+                             </c:wiz_field>
+                                        <apex:outputPanel rendered="{!rev2_cr.show}"> 
+                            <div class="add-approver-row col-md-12" id="Review1_div_cr">
+      <table class="table" id="Review1_table_cr2">
+          <thead>
+              <tr>
+                  <td><span class="mandatory"><apex:outputtext value=""/></span>Reviewer Name</td>
+                  <td width="40%"><span class="mandatory"><apex:outputtext value=""/></span>Approval Date</td>
+                  <td width="20%"><span class="mandatory"><apex:outputtext value=""/></span>Status</td>
+   
+              </tr>
+              <tr>
+               <td>{!rev2_cr.Reviewer_Name}
+               </td>
+               <td>
+               <apex:outputText value="{0,date,dd MMM yyyy}">
+                <apex:param value="{!rev2_cr.Approval_Date}" /> 
+               </apex:outputText>
+               </td>
+               <td>{!rev2_cr.status}
+               </td>
+              </tr>
+          </thead>
+          
+          <tbody>
+              <tr class="" id="row_12">
+              </tr>
+        </tbody>
+    </table>
+     </div>                
+                           
+                                        </apex:outputPanel></div>
+                                  </div>
+                              </div>
+                            </div>
+                          </div>
+                    </apex:outputPanel>
+                             <script>
+                             $( document ).ready(function() {
+                                         
+                                         $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Primary_File_Location__c_crrev12").attr('disabled', true);
+                                         $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Review_Description__c_crrev12").attr('disabled', true);
+                                           $("#Collaboration_Title__c_revcr2").attr('disabled', true);
+                                          });
+                                 </script>
+            </apex:outputPanel>
+            <!-- table -->
+           <apex:outputPanel layout="none" rendered="{!AND($CurrentPage.parameters.id!=null,
+                                    OR($CurrentPage.parameters.gtid_cr==gTask_cr.id,$CurrentPage.parameters.gtid_cr=='gt_init_cr'),
+                                    $CurrentPage.parameters.type=='CollaborationReview')}">
+               <apex:outputPanel rendered="{!cr2}">
+                    <div class="panel-group col-md-12" id="accordion" role="tablist"
+                        aria-multiselectable="true">
+                        <div class="panel panel-default">
+                            <div class="panel-heading" role="tab" id="headingOne">
+                                <h4 class="panel-title">
+                                    <a data-toggle="collapse" data-parent="#accordion123"
+                                        href="#collapseOne123" aria-expanded="true"
+                                        aria-controls="collapseOne" class="collapsed"> <span
+                                        class="col-exp"></span> See more
+                                    </a>
+                                </h4>
+                            </div>
+                            <!--multi table starts -->
+                            <div id="collapseOne123" class="panel-collapse collapse out" role="tabpanel" aria-labelledby="headingOne">
+                                <div class="panel-body">
+                                <apex:repeat value="{!AppFinalHistory_cr}" var="col">
+                                
+                                <!-- multi panel starts -->
+                                
+                                
+                                <div class="panel panel-default">
+                                  <div class="panel-heading">Review&nbsp;&nbsp; <apex:outputText value="{0,date,dd MMM yyyy}">
+                <apex:param value="{!rev1.review}" /> 
+                
+               </apex:outputText></div>
+                                  <div class="panel-body">                              
+                                <c:wiz_field Wide="true" 
+                                        FieldLabel="Review Title"
+                                        Required="false" 
+                                        rendered="{!$ObjectType.General_Task__c.Fields.Collaboration_Title__c.Accessible}"
+                                        JSId="Title" >
+                                       <c:wiz_textarea FieldId="Collaboration_Title__c_{!AppFinalHistory_cr[col].incrementer}" 
+                                         ObjectName="General_Task__c" 
+                                         initvalue="{!AppFinalHistory_cr[col].title}" 
+                                         Required="true" 
+                                         FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Collaboration_Title__c_crrev2" 
+                                         disabled="true"
+                                         rendered="true"/> 
+                                      </c:wiz_field>
+                                      <c:wiz_field Wide="true" 
+                           FieldLabel="Primary File Location"
+                            Required="false" 
+                            rendered="{!$ObjectType.General_Task__c.Fields.Collaboration_Title__c.Accessible}"
+                            JSId="Title" >
+                           <c:wiz_textarea FieldId="Primary_File_Location__c_{!AppFinalHistory_cr[col].incrementer}" 
+                             ObjectName="Document_Profile__c" 
+                             initvalue="{!if($CurrentPage.parameters.gtid_cr=='gt_init_cr',documentprofile.Primary_File_Location__c,rev2_cr.primaryfilepath)}" 
+                             Required="true" 
+                             FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Primary_File_Location__c" 
+                             disabled="true"
+                             rendered="true"/> </c:wiz_field>
+                               
+                          <c:wiz_field Wide="true" 
+                                            FieldLabel="{!$ObjectType.General_Task__c.Fields.Review_Description__c.label}"
+                                            Required="false" 
+                                            rendered="true"
+                                            JSId="Review_Description" >
+                           <c:wiz_textarea FieldId="Review_Description__c_view_{!AppFinalHistory_cr[col].incrementer}" 
+                             ObjectName="General_Task__c" 
+                             initvalue="{!AppFinalHistory_cr[col].revDescription}" 
+                             Required="true" 
+                             FieldName="Review_Description__c" 
+                             disabled="true"
+                             rendered="true"/>
+                             </c:wiz_field>
+                             <script>
+                                  $( document ).ready(function() {
+                                         
+                                         $("#Review_Description__c_view_{!AppFinalHistory_cr[col].incrementer}").attr('disabled', true);
+                                      $("#Collaboration_Title__c_{!AppFinalHistory_cr[col].incrementer}").attr('disabled', true);
+                                       $("#Primary_File_Location__c_{!AppFinalHistory_cr[col].incrementer}").attr('disabled', true);
+                                      
+                                          });
+                                  </script>
+                             
+                         <apex:outputPanel rendered="{!AppFinalHistory_cr[col].show}">           
+                         <div class="add-approver-row col-md-12" id="Review1_div">
+      <table class="table" id="Review_table_{!AppFinalHistory_cr[col].incrementer}">
+          <thead>
+              <tr>
+                  <td><span class="mandatory"><apex:outputtext value=""/></span>Reviewer Name</td>
+                  <td width="40%"><span class="mandatory"><apex:outputtext value=""/></span>Approval Date</td>
+                  <td width="20%"><span class="mandatory"><apex:outputtext value=""/></span>Status</td>
+   
+              </tr>
+              <tr>
+               <td>{!AppFinalHistory_cr[col].Reviewer_Name}
+               </td>
+               <td>
+               <apex:outputText value="{0,date,dd MMM yyyy}">
+                <apex:param value="{!AppFinalHistory_cr[col].Approval_Date}" /> 
+               </apex:outputText>
+               </td>
+               <td>{!AppFinalHistory_cr[col].status}
+                   
+                   
+                   
+                   
+               </td>
+              </tr>
+          </thead>
+          
+          <tbody>
+              <tr class="" id="row_1">
+              
+                  
+              </tr>
+        </tbody>
+    </table>
+                             
+                        </div>
+                             </apex:outputPanel> 
+                                </div>
+                             
+                            
+                             
+                       </div>   
+                        </apex:repeat>   
+                                        </div>
+                                        </div>
+                                        </div>
+                                        </div>
+                   </apex:outputPanel>
+                                        </apex:outputPanel>
+                            
+                
+            </apex:define>
+            <apex:define name="theform1">
+                
+            </apex:define>
+            
+            <apex:define name="buttonbar">
+            
+            
+               <apex:outputpanel >
+                   
+                <div class="fix-footer navbar-fixed-bottom navbar-inverse wiz-button-bar" style="position: fixed">
+                 <div class="col-sm-12 text-right">
+                 <apex:outputpanel rendered="{!AND(OR($CurrentPage.parameters.gtid_er=='gt_init',$CurrentPage.parameters.gtid_er=='{!gTask.id}',$CurrentPage.parameters.type=='EffectivenessReview' ),(DocumentProfile.Effectiveness_Review_Date__c<=TODAY() && DocumentProfile.Status__c!='Void' && '{!gTask.status__c}'!='Void'))}">
+                     <!--<button type="submit" id="nextBtn"
+                                       onclick="$(this).addClass('most-recent-click'); $('#submitBtn').removeClass('most-recent-click');
+                                                window.location.href = '/apex/DocumentProfile?id={!JSENCODE($Currentpage.parameters.Id)}&pg=doc_Approval'"
+                                        
+                                       class="btn btn-primary dont-allow-multiple-clicks {!if(documentProfile.createddate==documentProfile.lastmodifieddate,'hidden','')}">
+                                   <span class="fa fa-step-forward"></span> Next
+                               </button>-->
+                    <apex:outputPanel rendered="{!OR(gTask.Status__c =='open',$CurrentPage.parameters.gtid_er=='gt_init')}">
+                     <button type="button" class="btn btn-default" onclick="cancelPopup();">       
+                                <span class="fa fa-close">
+                                </span> Cancel
+                       </button>
+                        </apex:outputPanel>
+                       <apex:outputPanel rendered="{!OR(gTask.ownerid == $User.Id,$Profile.Name == 'System Administrator',DocumentProfile.Ownerid == $User.Id)}">
+                        <apex:outputPanel rendered="{!AND(gTask.Status__c != 'Rejected',gTask.Status__c != 'Pending Approval',gTask.Status__c != 'Closed',gTask.Status__c != 'Void')}">
+                       <button type="submit" 
+                               onclick="ValidateEffectiveReview()" id="saveBtn"
+                               class="btn {!IF(NOT(ISBLANK(DocumentProfile.Id)),'btn-primary','btn-success')} dont-allow-multiple-clicks">
+                               <span class="fa {!IF(NOT(ISBLANK(DocumentProfile.Id)),'fa fa-floppy-o','fa fa-send')}">
+                               </span>Save
+                       </button>
+                       
+                       <button type="submit" 
+                                onclick="onSubmit_GT();" 
+                                id="submitBtn"
+                                class="btn btn-success   dont-allow-multiple-clicks">
+                                <span class="fa fa fa-send">
+                                </span>Submit
+                       </button>
+                       
+                       </apex:outputPanel>
+                       </apex:outputPanel>
+                       </apex:outputpanel>
+                       <!-- Buttons Collabrationreview -->
+                        <apex:outputpanel rendered="{!OR($CurrentPage.parameters.gtid_cr=='gt_init_cr',$CurrentPage.parameters.gtid_cr=='{!gTask_cr.id}',$CurrentPage.parameters.type=='CollaborationReview')}">
+                 
+                        
+                        <apex:outputPanel rendered="{!OR(gTask_cr.Status__c == 'Rejected',gTask_CR.Status__c == 'Closed',gTask_CR.Status__c == 'Void')}">
+                       
+                         <button type="submit" id="nextBtn"
+                                       onclick="$(this).addClass('most-recent-click'); $('#submitBtn').removeClass('most-recent-click');
+                                                window.location.href = '/apex/DocumentProfile?id={!JSENCODE($Currentpage.parameters.Id)}&pg=doc_Approval'"
+                                        
+                                       class="btn btn-primary dont-allow-multiple-clicks {!if(documentProfile.createddate==documentProfile.lastmodifieddate,'hidden','')}">
+                                   <span class="fa fa-step-forward"></span> Next
+                               </button>
+                       
+                            </apex:outputPanel>
+                       
+                       <apex:outputPanel rendered="{!OR(gTask_cr.ownerid == $User.Id,$Profile.Name == 'System Administrator',DocumentProfile.Ownerid == $User.Id)}">
+                        <apex:outputPanel rendered="{!AND(gTask_cr.Status__c != 'Rejected',gTask_cr.Status__c != 'Pending Approval',gTask_CR.Status__c != 'Closed',gTask_CR.Status__c != 'Void')}">
+                             <button type="button" class="btn btn-default" onclick="cancelPopup();">       
+                                <span class="fa fa-close">
+                                </span> Cancel
+                       </button>
+                       <button type="submit" 
+                                     onclick="collaborationReview_save();"
+                               class="btn {!IF(NOT(ISBLANK(DocumentProfile.Id)),'btn-primary','btn-success')} dont-allow-multiple-clicks">
+                               <span class="fa {!IF(NOT(ISBLANK(DocumentProfile.Id)),'fa fa-floppy-o','fa fa-send')}">
+                               </span>Save
+                       </button>
+                       
+                       <button type="submit" 
+                                onclick="collaborationReview_submit();" 
+                                id="submitBtn"
+                                class="btn btn-success   dont-allow-multiple-clicks">
+                                <span class="fa fa fa-send">
+                                </span>Start
+                       </button>
+                       
+                        
+                   
+                       
+                       </apex:outputPanel>
+                       </apex:outputPanel>
+                       <apex:outputPanel rendered="{!gTask_cr.Status__c=='Pending Approval'}">
+                            <apex:outputPanel rendered="{!OR($User.Id==gTask_cr.Approver__c,$User.Id==gTask_cr.Approver_1__c,$User.Id==gTask_cr.Approver_2__c,$User.Id==gTask_cr.Approver_3__c,$User.Id==gTask_cr.Approver_4__c,$User.Id==gTask_cr.Approver_5__c,$User.Id==gTask_cr.Approver_6__c,$User.Id==gTask_cr.Approver_7__c,$User.Id==gTask_cr.Approver_8__c,$User.Id==gTask_cr.Approver_9__c)}">
+                              <button type="submit" id="ApprovaButtonIdNcContainment1"  onclick="ApprovePopupModal();" class="btn btn-success  dont-allow-multiple-clicks"><span class='fa fa-thumbs-o-up'></span> Complete</button>
+                            </apex:outputPanel>
+                       <apex:outputPanel rendered="{!(gTask_cr.Initial_Submitter__c==$User.Id)}">
+                             <button type="submit" id="RecallButtonIdNcContainment"  onclick="RecallPopupModal();" class="btn btn-primary  dont-allow-multiple-clicks "><span class="fa fa-mail-reply-all"></span> Recall</button>     
+                       </apex:outputPanel>                                                                             
+                    </apex:outputPanel>
+                       </apex:outputpanel>
+                       <apex:outputPanel rendered="{!gTask.Status__c=='Pending Approval'}">
+                            <apex:outputPanel rendered="{!OR($User.Id==gTask.Approver__c,$User.Id==gTask.Approver_1__c,$User.Id==gTask.Approver_2__c,$User.Id==gTask.Approver_3__c,$User.Id==gTask.Approver_4__c,$User.Id==gTask.Approver_5__c,$User.Id==gTask.Approver_6__c,$User.Id==gTask.Approver_7__c,$User.Id==gTask.Approver_8__c,$User.Id==gTask.Approver_9__c)}">
+                              <button type="submit" id="ApprovaButtonIdNcContainment1"  onclick="ApprovePopupModal();" class="btn btn-success  dont-allow-multiple-clicks"><span class='fa fa-thumbs-o-up'></span> Decision</button>
+                            </apex:outputPanel>
+                        <apex:outputPanel rendered="{!(gTask.Initial_Submitter__c==$User.Id)}">
+                            <button type="submit" id="RecallButtonIdNcContainment"  onclick="RecallPopupModal();" class="btn btn-primary  dont-allow-multiple-clicks "><span class="fa fa-mail-reply-all"></span> Recall</button>     
+                       </apex:outputPanel>                                                                              
+                    </apex:outputPanel>
+                   
+                       
+                       </div>
+                </div>
+               </apex:outputpanel>
+                           
+                
+            </apex:define>
+            
+            <apex:define name="rightpane">
+                  
+                <div Class="tab-content">
+                    <c:wiz_attachments record_id="{!documentProfile.Id}" showAddButtonLink="{!AND(NOT(ISBLANK(documentProfile.Id)),NOT(documentProfile.Status__c=='Closed'))}"></c:wiz_attachments>
+                </div>
+                <apex:outputPanel rendered="{!AND(OR(gTask_cr.Status__c == 'Pending Approval',gTask_CR.Status__c == 'Closed'),gTask_cr.Status__c!='New')}">
+                <div class="tab-pane chatter" id="chatter">
+                   <div class="row">
+                    <apex:iframe id="chatter-iframe" src="/apex/Chatter?gtid_cr={!gTask_cr.Id}&id={!documentProfile.Id}" width="100%" height="600px" scrolling="true" />
+                       <script type="text/javscript">
+                       //$('.cxchattertextareacontainer').hide();
+                            $('#chatter-iframe').contents().find('.publishercontainer').hide();
+                       </script>
+                  </div>
+
+                </div>
+              </apex:outputPanel>
+                
+              
+            </apex:define>
+        </apex:composition>
+    </div>
+    
+    <apex:outputPanel rendered="{!OR($CurrentPage.parameters.pg=='doc_init',ISBLANK($CurrentPage.parameters.pg))}">
+        <c:wiz_alert alertId="invalidDateAlert"/>
+        <c:digital_signature onSuccess="navigateAfterDigitalSignature()"  />
+        <c:wiz_validator onValid="if({!OR($CurrentPage.parameters.pg=='doc_init',ISBLANK($CurrentPage.parameters.pg))})onValidInit();"
+                         ignorehidden="" />
+    </apex:outputPanel>
+    
+    <apex:outputPanel rendered="{!OR($CurrentPage.parameters.gtid_er=='gt_init',$CurrentPage.parameters.gtid_er=='{!gTask.id}',$CurrentPage.parameters.type='EffectivenessReview')}">
+        <c:wiz_alert alertId="invalidDateAlert"/>
+        <c:digital_signature onSuccess="DigSig_onSuccess()"  />
+        <c:wiz_validator onValid="if({!OR($CurrentPage.parameters.gtid_er=='gtid_er',$CurrentPage.parameters.gtid_er=='{!gTask.id}')})onValidInit();"
+                         ignorehidden="" />
+    </apex:outputPanel>
+    <apex:outputPanel rendered="{!OR($CurrentPage.parameters.gtid_cr=='gt_init_cr',$CurrentPage.parameters.gtid_cr=='{!gTask_cr.id}',$CurrentPage.parameters.pg=='crpage')}">
+        <c:wiz_alert alertId="invalidDateAlert"/>
+        <c:digital_signature onSuccess="Digsig_onsuccess_col_rev()"  />
+        <c:wiz_validator onValid="if({!OR($CurrentPage.parameters.pg=='doc_init',ISBLANK($CurrentPage.parameters.pg))})onValidInit();"
+                         ignorehidden="" />
+    </apex:outputPanel>
+    
+    <c:wiz_validator ignorehidden="false" onValid=""></c:wiz_validator>
+</apex:page>

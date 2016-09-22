@@ -1,0 +1,6 @@
+<table border="0" cellpadding="5" width="550" cellspacing="5" height="400" >
+<tr valign="top" height="400" >
+<td tEditID="c1r1" style=" background-color:#FFFFFF; color:#000000; bEditID:r3st1; bLabel:main; font-size:12pt; font-family:arial;" aEditID="c1r1" locked="0" >
+<![CDATA[<font face="arial"><span style="font-size: 12pt;">Hello</span><span style="font-size: 12pt;">,&nbsp;</span></font><br><br><font face="arial" style="font-size: 12pt;">Please complete pending disposition assigned to you.&nbsp;</font><div><font face="arial"><br></font></div><div><font face="arial"><a href="https://c.na22.visual.force.com/{!General_Sub_Task__c.General_TaskId__c}">Click here for details.</a><br></font><br>Thanks</div>]]></td>
+</tr>
+</table>

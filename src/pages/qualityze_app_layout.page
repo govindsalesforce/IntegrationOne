@@ -1,0 +1,430 @@
+<!--
+   v1.0.4   Qualityze Inc(ST)       19-AUG-2016     For ChangeManagementChronology
+   v1.0.5   Qualityze Inc(ST)       19-AUG-2016     For Chronology
+   v1.0.6   Qualityze Inc(SG)       08-Sep-2016     For Expiration date alert,revise alert,chatter icon
+   
+-->
+
+<apex:page sidebar="false" showHeader="false" standardStylesheets="false" docType="html-5.0" controller="FileAttachmentController" extensions="QC_custom_settings">
+    <html>
+
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <!--[if !IE]><!-->
+      <!--  <style>
+        .wiz-steps-holder .wiz-step-cells .blue-back{
+            background-image:none;
+            }
+        </style>-->
+        <!--<![endif]-->
+        <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/font-awesome.min.css')}" />
+        <!-- <c:app_css /> -->
+        <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/bootstrap-datepicker.min.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/javascripts/select2-4.0.0/dist/css/select2.min.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/app.css')}" />
+        <title>Qualityze</title>
+        
+    </head>
+    
+    <style>
+        .error {
+            color: #F0493E !important;
+        }
+    </style>
+
+    <body>
+
+        <c:drawer_menu />
+        <apex:insert name="header_bar_component"/>
+        
+        
+        
+        <div class="container-fluid page-margins" id="app_warpper">
+            <!--  NC Header -->
+            <apex:insert name="theheader"/>
+            <!--  NC Header -->
+            
+            <!--  Wizard steps -->
+            <apex:insert name="wizsteps"/>
+            <!--  Wizard dots  -->
+            
+           
+        
+            <div class="form-holder">
+                <div class="form-title">
+                  <div class="col-lg-8 col-md-6 col-sm-6 col-xs-6">
+                      <h1><apex:insert name="from-holder-title"/></h1>
+                  </div>
+                    
+                  <div class="col-lg-4 col-md-6 col-sm-6 col-xs-6 ">
+                    <ul class="nav nav-tabs navbar-right hidden-sm hidden-xs" style="">
+                      <!-- v1.0.7 start-->  
+                         <li class="add-chatter" style="{!IF(CONTAINS($CurrentPage.parameters.type,'CollaborationReview') &&($CurrentPage.parameters.gtid_cr!='gt_init_cr'),'display:visible','display:none')}">
+                           <a href="#chatter" aria-controls="chatter" role="tab" onclick="$('.publishercontainer').css('display','none');$('#chatter-iframe').show();$('.publishercontainer').css('display','none');$('#attachment_list').hide();$('#chronology').hide();$('#help').hide();" 
+                               id="chatter" data-toggle="tab"><span class="fa fa-comments fa-lg"></span></a>
+                             
+                        </li>
+                        <!-- v1.0.7 end--> 
+                        
+                        <li class="add-attachment"><a href="#" onClick="$('#fileUpload').modal('show');$('#chronology').hide();resetAttachments();" id="add_attach"  style="{!IF(showaddAttachments,'display:visible','display:none')}">Add Attachment </a></li>
+                        <li style="{!IF(ShowAttachmentForParent,'display:visible','display:none')}">
+                            <a href="#attachment_list" aria-controls="attachment_list" role="tab" data-toggle="tab" id="attchment_tab" onclick="$('#chronology').hide();$('#chatter-iframe').hide();$('#help').hide();$('#attachment_list').show();" >
+                                Attachments <span class="badge" id="attachTabCnt"><apex:outputPanel id="countForAttachment">{!AttachmentCountForParent}<script type="text/javascript">console.log('Attachment Count {!AttachmentCountForParent}');</script></apex:outputPanel> </span>
+                            </a>
+                        </li>
+                        <li class="active"><a href="#help" aria-controls="help" role="tab" data-toggle="tab"  onclick="$('#help').show();$('#attachment_list').hide();$('#chronology').hide();$('#chatter-iframe').hide();">?</a></li>
+                        
+                        <li class="show-chronology" style="{!IF(CONTAINS($CurrentPage.parameters.pg,'nc_details'),'display:visible','display:none')}" >
+                            <a href="#chronology" aria-controls="chronology" role="tab" data-toggle="tab" id="chronology_tab" onclick="$('#help').hide();$('#attachment_list').hide();$('#chronology').show();">
+                                <span class='glyphicon glyphicon-time'></span>
+                            </a>
+                        </li>
+                                
+                        <li class="show-chronology" style="{!IF(CONTAINS($CurrentPage.parameters.pg,'capa_details'),'display:visible','display:none')}" >
+                          <a href="#chronology" aria-controls="chronology" role="tab" data-toggle="tab" id="chronology_tab" onclick="$('#help').hide();$('#attachment_list').hide();$('#chronology').show();">
+                              <span class='glyphicon glyphicon-time'></span>
+                          </a>
+                        </li>
+                              
+                         <!--v1.0.4 start -->        
+                        <li class="show-chronology" style="{!IF(CONTAINS($CurrentPage.parameters.pg,'cr_details'),'display:visible','display:none')}" >
+                          <a href="#chronology" aria-controls="chronology" role="tab" data-toggle="tab" id="chronology_tab" onclick="$('#help').hide();$('#attachment_list').hide();$('#chronology').show();">
+                              <span class='glyphicon glyphicon-time'></span>
+                          </a>
+                        </li>
+                        <!--v1.0.4 end -->  
+                        <!--v1.0.5 start -->        
+                        <li class="show-chronology" style="{!IF(CONTAINS($CurrentPage.parameters.pg,'doc_TypeDetails'),'display:visible','display:none')}" >
+                          <a href="#chronology" aria-controls="chronology" role="tab" data-toggle="tab" id="chronology_tab" onclick="$('#help').hide();$('#attachment_list').hide();$('#chronology').show();">
+                              <span class='glyphicon glyphicon-time'></span>
+                          </a>
+                        </li>
+                                
+                        <li class="show-chronology" style="{!IF(CONTAINS($CurrentPage.parameters.pg,'doc_Details'),'display:visible','display:none')}" >
+                          <a href="#chronology" aria-controls="chronology" role="tab" data-toggle="tab" id="chronology_tab" onclick="$('#help').hide();$('#attachment_list').hide();$('#chronology').show();">
+                              <span class='glyphicon glyphicon-time'></span>
+                          </a>
+                        </li>
+                        <!--v1.0.5 end -->  
+              
+                    </ul>
+                            
+                      <ul class="nav nav-pills navbar-right hidden-lg visible-sm visible-xs pull-right" style="margin-top: 10px;">
+                          <li class="add-attachment"  style="{!IF($CurrentPage.Name!='nc_details','display:visible','display:none')}"><a href="#" onClick="if(_globalIsDirty){alert('QPMS_MESSAGE: Please click Save before adding attachments.');} else {$('#fileUpload').modal('show'); }" id="add_attach"  style="{!IF(showaddAttachments,'display:visible','display:none')}">Add Attachment </a></li>                          
+                          <li><a data-toggle="modal"  onclick="attachmentdialog();"><i  class="fa fa-paperclip"></i></a></li>
+                          <li><a data-toggle="modal" onclick="helpDialog();" ><i class="fa fa-question-circle"></i></a></li>
+                          <li class="show-chronology" style="{!IF(CONTAINS($CurrentPage.parameters.pg,'nc_details'),'display:visible','display:none')}">
+                              <a href="#chronology" aria-controls="chronology" role="tab" data-toggle="tab" id="chronology_tab">
+                                  <i class='glyphicon glyphicon-time'></i>
+                              </a>
+                          </li> 
+                           
+                          <li class="" style="{!IF(CONTAINS($CurrentPage.parameters.pg,'capa_details'),'display:visible','display:none')}">
+                              <a href="#chronology" aria-controls="chronology" role="tab" data-toggle="tab" id="chronology_tab">
+                                  <i class='glyphicon glyphicon-time'></i>
+                              </a>
+                          </li> 
+                          
+                          <!--v1.0.4 start -->        
+                          <li class="show-chronology" style="{!IF(CONTAINS($CurrentPage.parameters.pg,'cr_details'),'display:visible','display:none')}">
+                              <a href="#chronology" aria-controls="chronology" role="tab" data-toggle="tab" id="chronology_tab">
+                                  <i class='glyphicon glyphicon-time'></i>
+                              </a>
+                          </li>
+                          <!--v1.0.4 end --> 
+                          <!--v1.0.5 start -->        
+                          <li class="show-chronology" style="{!IF(CONTAINS($CurrentPage.parameters.pg,'doc_TypeDetails'),'display:visible','display:none')}">
+                              <a href="#chronology" aria-controls="chronology" role="tab" data-toggle="tab" id="chronology_tab">
+                                  <i class='glyphicon glyphicon-time'></i>
+                              </a>
+                          </li>
+                          
+                          <li class="" style="{!IF(CONTAINS($CurrentPage.parameters.pg,'doc_Details'),'display:visible','display:none')}" >
+                          <a href="#chronology" aria-controls="chronology" role="tab" data-toggle="tab" id="chronology_tab">
+                              <span class='glyphicon glyphicon-time'></span>
+                          </a>
+                        </li>
+                          <!--v1.0.5 end -->
+                          
+                      </ul>
+                            <script>
+                            $('.add-attachment').click(function(){
+                            $('#chronology').hide();$('#help').hide();$('#attachment_list').show();
+                            });
+                            function helpDialog(){
+                                $('#contextualhelpbody').html($('#help').html());
+                                $( "#contextualhelpbody h2:first-child" ).css( "display", "None" );
+                                $('#help_dialog').modal('show');
+                            }
+                            function attachmentdialog(){
+                                $('#AttachmentsBody').html($('#attachment_list').html());
+                                $( "#AttachmentsBody h2:first-child" ).css( "display", "None" );
+                                $('#attachment_dialog').modal('show');
+                            }                            
+                            </script>
+                            <div aria-hidden="true" style="display: none;" class="modal fade" tabindex="-1" role="dialog" id="help_dialog">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">?</span></button>
+                                            <h4 class="modal-title" id="contextualhelp">Contextual Help </h4>
+                                        </div>
+                                        <div class="modal-body" id="contextualhelpbody" >
+                                            <p>One fine body?</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                        </div>
+                                    </div><!-- /.modal-content -->
+                                </div><!-- /.modal-dialog -->
+                            </div>
+                            <div aria-hidden="true" style="display: none; padding-right: 17px;" class="modal fade" tabindex="-1" role="dialog" id="attachment_dialog">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">?</span></button>
+                                            <h4 class="modal-title">Attachments</h4>
+                                        </div>
+                                        <div class="modal-body" id="AttachmentsBody">
+                                            <p>One fine body?</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                        </div>
+                                    </div><!-- /.modal-content -->
+                                </div><!-- /.modal-dialog -->
+                            </div>                      
+                  </div>
+                </div>
+                <div class="wiz-form-holder">
+                    <div class="row">
+
+                        <div class="wizard-form">
+                            <apex:insert name="theform" />
+                            
+                            <apex:insert name="relatedLists" />
+
+                            <div class="button-bar">
+                                <div class="pull-right">
+                                    <apex:insert name="buttonbar" />
+                                </div>
+                            </div>
+                            <div calss="clearfix"></div>
+                            
+                            <apex:insert name="approvalHistory"/>
+                            
+                        </div>
+
+                        <div class="wiz-form-rightpane hidden-sm hidden-xs">
+                            <div class="rightpane-content">
+                                <apex:insert name="rightpane" />
+                            </div>
+                            
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            
+        </div>
+        <!--  Footer  -->
+        
+    <!-- page redirect dialig   -->
+    <div class="modal fade" role="redirectDialog" aria-labelledby="redirectDialog" id="redirectDialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content message-window">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" >Unsaved Record Found</h4>
+          </div>
+          <div class="modal-body" style="height: 80px; font-size: 18px;">
+            <div class="container-fluid">
+              <p class="text-center">
+                  
+                The page you were working on is un-saved. <br/>Would you like redirect without saving?
+              </p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+            <button type="button" class="btn btn-primary">Yes</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+    <!-- page redirect dialig -->
+  <!-- page redirect dialig for 
+   button in DocumentProfile Page(Start) -->
+    <div class="modal fade" role="redirectDialog" aria-labelledby="redirectDialog" id="redirectDialog1">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content message-window">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" >NEW REVISION</h4>
+          </div>
+          <div class="modal-body" style="height: 80px; font-size: 18px;">
+            <div class="container-fluid">
+              <p class="text-center">
+                You are going to create a Revision. 
+              </p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+            <button type="button" class="btn btn-primary dont-allow-multiple-clicks">Yes</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+    <!-- page redirect dialig for Revise button in DocumentProfile Page(Stop) -->
+                      <!-- page redirect dialig for Temp button in DocumentProfile Page(Start) -->
+    <div class="modal fade" role="redirectDialog" aria-labelledby="redirectDialog" id="redirectDialog2">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content message-window">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" >TEMPORARY DEVIATION</h4>
+          </div>
+          <div class="modal-body" style="height: 80px; font-size: 18px;">
+            <div class="container-fluid">
+              <p class="text-center">
+                You are going to create a Temporary Deviation Document. 
+              </p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+            <button type="button" class="btn btn-primary dont-allow-multiple-clicks">Yes</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+    <!-- page redirect dialig for Temp button in DocumentProfile Page(Stop) -->
+    <!-- v1.0.6  start-->
+   <!-- New expiration date alert  -->
+    <div class="modal fade" role="redirectDialog" aria-labelledby="redirectDialog" id="newExpirationAlert">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content message-window">
+          <div class="modal-header">
+             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" > Expiration Date</h4>
+          </div>
+          <div class="modal-body" style="height: 80px; font-size: 18px;">
+            <div class="container-fluid">
+              <p class="text-center">
+                  
+               Do you want to change the Expiration date?
+              </p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+            <button type="button" class="btn btn-primary">Yes</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+    <!-- New expiration date alert end-->
+   <!--Collaboration alert -->
+                        
+    <div class="modal fade" role="redirectDialog" aria-labelledby="redirectDialog" id="Collaboration">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content message-window">
+          <div class="modal-header">
+             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" > New Expiration Date
+              
+              
+              </h4>
+          </div>
+          <div class="modal-body" style="height: 80px; font-size: 18px;">
+            <div class="container-fluid">
+              <p class="text-center">
+                  
+               Do you want to change the Expiration date?
+              </p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+            <button type="button" class="btn btn-primary">Yes</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+    <!-- New expiration date alert end-->
+   <!-- Revise alert end-->
+    <div class="modal fade" role="redirectDialog" aria-labelledby="redirectDialog" id="revise">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content message-window">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" >NEW REVISION</h4>
+          </div>
+          <div class="modal-body" style="height: 80px; font-size: 18px;">
+            <div class="container-fluid">
+              <p class="text-center">
+                A draft revision of this document already exist. Would you like to cancel this review? 
+              </p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+            <button type="button" class="btn btn-primary">Yes</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+   
+  
+   <!-- v1.0.6  end-->
+
+        
+        
+        <c:static_footer />                 
+        <c:static_attachments />
+
+        <script>
+            function getSessionId() {
+                return '{!$Api.Session_Id}';
+            }
+        </script>
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/bootstrap.min.js')}" />
+        <!-- <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/bootstrap-datepicker.min.js')}" /> -->
+        
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/moment.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/bootstrap-datetimepicker.js')}" />
+        
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.slimscroll.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/select2-4.0.0/dist/js/select2.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.form.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.validate.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/tiny_mce/tiny_mce.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/typeahead.bundle.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/app.js')}" />
+        
+
+       <!-- <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/sfdcapp.js')}" /> -->
+       <c:sfdcapp />
+       
+        <script src="../../soap/ajax/34.0/connection.js" type="text/javascript"></script>
+       
+                      
+       <!-- script files for Doc view functionality in iframe -->    
+           
+        <!--<script src="/EXT/ext-3.3.3/ext-core.js"></script>-->
+        <!--<script src="/jslibrary/1467322630000/sfdc/main.js"></script>-->
+        <!--<script src="/jslibrary/1466812160000/sfdc/Chatter.js"></script>--> 
+        <!--<script src="/jslibrary/1466812160000/sfdc/ChatterFiles.js"></script>-->
+        <!--<script src="/jslibrary/jslabels/1470958058000/en_US.js"></script>-->
+      <!-- script files for Doc view functionality in iframe -->            
+
+    </body>
+
+    </html>
+</apex:page>

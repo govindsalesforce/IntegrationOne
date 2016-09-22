@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customSettingsType>List</customSettingsType>
+    <customSettingsVisibility>Public</customSettingsVisibility>
+    <description>This is used to store queries which needs to be executed in vfseach controller.</description>
+    <enableFeeds>false</enableFeeds>
+    <fields>
+        <fullName>ObjectName__c</fullName>
+        <externalId>false</externalId>
+        <label>ObjectName</label>
+        <length>100</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>QueryFields__c</fullName>
+        <description>Comma separated list of fields to be queried/searched.</description>
+        <externalId>false</externalId>
+        <label>QueryFields</label>
+        <required>true</required>
+        <trackTrending>false</trackTrending>
+        <type>TextArea</type>
+    </fields>
+    <fields>
+        <fullName>QueryValue__c</fullName>
+        <externalId>false</externalId>
+        <label>QueryValue</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>TextArea</type>
+    </fields>
+    <fields>
+        <fullName>Type__c</fullName>
+        <externalId>false</externalId>
+        <label>Type</label>
+        <length>50</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <label>QC_VfsearchQueries</label>
+</CustomObject>

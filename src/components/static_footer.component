@@ -1,0 +1,6 @@
+<apex:component >
+<!--  Footer  -->
+        <div class="footer">
+          &copy; Copyright 2015 | Qualityze | All rights reserved
+        </div>
+</apex:component>

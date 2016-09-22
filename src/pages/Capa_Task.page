@@ -1,0 +1,1638 @@
+<!--
+v1.0  Qualityze Inc(BK)        19-MAY-2016    Initial Version.
+This page includes General Task Of CAPA
+-->
+<apex:page standardcontroller="CAPA__c" extensions="FileAttachmentController,Approvalclass,GeneralTaskController,CAPA,QC_custom_settings" sidebar="false" showHeader="false" standardStylesheets="false" docType="html-5.0">
+     <apex:variable value="{!-1}" var="internaltaskid"/>
+    <script>
+        function submitApprovalRequestCAPAOwner(RecordId,listid,ApprovalReqcomment,newOwner){
+        
+        Visualforce.remoting.Manager.invokeAction(
+            // @RemoteAction
+            '{!$RemoteAction.CAPA.submitApprovalRequestCAPAOwner}',RecordId,listid,ApprovalReqcomment,newOwner,function(result, event){
+                if(event.status){
+                    window.location.href = '/apex/capa_task?id='+'{!JSENCODE(CAPA__c.Id)}&type={!JSENCODE($CurrentPage.parameters.type)}&gtid=={!JSENCODE($CurrentPage.parameters.gtid)}';
+                }
+            });
+        
+    }
+    </script>
+     <!--------------approval process javascript function----------------------------------->
+    <script>
+                $( document ).ready(function() {
+                 $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY"});
+                     $('.LI_decision').hide();
+                     $('.doVerifyUserNameButton').hide(); 
+                     $('#ApprovaButtonIdNcContainment').hide(); 
+                     var flag=false;
+                
+                    var taskId="{!JSENCODE($CurrentPage.parameters.gtid)}";
+                     Visualforce.remoting.Manager.invokeAction(
+                            // @RemoteAction
+                            '{!$RemoteAction.Approvalclass.getApprover}',taskId,function(result, event){
+                                if(result.length!=0){
+                                        if(result[0].hasOwnProperty('Workitems')){
+                                            
+                                            
+                                                    $.each(result[0].Workitems,function(i, record) {
+                                                        if(record.ActorId=='{!JSENCODE($User.id)}')
+                                                        {
+                                                        
+                                                            flag=true;
+                                                        }
+                                                        }); 
+                                                    if(flag){
+                                                        
+                                                        $('.LI_decision').show();
+                                                        $('.doVerifyUserNameButton').show();
+                                                        $('#ApprovaButtonIdNcContainment').show(); 
+                                                    }
+                                                 
+                                                    if(result[0].SubmittedById=='{!JSENCODE($User.id)}'){
+                                                        $('#javascriptidForApprovalbutton_decision_wiz-fields-wide').hide();  
+                                                        $('#javascriptidForApprovalbutton_Comment_Required').show(); 
+                                                        $('#javascriptidForApprovalbutton__ApprovalRescomment').addClass('javascriptidForApprovalbutton_required');   
+                                                        recall=true;
+                                                    
+                                                    }
+             
+                                                    }
+                                                 else{
+                                                        $('.LI_decision').hide();
+                                                        $('.doVerifyUserNameButton').hide();  
+                                                        $('#ApprovaButtonIdNcContainment').show();
+                                                        
+                                                     }  
+                                    
+                                        }
+                                    else{                                       
+                                        $('.LI_decision').hide();
+                                        $('.doVerifyUserNameButton').hide(); 
+                                        $('#ApprovaButtonIdNcContainment').hide();
+                                    }
+                                });
+                         });
+    
+    
+    
+                            function ApprovePopupModal(){
+                    $('#ahrefjavascriptidForApprovalbutton_LI_decision').html('Approve');
+                    $('.LI_decision').show();
+                    $('#javascriptidForApprovalbutton_decision_wiz-fields-wide').show();  
+                    $('#javascriptidForApprovalbutton_header').html('Approve {!JSENCODE($CurrentPage.Parameters.type)} Approval');
+                    $('#javascriptidForApprovalbutton_Comment_Required').hide(); 
+                    $('.doVerifyUserNameButton').show();
+                    $('#ApprovaButtonIdNcContainment').show(); 
+                    $('#javascriptidForApprovalbutton__ApprovalRescomment').removeClass('javascriptidForApprovalbutton_required');
+                    $('#javascriptidForApprovalbutton').modal('show');
+                    $('#javascriptidForApprovalbutton_user_name').val('');
+                    $('#javascriptidForApprovalbutton_password').val('');       
+                    $('#javascriptidForApprovalbutton__ApprovalRescomment').val('');
+                    recall=false;
+                }  
+                function RecallPopupModal(){
+                    $('.LI_decision').hide();
+                    $('.doVerifyUserNameButton').hide(); 
+                    $('#ahrefjavascriptidForApprovalbutton_LI_decision').html('Recall');
+                    $('#javascriptidForApprovalbutton_decision_wiz-fields-wide').hide();  
+                    $('#javascriptidForApprovalbutton_header').html('Recall {!JSENCODE($CurrentPage.Parameters.type)} Approval');
+                    $('#javascriptidForApprovalbutton_Comment_Required').show(); 
+                    $('#javascriptidForApprovalbutton__ApprovalRescomment').addClass('javascriptidForApprovalbutton_required');   
+                    $('#javascriptidForApprovalbutton').modal('show');
+                    $('#javascriptidForApprovalbutton_user_name').val('');
+                    $('#javascriptidForApprovalbutton_password').val('');  
+                    $('#javascriptidForApprovalbutton__ApprovalRescomment').val('');                    
+                    recall=true;
+                }
+                    function SubmitApprovalRequest(RecordId,UserId,listid,ApprovalReqcomment,FieldId,TochangeFieldName,newDueDate){
+                         Visualforce.remoting.Manager.invokeAction(
+                                    // @RemoteAction
+                                    '{!$RemoteAction.Approvalclass.submitApprovalRequest}',RecordId,UserId,listid,ApprovalReqcomment,FieldId,TochangeFieldName,newDueDate,function(result, event){
+                                                                                                    if(event.status){
+                                                                                                        //location.reload();
+                                                                                                        window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&type={!JSENCODE($CurrentPage.parameters.type)}';
+                                                                                                    }
+                                        });
+
+                }
+
+                function ApprovalResponse(RecordId,ApprovalRescomment,approved,FieldId){
+                            Visualforce.remoting.Manager.invokeAction(
+                            // @RemoteAction
+                            '{!$RemoteAction.Approvalclass.submitApprovalResponse}',RecordId,ApprovalRescomment,approved,FieldId,function(result, event){
+                                                                                            if(event.status){
+                                                                                                //alert('sucess');
+                                                                                                //location.reload();
+                                                                                                window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&type={!JSENCODE($CurrentPage.parameters.type)}';
+                                                                                            }
+                                });
+                }
+    </script>
+    <!---------------------------------------------------->
+
+    <apex:composition template="qualityze_app_layout"> 
+        <apex:define name="header_bar_component">
+            <c:header_bar ObjectType="{!$ObjectType.CAPA__c}" ObjectTypeLinkTitle="CAPA"/>
+        </apex:define>
+        <apex:define name="theheader">
+            <c:capa_header rendered="{!NOT(ISBLANK(CAPA.Id))}" recordid="{!CAPA.Id}"/>
+        </apex:define>
+        <apex:define name="wizsteps">
+            <c:wizard_steps step="3" rendered="{!NOT(ISBLANK(CAPA__c.Id))}" 
+                requestedFieldHolder="{!CAPA__c.CAPA_Status__c},{!CAPA__c.Resolution_Code__c}" tasks="{!capaTasks}" adhocTaskDetails="{!adhocTaskDetails}"
+                object="{!CAPA__c}" />
+        </apex:define>
+        <apex:define name="from-holder-title">
+            <apex:variable value="{!0}" var="counter"/>
+            
+            <apex:repeat value="{!CAPA__c.General_Tasks__r}" var="genTask" rendered="{!$CurrentPage.parameters.gtid!=null}"> 
+                <apex:outputPanel rendered="{!genTask.id==$CurrentPage.parameters.gtid}">
+                <apex:variable value="{!counter}" var="internaltaskid"/>
+                <apex:outputText rendered="{!genTask.RecordType.Name!='AdhocTask'}" value="CAPA {!genTask.RecordType.Name} ({!genTask.Status__c})"/>
+                <apex:outputText rendered="{!genTask.RecordType.Name=='AdhocTask'}" value="{!genTask.AdhocTask_Title__c} ({!genTask.Status__c})"/>
+                </apex:outputPanel>
+                <apex:variable value="{!counter+1}" var="counter"/>
+                
+                <apex:outputPanel rendered="{!AND(genTask.RecordType.Name=='Closure',$CurrentPage.parameters.gtid!=genTask.id)}">
+                    <script>                   
+                    $( document ).ready(function() {
+                        var clsouredate=new Date('{!DATETIMEVALUE(genTask.Due_Date__c)}');
+                        var today = new Date();
+                        if(clsouredate.getTime() <= new Date().getTime() || clsouredate == today){
+                            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY" ,maxDate: clsouredate,minDate:clsouredate})
+                            .on('dp.change', function(e){     
+                            });
+                        }else{    
+                            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY" ,maxDate: clsouredate,minDate:new Date()})
+                            .on('dp.change', function(e){     
+                            });
+                        }    
+                    });
+                    </script>
+                </apex:outputPanel>
+            </apex:repeat>       
+        </apex:define>        
+        <apex:define name="theform"> 
+          <!--  <c:wiz_ChangeCapaOwner CA="{!CAPA__c}" isCapaApprover="{!isChangeCapaOwnerApprover}" isSubmitter="{!isCapaOwnerSubmitter}"  isInApproval="{!CAPA__c.Approval_Status__c=='Pending Approval'}" isLock="{!OR(CAPA__c.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Title__c.updateable),CAPA__c.Approval_Status__c=='Pending Approval')}" Required="true" rendered="{!AND($ObjectType.CAPA__c.Fields.OwnerId.Accessible,$CurrentPage.parameters.pg!='capa_init')}" formId="Ownerid_Task" ModalId="CapaModalId" ToChangeFieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_New_Owner__c"  CAPAJsis="changeOwner" TochangeFieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c">
+                <c:wiz_field FieldLabel="{!$ObjectType.CAPA__c.Fields.New_Owner__c.Label}"   required="true" jsid="change_owner" rendered="{!$ObjectType.CAPA__c.Fields.New_Owner__c.Accessible}">                                
+                    <c:wiz_multi typeofuser="CAPA_Owner" FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_New_Owner__c" Required="true" multiple="false" initValues="{value:'{!CAPA__c.New_Owner__c}', label:'{!CAPA__c.New_Owner__r.Name}'}" width="100%" queryFields="Name" disabled="{!OR(CAPA__c.Closed__c,CAPA__c.Is_In_Works__c,NOT($ObjectType.CAPA__c.Fields.Title__c.updateable),CAPA__c.Approval_Status__c=='Pending Approval')}" querytable="User"></c:wiz_multi>                          
+                </c:wiz_field>
+            </c:wiz_ChangeCapaOwner>-->
+            <input type="hidden" id="page" name="page" value="capa_{!LOWER(CAPA__c.General_Tasks__r[internaltaskid].RecordType.Name)}"/>
+            <input type="hidden" id="stepName" name="stepName" value="{!CAPA__c.General_Tasks__r[internaltaskid].RecordType.Name}" />
+     
+            <apex:repeat value="{!CAPA__c.General_Tasks__r}" var="genTask">
+                <apex:outputPanel rendered="{!genTask.id==$CurrentPage.parameters.gtid}">
+                    
+                    <c:wiz_change_field typeofApprover="CAPA_Approval" GT="{!genTask}" isLock="{!OR(genTask.Status__c=='Pending Approval',genTask.Status__c=='Pending ActionPlan',genTask.Status__c=='Closed',genTask.Status__c=='Void',NOT(OR(CAPA.Ownerid=$User.Id,genTask.Ownerid==$User.Id,isApprover,$Profile.Name=='System Administrator')),CAPA.CAPA_Status__c == 'Closed')}"  RecordId="{!genTask.id}" TochangeFieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c" Required="true" FieldId="OwnerId" FieldName="Owner"   FieldValue="{!JSENCODE(genTask.Owner.Name)}" ModalId="ImplementationFieldName" rendered="{!$ObjectType.General_Task__c.Fields.New_Owner__c.Accessible}">
+                        <c:wiz_form recordid="{!genTask.Id}" formclass="Ownerid_NCTaskform validate" formid="OwnerId_NCTaskform" submitpage="stringify_sobject"  postsavejs="window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&type={!JSENCODE($CurrentPage.parameters.type)}';">  
+                            <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.New_Owner__c.Label}"   required="true" jsid="change_owner" rendered="{!$ObjectType.General_Task__c.Fields.New_Owner__c.Accessible}">                            
+                                <c:wiz_multi width="100%" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c" Required="true" initValues="{value:'{!JSENCODE(genTask.New_Owner__c)}', label:'{!JSENCODE(genTask.New_Owner__r.Name)}'}"  querytable="User" queryfields="Name" disabled="{!AND(if(genTask.ChangeFieldApprovalStatus__c=='Pending',true,false),$ObjectType.General_Task__c.Fields.New_Owner__c.updateable)}" typeofuser="CAPA_Task_Owner" />                                
+                            </c:wiz_field>
+                            <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}general_task__c"/>
+                        </c:wiz_form>
+                    </c:wiz_change_field> 
+                    
+                    <c:wiz_change_field GT="{!genTask}" typeofApprover="CAPA_Approval" isLock="{!OR(genTask.Status__c=='Pending Approval',genTask.Status__c=='Pending ActionPlan',genTask.Status__c=='Closed',genTask.Status__c=='Void',NOT(OR(CAPA.Ownerid=$User.Id,genTask.Ownerid==$User.Id,isApprover,$Profile.Name=='System Administrator')),CAPA.CAPA_Status__c == 'Closed')}" RecordId="{!genTask.id}" TochangeFieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c" Required="true" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c" FieldName="{!$ObjectType.General_Task__c.Fields.Due_Date__c.Label}" FieldType="date" FieldDateValue="{!genTask.Due_Date__c}" ModalId="DueDateid" rendered="{!$ObjectType.General_Task__c.Fields.New_Due_Date__c.Accessible}">
+                        <c:wiz_form recordid="{!genTask.Id}" formclass="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_NCTaskform validate" formid="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_NCTaskform" submitpage="stringify_sobject"  postsavejs="window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&type={!JSENCODE($CurrentPage.parameters.type)}';">    
+                            <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.New_Due_Date__c.label}"  required="true" jsid="change_date" rendered="{!$ObjectType.General_Task__c.Fields.New_Due_Date__c.Accessible}">
+                                <c:wiz_date placeholder="DD/MM/YYYY" maxdateallowed="12/31/2018" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c" initdate="{!genTask.New_Due_Date__c}"  updateable="{!AND(if(genTask.ChangeFieldApprovalStatus__c=='Pending',false,true),$ObjectType.General_Task__c.Fields.New_Due_Date__c.updateable)}" />
+                            </c:wiz_field>
+                            <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}general_task__c"/>
+                        </c:wiz_form>
+                    </c:wiz_change_field>
+                </apex:outputPanel>
+            
+            
+            
+            
+            
+            <!------------------------------Investigation-------------------------------------------------------------------------------------->
+            <!---------------------Script  Starts--------------------------->
+            <!--<apex:outputPanel rendered="{!AND(CAPA__c.General_Tasks__r[internaltaskid].RecordType.Name=='Investigation',CAPA__c.General_Tasks__r[internaltaskid].id==$CurrentPage.Parameters.gtid)}">-->
+            <apex:outputPanel rendered="{!AND(genTask.RecordType.Name=='Investigation',genTask.id==$CurrentPage.Parameters.gtid)}">
+                <script>
+                SubmitwithApproval=false;
+                $( document ).ready(function() {
+                });
+                function capaImplEnable(is_enabled){
+                    if(is_enabled){
+                        //alert("disabled");
+                        $(".comment-field").addClass("hidden");
+                        $("#imple_task_required").addClass("hidden");
+                        $("#imple-task-details").removeClass("hidden");
+                        $('#capaInvtaskUsr').addClass('required');
+                        $('#capaImpl{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c').addClass('required');
+                    } else {
+                        //alert("Enabled");
+                        $(".comment-field").removeClass("hidden");
+                        $("#imple_task_required").removeClass("hidden");
+                        $("#imple-task-details").addClass("hidden");
+                        $('#capaInvtaskUsr').removeClass("required");
+                        $('#capaImpl{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c').removeClass("required");
+                        
+                    }
+                    
+                }
+                var entityMap = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;',
+                    "(": '&#40;',
+                    ")": '&#41;',
+                    '.': '&#46;',
+                    '/': '&#x2F;',
+                    '`': '&#x60;',
+                    ';': '&#59;',
+                    '.': '&#46;',
+                    '=': '&#x3D;'
+                }; 
+                
+                function escapeHtml (string) {
+                    return String(string).replace(/[&<>"'`=\/]/g, function fromEntityMap (s) {
+                        //console.log("Function escapeHtml() saved your butt again!!!: Escaped " + s);
+                        return entityMap[s];
+                    });
+                }
+                
+                
+                
+                
+                function saveApprovalFromDigitalSignature(taskid){
+                    //alert('hai-->'+taskid+'SubmitwithApproval='+SubmitwithApproval);
+                    console.log('inside saveApprovalFromDigitalSignature');
+                    if(!SubmitwithApproval){
+                        // alert("SubmitwithApproval "+SubmitwithApproval);
+                        if($('#tableId_chk').is(':checked')){
+                            // alert("inside checked when click save");
+                            saveApprovalData(taskid,SubmitwithApproval,submitinvform);  
+                            console.log('inside saveApprovalData !SubmitwithApproval saveApprovalFromDigitalSignature');
+                        } else{
+                            // alert("before calling updateCurretnRecord save with out approval");
+                            console.log('inside submit capa saveApprovalFromDigitalSignature');
+                            $('#capaForm').submit();
+                            //updateCurretnRecord(taskid,'{!Invtask.RecordType.Name}');
+                        }
+                        
+                    }else if(SubmitwithApproval){
+                        // alert("SubmitwithApproval "+SubmitwithApproval);
+                        if($('#tableId_chk').is(':checked')){
+                            //    alert("inside checked when click submit");
+                            console.log('inside saveApprovalData saveApprovalFromDigitalSignature');
+                            saveApprovalData(taskid,SubmitwithApproval,submitinvform);  
+                        }
+                        else{
+                            //  alert("before calling updateCurretnRecord");
+                            console.log('inside updateCurrentRecord saveApprovalFromDigitalSignature');
+                            updateCurrentRecord(taskid);
+                            //updateCurretnRecord(taskid,'{!Invtask.RecordType.Name}');
+                        }
+                        
+                    }    
+                    
+                    
+                    
+                }
+                
+                function updateCurrentRecord(taskid){
+                    // alert('with out Approval'+taskid);   
+                    console.log('inside updateCurrentRecord ');
+                    Visualforce.remoting.Manager.invokeAction(
+                        // @RemoteAction
+                        '{!$RemoteAction.GeneralTaskController.Capa_update_InvestigationCurrentRecord}',taskid,function(result, event){                       
+                            if(result== true){
+                                console.log('inside Capa_update_InvestigationCurrentRecord ');
+                                // submitinvform();
+                                //alert('from update current recotd success call back');
+                                $('#capaForm').submit();
+                            }
+                            else{
+                                console.log('inside false Capa_update_InvestigationCurrentRecord ');
+                            }
+                        });
+                }
+                </script>
+                
+                
+                <!---------------------Script  Endss--------------------------->
+                
+                        <div class="col-md-12 push-down"></div>
+                        <c:wiz_form submitpage="stringify_sobject" formid="capaForm" formclass="appform validate" recordid="{!CAPA.Id}" 
+                                    postsavejs="if($('#PageSaveButton').hasClass('most-recent-click')){window.location.href = '/apex/capa_task?id='+'{!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&type={!JSENCODE($CurrentPage.parameters.type)}';}else {window.location = '/apex/capa_task?id=' + '{!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&type={!JSENCODE($CurrentPage.parameters.type)}';}" >
+                            <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}capa__c"/>
+                            <!--  Accordian window.location.href = '/apex/capa_task?id=' + RecordId;-->
+                            <div class="panel-group col-md-12" id="accordion" role="tablist" aria-multiselectable="true">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading" role="tab" id="headingOne">
+                                        <h4 class="panel-title">
+                                            
+                                            <div class="checkbox pull-right">
+                                                <c:wiz_field FieldLabel="" required="false" jsid="AssementReq">
+                                                    <c:wiz_checkbox FieldId="risk_assessment_required" 
+                                                                    FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Risk_Assessment_Required__c" 
+                                                                    initvalue="{!JSENCODE(CAPA.CAPA_Risk_Assessment_Required__c)}"
+                                                                    onChangeFunction="showHideRiskAssessment"
+                                                                    disabled="{!OR(CAPA.Closed__c,InvTask.Status__c=='Pending Approval',InvTask.Status__c=='Closed',InvTask.Status__c=='Void')}"
+                                                                    />
+                                                </c:wiz_field>
+                                            </div>
+                                            <a data-toggle="collapse" data-parent="#accordion" >
+                                                Risk Assessment Required?
+                                            </a>
+                                        </h4>
+                                    </div>
+                                    
+                                    <div id="assesment_pane" class="panel-collapse collapse out" role="tabpanel" aria-labelledby="headingOne">
+                                        
+                                        <div class="panel-body">
+                                            
+                                            
+                                            
+                                            <c:wiz_field FieldLabel="Severity" required="true" jsid="sev" rendered="{!$ObjectType.CAPA__c.Fields.Risk_Severity__c.accessible}">
+                                                <c:wiz_multi required="true" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Risk_Severity__c" multiple="false" queryFields="Name,{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Number__c" querytable="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Risk_Severity__c"
+                                                             queryorderby="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Number__c"
+                                                             initvalues="{value:'{!JSENCODE(CAPA.Risk_Severity__c)}', label:'{!JSENCODE(CAPA.Risk_Severity__r.Name)}'}"
+                                                             onchange="updateRiskPriority();"
+                                                             disabled="{!OR(CAPA.Closed__c,InvTask.Status__c=='Pending Approval',InvTask.Status__c=='Closed',InvTask.Status__c=='Void')}"
+                                                             />
+                                            </c:wiz_field>
+                                            
+                                            
+                                            <c:wiz_field FieldLabel="Probability" required="true" jsid="prob" rendered="{!$ObjectType.CAPA__c.Fields.Risk_Occurrence__c.accessible}">
+                                                <c:wiz_multi required="true" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Risk_Occurrence__c" multiple="false" queryFields="Name,{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Number__c" querytable="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Risk_Occurrence__c" 
+                                                             queryorderby="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Number__c"
+                                                             initvalues="{value:'{!JSENCODE(CAPA.Risk_Occurrence__c)}', label:'{!JSENCODE(CAPA.Risk_Occurrence__r.Name)}'}"
+                                                             onchange="updateRiskPriority();"
+                                                             disabled="{!OR(CAPA.Closed__c,InvTask.Status__c=='Pending Approval',InvTask.Status__c=='Closed',InvTask.Status__c=='Void')}"
+                                                             />
+                                            </c:wiz_field>
+                                            
+                                            <c:wiz_field FieldLabel="Risk Priority Value" required="false" jsid="riskpriority" rendered="{!$ObjectType.CAPA__c.Fields.Risk_Priority__c.accessible}">
+                                                <c:wiz_readonly value="{!JSENCODE(CAPA__c.Risk_Priority__r.Name)}"/>
+                                            </c:wiz_field>
+                                            <c:wiz_field FieldLabel="Risk Description" required="true" jsid="Risk_Description" wide="true">
+                                                <!-- <c:wiz_richtext readonly="{!OR(CAPA.Closed__c, NOT($ObjectType.CAPA__c.Fields.Risk_Description__c.updateable))}" FieldId="QPMS__Risk_Description__c" initvalue="{!CAPA.Risk_Description__c}" Required="true" /> -->
+                                                <c:wiz_richtext Rendered="true" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Risk_Description__c" initvalue="{!CAPA.Risk_Description__c}" Required="true" ReadOnly="{!OR(CAPA.Closed__c,InvTask.Status__c=='Pending Approval',InvTask.Status__c=='Closed',InvTask.Status__c=='Void')}"/>
+                                                <apex:outputpanel rendered="false">
+                                                    <div class="alert alert-info" > <apex:outputField value="{!CAPA.Risk_Description__c}" /> </div>
+                                                </apex:outputpanel>
+                                            </c:wiz_field>
+                                            
+                                            <c:GetRiskPriorityData GlobalVariableName="riskPriorityGridAll" ReturnAll="true"> </c:GetRiskPriorityData>
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                            
+                            <!--  Accordian -->
+                            
+                            
+                            
+                        </c:wiz_form> 
+ 
+                        <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.Investigation_Summary__c.Label}" JSId="investSum" Required="true" Wide="true">
+                            <c:wiz_richtext rendered="{!NOT(OR(genTask.ChangeFieldApprovalStatus__c=='Pending',genTask.Status__c=='Pending Approval',genTask.Status__c=='Closed',Invtask.Status__c=='Void',NOT(OR(CAPA.OwnerId=$User.Id,Invtask.Ownerid==$User.Id,$Profile.Name=='System Administrator'))))}" readonly="{!OR(Invtask.ChangeFieldApprovalStatus__c=='Pending',Invtask.Status__c=='Pending Approval',Invtask.Status__c=='Closed',Invtask.Status__c=='Void',NOT(OR(CAPA.OwnerId=$User.Id,Invtask.Ownerid==$User.Id,$Profile.Name=='System Administrator')))}" Required="true" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Investigation_Summary__c" initvalue="{!IF(NOT(ISBLANK(Invtask.Investigation_Summary__c)),Invtask.Investigation_Summary__c,' ')}" />
+                            <apex:outputpanel rendered="{!OR(genTask.ChangeFieldApprovalStatus__c=='Pending',genTask.Status__c=='Pending Approval',genTask.Status__c=='Closed',Invtask.Status__c=='Void',NOT(OR(CAPA.OwnerId=$User.Id,Invtask.Ownerid==$User.Id,$Profile.Name=='System Administrator')))}">
+                                <div class="alert alert-info" > <apex:outputField value="{!Invtask.Investigation_Summary__c}" /> </div>
+                            </apex:outputpanel>
+                        </c:wiz_field>
+                        <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.Investigation_Tools__c.Label}" JSId="investTool" Required="false">
+                            <c:wiz_select width="100%" FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Investigation_Tools__c" 
+                                          FieldId="invTool" required="true"
+                                          ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}General_Task__c"
+                                          developername="Investigation_Tools__c" 
+                                          unSelectedDisplayText="Select Tool...."
+                                          initvalue="{!JSENCODE(Invtask.Investigation_Tools__c)}" 
+                                          disabled="{!OR(Invtask.ChangeFieldApprovalStatus__c=='Pending',genTask.Status__c=='Pending Approval',genTask.Status__c=='Closed',genTask.Status__c=='Void',NOT(OR(genTask.Ownerid==$User.Id,$Profile.Name=='System Administrator')))}">
+                            </c:wiz_select>
+                        </c:wiz_field> 
+                        
+                        
+                        
+                     <!--   <c:submitforApproval approvalbuttonid="ApprovaButtonIdNcContainment" jsid="javascriptidForApprovalbutton" generalTask="{!Invtask}"></c:submitforApproval>-->
+                        <c:wiz_approvalbutton approvalbuttonid="ApprovaButtonIdNcContainment" jsid="javascriptidForApprovalbutton" RecordId="{!genTask.id}"></c:wiz_approvalbutton>
+                        
+                
+                
+                
+                    <div class="button-bar text-right">
+                        <h4 class="pull-left task-title"> Root Cause(s):</h4>
+                        <apex:outputPanel >
+                            <button id="create-investigation-button" class="btn btn-primary dont-allow-multiple-clicks" onclick="addRootCause();"><span class="fa fa-plus-square-o"></span> Add Root Cause</button>
+                        </apex:outputPanel>
+                    </div>
+                   <div class="wiz-field col-md-12"> 
+                    <c:wiz_capa_add_rootcause divId="rcause" GTRecord="{!genTask}"></c:wiz_capa_add_rootcause>
+                 </div>  
+            
+            <div class="clearfix">
+                
+            </div>
+            </apex:outputPanel>
+          <!-------------------------------investigation ends form-------------------------------->
+          <!-------------------------------implementation starts form----------------------------->
+          <apex:outputPanel rendered="{!AND(genTask.RecordType.Name=='Implementation',genTask.id==$CurrentPage.Parameters.gtid)}">
+          <!-----------------------script--------------------------------------------------------->
+              <script>
+              var SubmitwithApproval=false;
+              var isCompletedActionplan = false;
+              function saveActionPlan(taskid){
+                  var start = 0,str = '',activeId,rcName;
+                  var actionPlanDetails=[];
+                  $("#actionPlanSection>div").each(function(){
+                      var divId = 'actionPlan'+ (start);
+                      var findDiv = $("#"+divId+">div").find('div').eq(1).find('div');
+                      
+                      var apType = findDiv.eq(0).find('.active').find('input').attr('value');
+                      var apTitle = findDiv.eq(4).find('input').attr('id',divId+'input'+(start)).val();
+                      var apDescription = escapeHtml(findDiv.eq(6).find('textarea').val());
+                      var apAssociatedRootCauses = findDiv.eq(8).find('select option:selected').val();
+                      str='';
+                      rcName='';
+                      findDiv.eq(8).find('select option:selected').each(function() {
+                          str +=$( this ).val() + ',';
+                          rcName+=$(this).text()+',';
+                      });
+                      var apAssociatedRootCauses = str;
+                      var apAssociatedRootCauseName = rcName;
+                      var apAssignedUser = findDiv.eq(10).find('select option:selected').val();
+                      var apDueDate = findDiv.eq(12).find('input').val();
+                      var apComplete = findDiv.eq(16).find('.active').find('input').attr('value');
+                      var apCompletedBy = findDiv.eq(20).find('select option:selected').val();
+                      var apCompletedDate = findDiv.eq(22).find('input').val();
+                      var apCompletionComments = escapeHtml(findDiv.eq(26).find('textarea').val());
+                      var hiddenapid='#actionPlan'+start+'_apchid';
+                      
+                      console.log('actionPlanDetails val to save='+apType+'   apTitle'+apTitle+'...Descr'+apDescription+'...apAssociatedRootCauses'+apAssociatedRootCauses+'...apAssociatedRootCauseName'+apAssociatedRootCauseName+'  apAssignedUser'+apAssignedUser+'   apDueDate'+apDueDate+'  apComplete'+apComplete+'  apCompletedBy'+apCompletedBy+'  apCompletedDate'+apCompletedDate+'   apCompletionComments'+apCompletionComments+':'+$(hiddenapid).val());
+                      
+                      actionPlanDetails.push([apType,apTitle,apDescription,apAssociatedRootCauses,apAssociatedRootCauseName,apAssignedUser,apDueDate,apComplete,apCompletedBy,apCompletedDate,apCompletionComments,$(hiddenapid).val()])
+                      
+                      start++;
+                  });
+                  var appcheck = $('#tableId_chk').is(':checked');
+                  var efvpcheck; 
+                  if($('#Add_Effectiveness_verificiation__c').is(':checked')){
+                      efvpcheck='Yes';
+                  }
+                  else{
+                      efvpcheck='No';
+                  }
+                  Visualforce.remoting.Manager.invokeAction(
+                      // @RemoteAction
+                      '{!$RemoteAction.GeneralTaskController.Capa_ActionPlan_saveActionPlan}',actionPlanDetails,taskid,SubmitwithApproval,appcheck,efvpcheck,
+                      // Callback
+                      function(result, event){
+                          if(result==0){
+                              console.log("success...");
+                              //window.location.href = '/apex/capa_implementation?id={!JSENCODE($CurrentPage.parameters.id)}';
+                              //saveApprovalFromDigitalSignature(taskid);
+                              
+                          }else{
+                              console.log("fail to save data!");
+                          }  
+                          
+                          if($('#Add_Effectiveness_verificiation__c').is(':checked')){
+                              saveEffectiveVerificationPlan(taskid);
+                          }
+                          else{
+                              saveApprovalFromDigitalSignature(taskid);
+                          }
+                      }); 
+                  
+                  
+              }
+              
+              function saveEffectiveVerificationPlan(taskid){
+                  var start = 0;
+                  var efvpdetails = [];
+                  $('#effectiveVerificationPlanSection>div').each(function(){
+                      var divId = 'effectiveVerifivation'+ (start); 
+                      var findDiv = $("#"+divId+">div").find('div').eq(1).find('div');
+                      
+                      var efvpplnstmt =escapeHtml(findDiv.eq(1).find('textarea').val());
+                      var hiddenefvpid='#effectiveVerifivation'+start+'_efvpchid';
+                      //alert('efvpplnstmt'+efvpplnstmt);
+                      //alert('efvpplnstmt'+$(efvpplnstmt).val());
+                      console.log('efvpdetails val to save='+efvpplnstmt+':'+$(hiddenefvpid).val());
+                      efvpdetails.push([efvpplnstmt,$(hiddenefvpid).val()]);
+                      start++;
+                  });
+                  Visualforce.remoting.Manager.invokeAction(
+                      // @RemoteAction
+                      '{!$RemoteAction.GeneralTaskController.CAPA_EffectiveVerification_saveEfvpPlan}',efvpdetails,taskid,
+                      // Callback
+                      function(result, event){
+                          if(result==0){
+                              console.log("success...");
+                              saveApprovalFromDigitalSignature(taskid);
+                          }else{
+                              console.log("fail to save data!");
+                             window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&type={!JSENCODE($CurrentPage.parameters.type)}';
+                          }    
+                      }
+                  ); 
+              }
+              
+              
+              
+              function cancelPopup(){
+                  var YESButtonInRedirectModalOnClick = function () {
+                     window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&type={!JSENCODE($CurrentPage.parameters.type)}';
+                  };
+                  var NOButtonInRedirectModalOnClick = function () {
+                      
+                  };
+                  $('#redirectDialog .btn-primary').bind( "click", YESButtonInRedirectModalOnClick);
+                  $('#redirectDialog .btn-default').bind( "click", NOButtonInRedirectModalOnClick);
+                  
+                  // Show the redirect dialog
+                  $('#redirectDialog').modal('show');
+                  
+                  // Remove the onClick event
+                  $('#redirectDialog').on('hidden.bs.modal', function () {
+                      $('#redirectDialog .btn-primary').unbind( "click", YESButtonInRedirectModalOnClick);
+                      $('#redirectDialog .btn-default').unbind( "click", NOButtonInRedirectModalOnClick);
+                  }) 
+              }
+              
+              var isApproversValid=false;
+              function afterValidate(){
+                  isApproversValid=true;
+              }
+              function implValidation(){
+                  isApproversValid=false;
+                  console.log('Begin implValidation  isValid   '+isValid);
+                  var isValid = true,efvValid=true;
+                  isValid=actPlanValidation();
+                  if($('#Add_Effectiveness_verificiation__c').is(':checked')){
+                      efvValid=efvPlanValidation();
+                      isValid=isValid?efvValid:isValid
+                  }
+                  validate(null,afterValidate,'Taskapproval');
+                  console.log('begin Approval implValidation  isValid   '+isValid);
+                  if(!isApproversValid){
+                      console.log('inside Approval implValidation  isValid   '+isValid);
+                      return false; 
+                  }
+                  console.log('End implValidation  isValid   '+isValid);
+                  return isValid;
+              }
+                                  function RecallforPendingActionPlan(taskid,status){
+                        Visualforce.remoting.Manager.invokeAction(
+                            // @RemoteAction
+                            '{!$RemoteAction.GeneralTaskController.Capa_Implementation_RecallwithoutApproval}',taskid,status,function(result, event){
+                                if(event.status){
+                                    //alert('sucess');
+                                   window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&type={!JSENCODE($CurrentPage.parameters.type)}';
+                                }
+                            });
+                        
+                    }
+                    
+                    function updateApprovalRequired(generalTaskId,flag){
+                        Visualforce.remoting.Manager.invokeAction(
+                            // @RemoteAction
+                            '{!$RemoteAction.GeneralTaskController.Capa_Implementation_updateApprovalRequired}',generalTaskId,flag,
+                            function(result, event){
+                                if(event.status){
+                                    console.log("success");
+                                    window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&type={!JSENCODE($CurrentPage.parameters.type)}';
+                                }else{
+                                    console.log("update approval required failed");
+                                }
+                            }
+                        );
+                     }
+                    
+                    function updateCurretnRecord(taskid,RecordType){
+                        
+                        Visualforce.remoting.Manager.invokeAction(
+                            // @RemoteAction
+                            '{!$RemoteAction.GeneralTaskController.updateCurretnRecord}',taskid,RecordType,'dummy',function(result, event){                       
+                                if(event.status){
+                                  window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&type={!JSENCODE($CurrentPage.parameters.type)}';
+                                }
+                                else{
+                                    //alert(result);
+                                }
+                                
+                            });
+                    }
+                    
+                    function saveApprovalFromDigitalSignature(taskid){
+                        //alert('hai'+taskid);
+                        console.log('inside saveApprovalFromDigitalSignature');
+                        if(!SubmitwithApproval){
+                            //alert("SubmitwithApproval "+SubmitwithApproval);
+                            if($('#tableId_chk').is(':checked')){
+                                //alert("inside checked when click save");
+                                saveApprovalData(taskid,SubmitwithApproval);  
+                            }else{
+                                //alert("inside unchecked when click save");
+                                updateApprovalRequired(taskid,$('#tableId_chk').is(':checked'));
+                            }
+                        }else if(SubmitwithApproval){
+                            //alert("SubmitwithApproval "+SubmitwithApproval);
+                            if($('#tableId_chk').is(':checked')){
+                                //alert("inside checked when click submit");
+                                saveApprovalData(taskid,SubmitwithApproval);  
+                            }
+                            else{
+                                //alert("before calling updateCurretnRecord");
+                                updateCurretnRecord(taskid,'{!ImplTask.RecordType.Name}');
+                            }
+                        }    
+                    }
+              
+              </script>
+    <!-------------------------script ends----------------------------------------------->              
+                 <apex:outputpanel layout="none" rendered="true"> 
+                        
+                     <!--   <c:submitforApproval approvalbuttonid="ApprovaButtonIdNcContainment" jsid="javascriptidForApprovalbutton" generalTask="{!ImplTask}"></c:submitforApproval>-->
+                        <c:wiz_approvalbutton approvalbuttonid="ApprovaButtonIdNcContainment" jsid="javascriptidForApprovalbutton" RecordId="{!genTask.Id}" ></c:wiz_approvalbutton>                                    
+                        
+
+                    </apex:outputpanel>
+                   
+                    <div class="wiz-field">  
+                       <c:wiz_capa_add_actionplan divId="actionPlan" capaid="{!CAPA}" GTRecord="{!genTask}" isLock="{!OR(genTask.ChangeFieldApprovalStatus__c=='Pending',genTask.Status__c=='Pending Approval',genTask.Status__c=='Closed',genTask.Status__c=='Void',NOT(OR(genTask.Ownerid==$User.Id,$Profile.Name=='System Administrator')),CAPA.CAPA_Status__c == 'Closed')}" assignedTo="assignedTo" apdueDate="apDate" actplanCompBy="apCompBy" actplanCompDate="apCompDate" actplanCompComm="apCompComm" completed="completed" Type="Type"></c:wiz_capa_add_actionplan>
+                    </div>
+                                        
+                    <div class="wiz-field">  
+                        <c:wiz_capa_add_verificationplan divId="effectiveVerifivation" capaid="{!CAPA}" GTRecord="{!genTask}" isLock="{!OR(genTask.ChangeFieldApprovalStatus__c=='Pending',genTask.Status__c=='Pending Approval',genTask.Status__c=='Closed',genTask.Status__c=='Void',NOT(OR(genTask.Ownerid==$User.Id,$Profile.Name=='System Administrator')),CAPA.CAPA_Status__c == 'Closed')}" efvpdueDate="efvpDate" efvplanStatement="efvpStatement" />
+                    </div>
+
+                     
+          </apex:outputPanel>
+            <!-------------------------------implementation Ends form----------------------------->
+                
+            <!-------------------------------EffectivenessReview starts form----------------------------->
+                <apex:outputPanel rendered="{!AND(genTask.RecordType.Name=='EffectivenessReview',genTask.id==$CurrentPage.Parameters.gtid)}">
+                    <script>
+                    var SubmitwithApproval;
+                    function updateAppRequired(){
+                        
+                        console.log('{!JSENCODE(effectTask.Status__c)}'+SubmitwithApproval);
+                        Visualforce.remoting.Manager.invokeAction(
+                            // @RemoteAction
+                            '{!$RemoteAction.GeneralTaskController.updateCurretnRecord}','{!JSENCODE(effectTask.Id)}',escapeHtml('EffectivenessReview'),'{!JSENCODE(effectTask.Status__c)}'+escapeHtml(SubmitwithApproval),
+                            // Callback
+                            function(result, event){
+                                if(result){
+                                    console.log('success');
+                                   window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&type={!JSENCODE($CurrentPage.parameters.type)}';
+                                } 
+                            }
+                        );
+                    }
+                    
+                    function saveApprovalFromDigitalSignature(){
+                        // when clicking save button 
+                        if(!SubmitwithApproval){
+                            if($('#tableId_chk').is(':checked')){
+                                saveApprovalData('{!JSENCODE(effectTask.Id)}',SubmitwithApproval);  
+                            }else{
+                                updateAppRequired();
+                            }
+                        }else if(SubmitwithApproval){
+                            if($('#tableId_chk').is(':checked')){
+                                saveApprovalData('{!JSENCODE(effectTask.Id)}',SubmitwithApproval);  
+                            }else{
+                                updateAppRequired();
+                            }
+                        }    
+                    }
+                    
+                    function formatDate(date){
+                        return parseInt(date.getMonth()+1)+'/'+date.getDate()+'/'+date.getFullYear();
+                    }    
+                    
+                    function saveVerificationPlans(){
+                        var start = 0;
+                        var plan={},verificationPlans = {},effectivenessReviewDetails = {};
+                        $("#effectivenessReviewSection>div").each(function(){
+                            var divId = 'effectTask'+ (start++);
+                            if($("#"+divId).length != 0){
+                                plan['id'] = $("#"+divId).attr('class');
+                                plan['planStmt'] = $("#"+divId+"_PlanStmt").val();
+                                verificationPlans['plan'+start] = plan;
+                                plan = {};
+                            }    
+                        });
+                        effectivenessReviewDetails['objectiveEvidence'] = $("#objectiveEvidence").val();
+                        effectivenessReviewDetails['completedBy'] = $("#completedBy").val();
+                        effectivenessReviewDetails['completedDate'] = formatDate(new Date($("#completed_Date_GRDATE").val()));
+                        console.log('{!effectTask}');
+                        Visualforce.remoting.Manager.invokeAction(
+                            // @RemoteAction
+                            '{!$RemoteAction.GeneralTaskController.Capa_EffectivenessReview_saveVerificationPlans}','{!effectTask.Id}',verificationPlans,effectivenessReviewDetails,
+                            // Callback
+                            function(result, event){
+                                if(result==0){
+                                    console.log('success');
+                                    saveApprovalFromDigitalSignature();
+                                } 
+                            }
+                        );
+                    }
+                    
+                    function deleteVerificationPlan(deleteId){
+                        if($(deleteId).attr('disabled')){
+                            return false;
+                        }else{
+                            var divId = $(deleteId).attr('id').split('_');
+                            var verificationId = $("#"+divId).attr('class');
+                            Visualforce.remoting.Manager.invokeAction(
+                                // @RemoteAction
+                                '{!$RemoteAction.GeneralTaskController.Capa_EffectivenessReview_deleteVerificationPlan}',verificationId,
+                                // Callback
+                                function(result, event){
+                                    if(result==0){
+                                        console.log('success');
+                                     window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&&type={!JSENCODE($CurrentPage.parameters.type)}';
+                                    } 
+                                }
+                            );
+                        }    
+                    }
+                    
+                    var isApproversValid=false;
+                    function afterValidate(){
+                        isApproversValid=true;
+                    }
+                    
+                    function onSubmit(){
+                        SubmitwithApproval=true;
+                        isSave=true;
+                        var isDigitalneeded = "<apex:outputtext value="{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}" />";
+                        if(effectivenessReviewValidation() && isDigitalneeded == 'true'){
+                            $('#uname').val('');
+                            $('#pw').val('');
+                            $('.dont-allow-multiple-clicks').removeAttr('disabled');
+                            $('#signature').modal('show');
+                        }else if(effectivenessReviewValidation() && isDigitalneeded == 'false'){    
+                            $('#Save').attr('disabled', 'true');
+                            $('#Submit').attr('disabled', 'true');
+                            saveVerificationPlans();
+                        }
+                    }
+                    
+                    function onSave(){
+                        SubmitwithApproval=false;
+                        isSave=true;
+                        if(effectivenessReviewValidation()){
+                            $('#Save').attr('disabled', 'true');
+                            $('#Submit').attr('disabled', 'true');
+                            saveVerificationPlans();
+                        }
+                    }    
+                    </script>
+                    
+                
+                <c:wiz_add_effect_review divId="effectTask" effectTask="{!effectTask}" effectReviewTask="{!effectReviewTask}" effectiveCheckPlan="{!effectiveCheckPlan}" Capa="{!CAPA}"></c:wiz_add_effect_review>
+                
+                <div class="wiz-field">
+                 <!--   <c:submitforApproval approvalbuttonid="ApprovaButtonIdEffectTask" jsid="javascriptidForApprovalbutton" generalTask="{!effectTask}"></c:submitforApproval>
+                 -->    <c:wiz_approvalbutton approvalbuttonid="ApprovaButtonIdEffectTask" jsid="javascriptidForApprovalbutton" RecordId="{!effectTask.Id}" rendered="{!OR($User.Id==effectTask.Approver__c,$User.Id==effectTask.Approver_1__c,$User.Id==effectTask.Approver_2__c,$User.Id==effectTask.Approver_3__c,$User.Id==effectTask.Approver_4__c,$User.Id==effectTask.Approver_5__c,$User.Id==effectTask.Approver_6__c,$User.Id==effectTask.Approver_7__c,$User.Id==effectTask.Approver_8__c,$User.Id==effectTask.Approver_9__c,$User.Id==effectTask.Initial_Submitter__c)}"/>
+                </div>
+               </apex:outputPanel>
+            <!-------------------------------EffectivenessReview starts form----------------------------->
+            <!-------------------------------Closure starts form----------------------------->
+                   <apex:outputPanel rendered="{!AND(genTask.RecordType.Name=='Closure',genTask.id==$CurrentPage.parameters.gtid)}">
+                    <script>
+                    
+                    $( document ).ready(function() {
+                        //changeBtn();
+                        $('#tableId_chk').change(function(){
+                            changeBtn();
+                        });
+                        $("#CloseCAPAafterSpan").html("{!JSENCODE(if(genTask.Approval_Required__c!='Yes','Close','Start'))}")
+                    });
+                       
+                       function changeRequiredStatus(){
+                           $("div[id$='_error']").empty();
+                           if($('input[name={!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Create_New_CAPA__c]:checked').val() == 'No' && $('input[name={!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Effectiveness__c]:checked').val() == 'Not Effective'){
+                               $('#closurecomment').find('label').find('span').attr('class','mandatory').text('* ').show();
+                           }else{
+                               $('#closurecomment').find('label').find('span').hide();
+                           }
+                       }
+                    
+
+                    var isApproversValid=false;
+                    function afterValidate(){
+                        isApproversValid=true;
+                    }
+                    
+                    function validateClosure(){
+                        $("div[id$='_error']").empty();
+                        var isValid = true;
+                        if($('input[name={!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Create_New_CAPA__c]:checked').val() == 'No' && $('input[name={!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Effectiveness__c]:checked').val() == 'Not Effective'){
+                            if($('#Closure_Comment__c').val() == null || $('#Closure_Comment__c').val() == ''){
+                                $( '#Closure_Comment__c_error' ).html( "<p><font color='red'>This Field is required</font></p>");
+                                isValid = false;
+                            }
+                        }
+                        if($('#tableId_chk').is(':checked')){
+                            validate(null,afterValidate,'Taskapproval');
+                            if(!isApproversValid){
+                                isValid = false;
+                                return false;
+                                
+                            }
+                            
+                        }
+                        return isValid;
+                    }    
+                    
+                    function onSubmit(){
+                        SubmitwithApproval=true;
+                        var isDigitalneeded = "<apex:outputtext value="{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}" />";
+                        if(validateClosure() && isDigitalneeded == 'true'){
+                                $('#uname').val('');$('#pw').val('');
+                                $('.dont-allow-multiple-clicks').removeAttr('disabled');
+                                $('#signature').modal('show');
+                                
+                        }else{
+                            saveTheClosure();
+                        }
+                    }
+                    
+                                        
+                    function saveTheClosure(){
+                        if(validateClosure()){
+                            var capaEffect,createCapa,closureComment;
+                            
+                            capaEffect = $('input[name={!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Effectiveness__c]:checked').val();
+                            createCapa = $('input[name={!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Create_New_CAPA__c]:checked').val();
+                            //capaEffect=capaEffect?capaEffect:false;
+                            //createCapa=createCapa?createCapa:false;
+                            closureComment = $('#Closure_Comment__c').val();
+                            console.log('inside saveTheClosure  capaEffect '+capaEffect+' createCapa '+createCapa+'   closureComment '+$('#Closure_Comment__c').val());
+                            $('.dont-allow-multiple-clicks').attr('disabled', 'true');
+                            Visualforce.remoting.Manager.invokeAction(
+                                // @RemoteAction
+                                '{!$RemoteAction.GeneralTaskController.Capa_Closure_saveClosureTask}','{!JSENCODE($CurrentPage.parameters.id)}','Closure',capaEffect,createCapa,closureComment,$('#tableId_chk').is(':checked'),SubmitwithApproval,
+                                function(result, event){                       
+                                    if(result==0){
+                                        if($('#tableId_chk').is(':checked')){
+                                            saveApprovalData('{!genTask.Id}',SubmitwithApproval);
+                                        }else{    
+                                         window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&type={!JSENCODE($CurrentPage.parameters.type)}';
+                                        }    
+                                    }else{
+                                        $('.dont-allow-multiple-clicks').attr('disabled', 'false');
+                                    }
+                                    
+                                });
+                        }
+                        
+                    }  
+                                      
+                    function showCreateNewCAPA(isSelected, fieldValue){
+                        $("div[id$='_error']").empty();
+                        if(fieldValue == 'Not Effective' && isSelected ){
+                            $('#showRadioButtons').show();
+                        }else if(fieldValue == 'Effective' && isSelected){
+                            $('#showRadioButtons').hide();
+                        }
+                        if(fieldValue == 'Not Effective' && $('input[name={!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Create_New_CAPA__c]:checked').val() == 'No'){
+                            $('#closurecomment').find('label').find('span').attr('class','mandatory').text('* ').show();
+                        }else{
+                            $('#closurecomment').find('label').find('span').hide();
+                        } 
+                    }
+                    
+                    var capaStatusWithApproval;
+                   function changeBtn(){
+                       if( $('#tableId_chk').is(':checked')){
+                            $('#CloseCAPAafterSpan').html(' Start');
+                       }else{
+                            $('#CloseCAPAafterSpan').html(' Close');
+                       }
+                   }
+                    
+                    </script>
+                                                <div class="clearfix"></div>
+                            <br/>
+                            
+                            <apex:outputPanel rendered="true">
+                                
+                                <c:wiz_field Wide="true"
+                                             FieldLabel="{!$ObjectType.General_Task__c.Fields.CAPA_Effectiveness__c.Label}"
+                                             required="true" jsid="CAPA_Effectiveness"
+                                             rendered="true">
+                                    <c:wiz_RadioSet onchangefunction="showCreateNewCAPA"
+                                                    FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}CAPA_Effectiveness__c"
+                                                    ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}General_Task__c"
+                                                    initvalue="{!genTask.CAPA_Effectiveness__c}"
+                                                    disabled="{!OR(genTask.Status__c=='Pending Approval',genTask.Status__c=='Closed',genTask.Status__c=='Void',CAPA.CAPA_Status__c == 'Closed')}" rendered="true" /> 
+                                </c:wiz_field>
+                                <input class="hidden" id="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Status__c" name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Status__c" value=""/>
+                                
+                            </apex:outputPanel>
+                            
+                            
+                            <div class="clearfix"></div>    
+                            
+                            
+                            <div id="showRadioButtons">
+                                <apex:outputPanel rendered="true">
+                                    <c:wiz_field Wide="true"
+                                                 FieldLabel="{!$ObjectType.General_Task__c.Fields.Create_New_CAPA__c.Label}"
+                                                 required="false"
+                                                 jsid="createNewCapa"
+                                                 rendered="true">
+                                        <!-- Technically this is required but Severity and Probability are also required and when they are selected they also update this field. -->
+                                        <c:wiz_RadioSet FieldName="Create_New_CAPA__c" 
+                                                        ObjectName="General_Task__c" 
+                                                        InitValue="{!genTask.Create_New_CAPA__c}" 
+                                                        onchangefunction="changeRequiredStatus"
+                                                        disabled="{!OR(genTask.Status__c=='Pending Approval',genTask.Status__c=='Closed',genTask.Status__c=='Void',CAPA.CAPA_Status__c == 'Closed')}"
+                                                        />
+                                    </c:wiz_field> 
+                                    
+                                </apex:outputPanel>
+                            </div>
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            <apex:outputPanel >
+                                <c:wiz_field Wide="true" FieldLabel="{!$ObjectType.General_Task__c.Fields.Closure_Comment__c.label}" Required="false" JSId="closurecomment" >
+                                    <c:wiz_textarea FieldId="Closure_Comment__c" ObjectName="General_Task__c" initvalue="{!genTask.Closure_Comment__c}" Required="true" FieldName="Closure_Comment__c" rendered="{!NOT(OR(genTask.Status__c=='Closed',genTask.Status__c=='Pending Approval',genTask.Status__c=='Void',CAPA.CAPA_Status__c =='Closed',CAPA.CAPA_Status__c =='Void'))}"/>
+                                    
+                                    <!-- <c:wiz_richtext  rendered="true" Required="true" FieldId="Closure_Comment__c" initvalue="{!genTask.Closure_Comment__c}" ReadOnly="" /> disabled="{!OR(genTask.Status__c=='Pending Approval',genTask.Status__c=='Closed',genTask.Status__c=='Void',CAPA.CAPA_Status__c =='Closed')}"-->
+                                    
+                                </c:wiz_field>
+                                
+                                <div class="col-md-12">
+                                <apex:outputpanel rendered="{!OR(genTask.Status__c=='Closed',genTask.Status__c=='Pending Approval',genTask.Status__c=='Void',CAPA.CAPA_Status__c =='Void',CAPA.CAPA_Status__c =='Closed')}">
+                                    <div class="alert alert-info" >
+                                        <apex:outputField value="{!genTask.Closure_Comment__c}" />
+                                    </div>
+                                </apex:outputpanel> 
+                                </div>
+                                
+                                <input type='hidden' name="" id="Status__c" value='Closed'/>
+                                <input type='hidden' name="" id="Approval_Required__c" value='No'/> 
+                            </apex:outputPanel>
+                            
+                        
+                   <!--     <c:submitforApproval approvalbuttonid="ApprovaButtonIdCAPAClosure" jsid="javascriptidForApprovalbutton" generalTask="{!genTask}" returnURL="window.location.href='/apex/capa_closure?id='+'{!CAPA.id}'"></c:submitforApproval>
+                   -->     <c:wiz_approvalbutton approvalbuttonid="ApprovaButtonIdCAPAClosure" jsid="javascriptidForApprovalbutton" RecordId="{!genTask.Id}" rendered="{!AND(OR(CAPA.Ownerid=$User.Id,genTask.Ownerid==$User.Id,$Profile.Name=='System Administrator',isApprover),CAPA.CAPA_Status__c != 'Closed')}"/>
+                        
+                    
+                    <div class="clearfix"></div>
+                    
+                    <div class="wiz-field">  
+                        <!--  Accordian -->
+                        
+                        
+                        
+                        
+                    </div> 
+                    
+                </apex:outputPanel>
+            <!-------------------------------closure ends form----------------------------->
+            <!-------------------------------adhoc starts ------------------------------------>   
+                <apex:outputPanel rendered="{!AND(genTask.RecordType.Name=='AdhocTask',genTask.id==$CurrentPage.parameters.gtid)}">
+                    <script>
+                    var users,SubmitwithApproval,loggedInUser,capaOwner,taskOwner,profile;
+                    $( document ).ready(function() {
+                        loggedInUser = "{!JSENCODE($User.Id)}";
+                        capaOwner = "{!JSENCODE(CAPA.Ownerid)}";
+                        taskOwner = "{!JSENCODE(genTask.Ownerid)}";
+                        profile = "{!JSENCODE($Profile.Name)}";
+                        $("#generic").hide();
+                        assignDynamicIdsToAdhocTask();
+                        getTaskOwners();
+                    });
+                    
+                    function disableAdhocActions(){
+                        $('#addAdhocTask').attr('disabled','true');
+                        $('#AdhocTaskSection *').attr('disabled','true');
+                        $("a[href$='_href']").removeAttr('disabled');
+                        $("a[id$='_Cancel']").hide();
+                    }
+                    
+                    function getTaskOwners(){
+                        Visualforce.remoting.Manager.invokeAction(
+                            // @RemoteAction
+                            '{!$RemoteAction.GeneralTaskController.getCAPATaskOwners}',
+                            // Callback
+                            function(result, event){
+                                console.log('inside remoting');
+                                users = result;
+                                $("#CompletedBy").append($("<option />").val('').text(''));
+                                $.each(users,function(usr) {
+                                    var userPrts = users[usr].split('@');
+                                    $("#CompletedBy").append($("<option />").val(escapeHtml(userPrts[0])).text(escapeHtml(userPrts[1])));
+                                });
+                                if($('#AdhocTaskSection').children().length == 0){
+                                    $("#generic").clone().prependTo("#AdhocTaskSection").show();
+                                }
+                                assignDynamicIdsToAdhocTask();
+                                if('{!JSENCODE(genTask.Status__c)}' == 'Pending Approval' || '{!JSENCODE(genTask.Status__c)}' == 'Closed' || '{!JSENCODE(genTask.Status__c)}' == 'Void' || '{!JSENCODE(genTask.ChangeFieldApprovalStatus__c)}' == 'Pending' || (loggedInUser != taskOwner && profile != 'System Administrator' && loggedInUser != capaOwner)){
+                                    disableAdhocActions();
+                                }
+                            }
+                        );
+                    }
+                    
+                    function deleteAdhocTask(deletedId){
+                        if($(deletedId).attr('disabled')){
+                            return false;
+                        }else{
+                            var divId = $(deletedId).attr('id').split('_');
+                            var deleteDiv = $("#"+divId).attr('class');
+                            Visualforce.remoting.Manager.invokeAction(
+                                // @RemoteAction
+                                '{!$RemoteAction.GeneralTaskController.Capa_AdhocTask_deleteAdhocAction}',deleteDiv,
+                                // Callback
+                                function(result, event){
+                                    if(result==0){
+                                        console.log('success');
+                                       window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&type={!JSENCODE($CurrentPage.parameters.type)}'; 
+                                    } 
+                                }
+                            );
+                        }    
+                    }    
+                    
+                    function saveAdhocActions(){
+                        $('#Save').attr('disabled', 'true');
+                        $('#Submit').attr('disabled', 'true');
+                        var start = 0;
+                        var aAction={},adhocActions= {};
+                        $("#AdhocTaskSection>div").each(function(){
+                            var divId = 'generic'+ (start++);
+                            if($("#"+divId).length != 0){
+                                aAction['id'] = $("#"+divId).attr('class');
+                                aAction['completedBy'] = $("#"+divId+"_CompletedBy").val();
+                                aAction['completedDate'] = formatDate(new Date($("#"+divId+"_CompDate_GRDATE").val()));
+                                aAction['detail'] = $("#"+divId+"_Detail").val();
+                                adhocActions['adhocAction'+start] = aAction;
+                                aAction = {};
+                            }    
+                        });
+                        //console.log(adhocActions);
+                        Visualforce.remoting.Manager.invokeAction(
+                            // @RemoteAction
+                            '{!$RemoteAction.GeneralTaskController.CAPA_AdhocTask_saveAdhocActions}','{!adhocTask[0].Id}',adhocActions,
+                            // Callback
+                            function(result, event){
+                                if(result==0){
+                           
+                                    saveApprovalFromDigitalSignature();
+                                } 
+                            }
+                        );
+                    }
+                    
+                    function saveApprovalFromDigitalSignature(){
+                        // when clicking save button 
+                        if(!SubmitwithApproval){
+                            if($('#tableId_chk').is(':checked')){
+                                saveApprovalData('{!JSENCODE(adhocTask[0].Id)}',SubmitwithApproval);  
+                            }else{
+                                updateAppRequired();
+                            }
+                        }else if(SubmitwithApproval){
+                            if($('#tableId_chk').is(':checked')){
+                                saveApprovalData('{!JSENCODE(adhocTask[0].Id)}',SubmitwithApproval);  
+                            }else{
+                                updateAppRequired();
+                            }
+                        }    
+                    }
+                    
+                    function updateAppRequired(){
+                        console.log('{!JSENCODE(adhocTask[0].Status__c)}'+SubmitwithApproval);
+                        Visualforce.remoting.Manager.invokeAction(
+                            // @RemoteAction
+                            '{!$RemoteAction.GeneralTaskController.updateCurretnRecord}','{!JSENCODE(adhocTask[0].Id)}',escapeHtml('AdhocTask'),'{!JSENCODE(adhocTask[0].Status__c)}'+escapeHtml(SubmitwithApproval),
+                            // Callback
+                            function(result, event){
+                                if(result){
+                                  window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&type={!JSENCODE($CurrentPage.parameters.type)}';
+                                } 
+                            }
+                        );
+                    }
+                    
+                    function onSave(){
+                        if(adhocTaskValidation()){
+                            SubmitwithApproval=false;
+                            saveAdhocActions();
+                        }    
+                    }
+                    
+                    function onSubmit(){
+                        SubmitwithApproval=true;
+                        var isDigitalneeded = "<apex:outputtext value="{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}" />";
+                        if(adhocTaskValidation() && isDigitalneeded == 'true'){
+                            $('#uname').val('');
+                            $('#pw').val('');
+                            $('.dont-allow-multiple-clicks').removeAttr('disabled');
+                            $('#signature').modal('show');
+                        }else if(adhocTaskValidation() && isDigitalneeded == 'false'){    
+                            $('#Save').attr('disabled', 'true');
+                            $('#Submit').attr('disabled', 'true');
+                            saveAdhocActions();
+                        }
+                    } 
+                    
+                    var isApproversValid=false;
+                    function afterValidate(){
+                        isApproversValid=true;
+                    }
+                    
+                    var entityMap = {
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '"': '&quot;',
+                        "'": '&#39;',
+                        "(": '&#40;',
+                        ")": '&#41;',
+                        '.': '&#46;',
+                        '/': '&#x2F;',
+                        '`': '&#x60;',
+                        ';': '&#59;',
+                        '.': '&#46;',
+                        '=': '&#x3D;'
+                    };
+                    
+                    
+                    function escapeHtml (string) {
+                        return String(string).replace(/[&<>"'`=\/]/g, function fromEntityMap (s) {
+                            //console.log("Function escapeHtml() saved your butt again!!!: Escaped " + s);
+                            return entityMap[s];
+                        });
+                    }
+                    </script>
+                    <c:wiz_add_adhoctask divId="generic" compDate="CompDate" adhocTask="{!adhocTask[0]}" Capa="{!CAPA}" compBy="CompletedBy" detail="Detail" adhocTaskActions="{!adhocTaskActions}"></c:wiz_add_adhoctask>
+                    
+                    <div class="wiz-field">
+                       <!-- <c:submitforApproval approvalbuttonid="ApprovaButtonIdEffectTask" jsid="javascriptidForApprovalbutton" generalTask="{!adhocTask[0]}"></c:submitforApproval>
+                        --><c:wiz_approvalbutton approvalbuttonid="ApprovaButtonIdEffectTask" jsid="javascriptidForApprovalbutton" RecordId="{!adhocTask[0].Id}" rendered="{!OR($User.Id==adhocTask[0].Approver__c,$User.Id==adhocTask[0].Approver_1__c,$User.Id==adhocTask[0].Approver_2__c,$User.Id==adhocTask[0].Approver_3__c,$User.Id==adhocTask[0].Approver_4__c,$User.Id==adhocTask[0].Approver_5__c,$User.Id==adhocTask[0].Approver_6__c,$User.Id==adhocTask[0].Approver_7__c,$User.Id==adhocTask[0].Approver_8__c,$User.Id==adhocTask[0].Approver_9__c,$User.Id==adhocTask[0].Initial_Submitter__c)}"/>
+                    </div>
+                </apex:outputPanel>
+                <!-------------------------------adhoc ends ------------------------------------>   
+          <!-------------------------------approval component---Start-------------------------------->  
+                
+                 <apex:outputPanel rendered="{!genTask.id==$CurrentPage.parameters.gtid}">
+                    <c:wiz_form FormClass="Taskapproval validate" FormId="Taskapproval" RecordId="" submitPage="">
+                    <c:wiz_approval disabled="false" isLocked="{!OR(genTask.Status__c=='Pending ActionPlan',genTask.Status__c=='Pending ActionPlan',genTask.ChangeFieldApprovalStatus__c=='Pending',genTask.Status__c=='Pending Approval',genTask.Status__c=='Closed',genTask.Status__c=='Void',NOT(OR(CAPA.OwnerId=$User.Id,genTask.Ownerid==$User.Id,$Profile.Name=='System Administrator')),CAPA.CAPA_Status__c == 'Closed')}" allowDaysFieldId="allAllowed_Days__c" isSubmitForApproval="true" dueDateFieldId="allDue_Date__c"  taskId="{!genTask.id}" seqFieldId="seqFieldId" tableId="tableId" crDate="{!genTask.CreatedDate}" id="approvalid" isApproverNoteNeeded="true" userFieldId="userFieldId" rendered="{!NOT(AND(genTask.Approval_Required__c!='Yes',OR(genTask.Status__c=='Pending Approval',genTask.ChangeFieldApprovalStatus__c=='Pending',genTask.Status__c=='Closed',genTask.Status__c=='Void',NOT(OR(CAPA.OwnerId=$User.Id,genTask.Ownerid==$User.Id,$Profile.Name=='System Administrator')),genTask.Status__c=='Pending ActionPlan')))}"  noteToApprover="{!genTask.Note_To_Approver__c}" typeofapprover="CAPA_Approval" initjs="
+                                    if({!(genTask.Approval_Required__c=='Yes')}){
+                                $('#tableId_div').removeClass('hidden'); 
+                                $('#tableId_link').removeClass('hidden');$('#tableId_chk').attr('checked', true);                
+                                $('#tableId_table').find('input,select').each(function(){
+                                                         $(this).attr('disabled', false);   
+                                                    });
+                        } 
+                        else{
+                         $('#tableId_div').addClass('hidden'); 
+                          $('#tableId_link').addClass('hidden');
+                          $('#tableId_chk').attr('checked', false); 
+                        }"
+                     /> 
+                    </c:wiz_form> 
+                    <!-- added on 9th dec ----->
+                    <apex:outputPanel rendered="{!(genTask.Approval_Required__c!='Yes') && OR(genTask.Status__c=='Closed',genTask.ChangeFieldApprovalStatus__c=='Pending',genTask.Status__c=='Void',NOT(OR(CAPA.OwnerId=$User.Id,genTask.Ownerid==$User.Id,$Profile.Name=='System Administrator')),genTask.Status__c=='Pending ActionPlan',genTask.Status__c=='Pending Approval')}" >
+                        <div class="col-md-12"> &nbsp;&nbsp;&nbsp; <input  type="checkbox" value="Yes" disabled="true"/> Approval Required? </div>
+                    </apex:outputPanel>
+                    
+                    <apex:outputPanel rendered="{!if(genTask.ChangeFieldApprovalStatus__c=='Pending',false,true)}">
+                        <apex:outputPanel rendered="{!AND(OR($User.Id==genTask.Approver__c,$User.Id==genTask.Approver_1__c,$User.Id==genTask.Approver_2__c,$User.Id==genTask.Approver_3__c,$User.Id==genTask.Approver_4__c,$User.Id==genTask.Approver_5__c,$User.Id==genTask.Approver_6__c,$User.Id==genTask.Approver_7__c,$User.Id==genTask.Approver_8__c,$User.Id==genTask.Approver_9__c),genTask.Status__c=='Pending Approval')}">                                           
+                           <div class="form-group id='Note_To_Approver__c' col-md-12">   
+                            <label >{!$ObjectType.General_Task__c.Fields.Note_To_Approver__c.Label}:
+                            </label>
+                           <!-- <textarea value="{!Task.Note_To_Approver__c}" disabled="disabled" class="form-control changeMe-setTextArea">{!Task.Note_To_Approver__c}</textarea>   -->
+                               <div class="alert alert-info"> <apex:outputField value="{!genTask.Note_To_Approver__c}" /> </div>
+                            </div>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </apex:outputPanel> 
+                </apex:repeat>
+            <!-------------------------------approval component  end------------------------------------->
+        </apex:define>
+        
+        
+        
+         <apex:define name="buttonbar">
+            <apex:repeat value="{!CAPA__c.General_Tasks__r}" var="genTask">
+                <apex:outputPanel rendered="{!AND(genTask.RecordType.Name=='Investigation',genTask.id==$CurrentPage.Parameters.gtid)}">
+                    <apex:outputpanel layout="none" rendered="{!AND(if(genTask.ChangeFieldApprovalStatus__c=='Pending',false,true),if(genTask.Status__c=='Closed',false,true),if(genTask.Status__c=='Void',false,true))}"> 
+                        
+                        <apex:outputpanel layout="none" rendered="{!AND(NOT(CAPA.Closed__c),OR(genTask.Ownerid==$User.Id,$Profile.Name=='System Administrator'), OR($ObjectType.CAPA__c.Updateable, AND(ISBLANK(CAPA.Id), $ObjectType.CAPA__c.Createable)))}">
+                            <apex:outputPanel rendered="{!AND(if(genTask.Status__c=='Pending Approval',false,true))}">          
+                                <button id="Cancel" type="button" class="btn btn-default dont-allow-multiple-clicks" onclick="cancelPopup();"><span class="fa fa-close"></span> Cancel</button>
+                            </apex:outputPanel>
+                        </apex:outputpanel>
+                        <apex:outputpanel layout="none" rendered="{!AND(NOT(CAPA.Closed__c),NOT(ISBLANK(CAPA.Id)))}">
+                            <apex:outputPanel rendered="{!AND(if(genTask.ChangeFieldApprovalStatus__c=='Pending',false,true),if(genTask.Status__c=='Pending Approval',false,true),if(genTask.Status__c=='Pending ActionPlan',false,true),OR(CAPA.OwnerId=$User.Id,genTask.Ownerid==$User.Id,$Profile.Name=='System Administrator'))}">
+                                <button id="Save" type="button" class="btn btn-primary dont-allow-multiple-clicks" onclick=" $('.dont-allow-multiple-clicks').attr('disabled', 'true');SubmitwithApproval=false;updatecapaInvTask();"><span class="fa fa-floppy-o"></span> Save </button>  
+                                <apex:outputPanel rendered="{!(genTask.Status__c=='Open')}">
+                                    <button type="submit" class="btn btn-success dont-allow-multiple-clicks" id="SubmitwithApprovalButtonImplementation" onclick=" $('.dont-allow-multiple-clicks').attr('disabled', 'true');SubmitwithApproval=true;if({!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}){$('#uname').val('');$('#pw').val('');$('.dont-allow-multiple-clicks').removeAttr('disabled');$('#investigation_digital_signature_modalid').modal('show');}else if(!{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}){updatecapaInvTask();} "><span class="fa fa-send"></span> Submit </button>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                            
+                            <apex:outputPanel rendered="{!NOT(genTask.ChangeFieldApprovalStatus__c=='Pending')}">
+                                <apex:outputPanel rendered="{!genTask.Status__c=='Pending Approval'}">     
+                                    <apex:outputPanel rendered="{!OR($User.Id==genTask.Approver__c,$User.Id==genTask.Approver_1__c,$User.Id==genTask.Approver_2__c,$User.Id==genTask.Approver_3__c,$User.Id==genTask.Approver_4__c,$User.Id==genTask.Approver_5__c,$User.Id==genTask.Approver_6__c,$User.Id==genTask.Approver_7__c,$User.Id==genTask.Approver_8__c,$User.Id==genTask.Approver_9__c)}">
+                                        <button type="submit" id="ApprovaButtonIdNcContainment"  onclick="ApprovePopupModal();" class="btn btn-success  dont-allow-multiple-clicks"><span class='fa fa-thumbs-o-up'></span> Decision</button>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!(genTask.Initial_Submitter__c==$User.Id)}">
+                                        <button type="submit" id="RecallButtonIdNcContainment"  onclick="RecallPopupModal();" class="btn btn-primary  dont-allow-multiple-clicks "><span class="fa fa-mail-reply-all"></span> Recall</button>     
+                                    </apex:outputPanel> 
+                                </apex:outputPanel>    
+                            </apex:outputPanel>  
+                            
+                        </apex:outputpanel>
+                    </apex:outputpanel> 
+                     <apex:outputPanel rendered="{!AND(genTask.RecordType.Name=='Investigation',genTask.id==$CurrentPage.Parameters.gtid)}">
+                    </apex:outputPanel>
+                </apex:outputPanel>
+                <!--------------------------------Implementation------------------------------------>
+                 <apex:outputPanel rendered="{!AND(genTask.RecordType.Name=='Implementation',genTask.id==$CurrentPage.Parameters.gtid)}">
+                    <apex:outputpanel layout="none" rendered="{!AND(if(genTask.ChangeFieldApprovalStatus__c=='Pending',false,true),if(genTask.Status__c=='Closed',false,true),if(genTask.Status__c=='Void',false,true))}"> 
+                        
+                        <apex:outputpanel layout="none" rendered="{!AND(NOT(CAPA.Closed__c),OR(genTask.Ownerid==$User.Id,$Profile.Name=='System Administrator'), OR($ObjectType.CAPA__c.Updateable, AND(ISBLANK(CAPA.Id), $ObjectType.CAPA__c.Createable)))}">
+                            <apex:outputPanel rendered="{!AND(if(genTask.Status__c=='Pending Approval',false,true),if(genTask.Status__c=='Pending ActionPlan',false,true))}">          
+                                <button id="Cancel" type="button" class="btn btn-default dont-allow-multiple-clicks" onclick="cancelPopup();"><span class="fa fa-close"></span> Cancel</button>
+                            </apex:outputPanel>
+                        </apex:outputpanel>
+                        
+                        <apex:outputpanel layout="none" rendered="{!AND(NOT(CAPA.Closed__c),NOT(ISBLANK(CAPA.Id)))}">
+                            <apex:outputPanel rendered="{!AND(if(genTask.ChangeFieldApprovalStatus__c=='Pending',false,true),if(genTask.Status__c=='Pending Approval',false,true),if(genTask.Status__c=='Pending ActionPlan',false,true),OR(CAPA.OwnerId=$User.Id,genTask.Ownerid==$User.Id,$Profile.Name=='System Administrator'))}">
+                                <button id="Save" type="button" class="btn btn-primary dont-allow-multiple-clicks" onclick="SubmitwithApproval=false;if(implValidation()){$('.dont-allow-multiple-clicks').attr('disabled', 'true');saveActionPlan('{!genTask}');$('.dont-allow-multiple-clicks').attr('disabled', 'false');}"><span class="fa fa-floppy-o"></span> Save </button>  
+                                <apex:outputPanel rendered="{!(genTask.Status__c=='Open')}">
+                                    <button type="submit" class="btn btn-success dont-allow-multiple-clicks" id="SubmitwithApprovalButtonImplementation" onclick="SubmitwithApproval=true;if(implValidation()&&{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}){$('#uname').val('');$('#pw').val('');$('.dont-allow-multiple-clicks').removeAttr('disabled');$('#signature').modal('show');}else if(implValidation()&&!{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}){if(!isCompletedActionplan){$('.dont-allow-multiple-clicks').attr('disabled', 'true');saveActionPlan('{!genTask}');$('.dont-allow-multiple-clicks').attr('disabled', 'false');}else{$('.dont-allow-multiple-clicks').attr('disabled', 'true');completePendingActionPlan(completeActplanID);$('.dont-allow-multiple-clicks').attr('disabled', 'false');}}"><span class="fa fa-send"></span> Submit </button>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                            
+                            <apex:outputPanel rendered="{!NOT(genTask.ChangeFieldApprovalStatus__c=='Pending')}">
+                                <apex:outputPanel rendered="{!genTask.Status__c=='Pending Approval'}">     
+                                    <apex:outputPanel rendered="{!OR($User.Id==genTask.Approver__c,$User.Id==genTask.Approver_1__c,$User.Id==genTask.Approver_2__c,$User.Id==genTask.Approver_3__c,$User.Id==genTask.Approver_4__c,$User.Id==genTask.Approver_5__c,$User.Id==genTask.Approver_6__c,$User.Id==genTask.Approver_7__c,$User.Id==genTask.Approver_8__c,$User.Id==genTask.Approver_9__c)}">
+                                        <button type="submit" id="ApprovaButtonIdNcContainment"  onclick="ApprovePopupModal();" class="btn btn-success  dont-allow-multiple-clicks"><span class='fa fa-thumbs-o-up'></span> Decision</button>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!(genTask.Initial_Submitter__c==$User.Id)}">
+                                        <button type="submit" id="RecallButtonIdNcContainment"  onclick="RecallPopupModal();" class="btn btn-primary  dont-allow-multiple-clicks "><span class="fa fa-mail-reply-all"></span> Recall</button>     
+                                    </apex:outputPanel> 
+                                </apex:outputPanel>    
+                            </apex:outputPanel>  
+                            
+                            <apex:outputPanel rendered="{!NOT(genTask.ChangeFieldApprovalStatus__c=='Pending')}">
+                                <apex:outputPanel >   
+                                    <apex:outputPanel > 
+                                        <button type="submit" id="RecallButtonNcImplementation" onclick="RecallforPendingActionPlan('{!genTask.Id}','{!genTask.Status__c}');" class="btn btn-primary  dont-allow-multiple-clicks"><span class="fa fa-mail-reply-all"></span> Recall</button>     
+                                    </apex:outputPanel> 
+                                </apex:outputPanel>    
+                            </apex:outputPanel> 
+                        </apex:outputpanel>
+                    </apex:outputpanel>   
+                </apex:outputPanel>
+                <!-----------------EffectiveReview start------------------->
+                <apex:outputPanel rendered="{!AND(genTask.RecordType.Name=='EffectivenessReview',genTask.id==$CurrentPage.Parameters.gtid)}">
+                
+                <apex:outputPanel rendered="{!OR(genTask.ownerid == $User.Id,$Profile.Name=='System Administrator',CAPA.Ownerid == $User.Id)}">
+                    <apex:outputPanel rendered="{!AND(genTask.Status__c != 'Pending Approval',genTask.Status__c != 'Closed',genTask.Status__c != 'Void',genTask.ChangeFieldApprovalStatus__c!='Pending')}">
+                        <button type="button" id="Cancel" class="btn btn-default" onclick="cancelPopup()"><span class="fa fa-close"></span> Cancel</button>
+                        <button type="button" id="Save" class="btn btn-primary dont-allow-multiple-clicks" onclick="onSave();"><span class="fa fa-floppy-o"></span> Save </button> 
+                        <apex:outputPanel rendered="{!NOT(genTask.Status__c == 'Created')}">
+                            <button type="button" id="Submit" class="btn btn-success dont-allow-multiple-clicks" onclick="onSubmit();"><span class="fa fa-send"></span> Submit </button>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!if(genTask.Status__c=='Pending Approval',true,false)}">   
+                    <apex:outputPanel rendered="{!OR($User.Id==genTask.Approver__c,$User.Id==genTask.Approver_1__c,$User.Id==genTask.Approver_2__c,$User.Id==genTask.Approver_3__c,$User.Id==genTask.Approver_4__c,$User.Id==genTask.Approver_5__c,$User.Id==genTask.Approver_6__c,$User.Id==genTask.Approver_7__c,$User.Id==genTask.Approver_8__c,$User.Id==genTask.Approver_9__c)}">
+                        <button type="submit" id="ApprovaButtonIdNcContainment"  onclick="ApprovePopupModal();" class="btn btn-success dont-allow-multiple-clicks"><span class='fa fa-thumbs-o-up'></span> Decision</button>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!(genTask.Initial_Submitter__c==$User.Id)}">
+                        <button type="submit" id="RecallButtonIdNcContainment"  onclick="RecallPopupModal();" class="btn btn-primary  dont-allow-multiple-clicks "><span class="fa fa-mail-reply-all"></span> Recall</button>     
+                    </apex:outputPanel>                                                                             
+                </apex:outputPanel>
+                </apex:outputPanel>
+                <!-----------------EffectiveReview end---------------->
+                <!------------------closure start-------------------->
+                 <apex:outputPanel rendered="{!AND(genTask.RecordType.Name=='Closure',genTask.id==$CurrentPage.Parameters.gtid)}">      <!-- output panel rendered only if record type is Closure -->
+                    <apex:outputpanel layout="none" rendered="{!AND(if(genTask.ChangeFieldApprovalStatus__c=='Pending',false,true),if(genTask.Status__c=='Closed',false,true),if(genTask.Status__c=='Void',false,true))}">    
+                        
+                        <apex:outputpanel layout="none" rendered="{!AND(NOT(CAPA.Closed__c),OR(CAPA.Ownerid=$User.Id,genTask.Ownerid==$User.Id,$Profile.Name=='System Administrator'),OR($ObjectType.CAPA__c.Updateable, AND(ISBLANK(CAPA.Id), $ObjectType.CAPA__c.Createable)))}">    
+                            <apex:outputPanel rendered="{!if(genTask.Status__c=='Pending Approval',false,true)}">
+                                <button type="button" class="btn btn-default dont-allow-multiple-clicks" onclick="cancelPopup()"><span class="fa fa-close"></span> Cancel</button> 
+                            </apex:outputPanel>
+                        </apex:outputpanel>
+                        
+                        <apex:outputpanel layout="none" rendered="{!AND(NOT(CAPA.Closed__c),NOT(ISBLANK(CAPA.Id)))}">
+                            <apex:outputPanel rendered="{!AND(if(genTask.ChangeFieldApprovalStatus__c=='Pending',false,true),if(genTask.Status__c=='Pending Approval',false,true),OR(CAPA.Ownerid=$User.Id,genTask.Ownerid==$User.Id,$Profile.Name=='System Administrator'))}">
+                                <button type="submit" class="btn btn-primary dont-allow-multiple-clicks" onclick="SubmitwithApproval=false;saveTheClosure();"><span class="fa fa-floppy-o"></span> Save</button>
+                                
+                                
+                                <apex:outputPanel rendered="{!OR(genTask.Status__c=='Open',genTask.Status__c=='InProgress',genTask.Status__c!='Created')}">          
+                                    <button type="button" class="btn btn-success dont-allow-multiple-clicks" id="CloseCAPA" onclick="onSubmit();"><span class="fa fa-play"></span> <span id="CloseCAPAafterSpan"></span></button>
+                                </apex:outputPanel>
+                                
+                                
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!NOT(genTask.ChangeFieldApprovalStatus__c=='Pending')}">
+                                <apex:outputPanel rendered="{!genTask.Status__c=='Pending Approval'}">   
+                                    <apex:outputPanel rendered="{!OR($User.Id==genTask.Approver__c,$User.Id==genTask.Approver_1__c,$User.Id==genTask.Approver_2__c,$User.Id==genTask.Approver_3__c,$User.Id==genTask.Approver_4__c,$User.Id==genTask.Approver_5__c,$User.Id==genTask.Approver_6__c,$User.Id==genTask.Approver_7__c,$User.Id==genTask.Approver_8__c,$User.Id==genTask.Approver_9__c)}">
+                                        <button type="submit" id="ApprovaButtonIdNcContainment"  onclick="ApprovePopupModal();" class="btn btn-success  dont-allow-multiple-clicks" ><span class="fa fa-thumbs-o-up"></span> Decision</button>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!OR($Profile.Name=='System Administrator',CAPA.Ownerid==$User.Id,genTask.Initial_Submitter__c==$User.Id,genTask.Owner==$User.Id)}">
+                                        <button type="submit" id="RecallButtonIdNcContainment"  onclick="RecallPopupModal();" class="btn btn-danger  dont-allow-multiple-clicks " ><span class="fa fa-hand-stop-o"></span> stop</button>     
+                                    </apex:outputPanel>                                                                             
+                                </apex:outputPanel>    
+                            </apex:outputPanel>
+                            
+                        </apex:outputpanel> 
+                    </apex:outputpanel>
+                    
+                    
+                    
+                    <!-- preventing user if he presses cancel btton .he is asked "he will lose the data "  -->  
+                    <script>
+                    function cancelPopup(){
+                        /* var r = confirm("All the data will be lost");
+                            if (r == true) {
+                               window.location = '/apex/nc_containment?id={!$CurrentPage.parameters.id}';
+                            } else {
+                                console.log("You pressed Cancel!");
+                            }*/
+                        
+                        var YESButtonInRedirectModalOnClick = function () {
+                           window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&type={!JSENCODE($CurrentPage.parameters.type)}';
+                        };
+                        var NOButtonInRedirectModalOnClick = function () {
+                            
+                        };
+                        $('#redirectDialog .btn-primary').bind( "click", YESButtonInRedirectModalOnClick);
+                        $('#redirectDialog .btn-default').bind( "click", NOButtonInRedirectModalOnClick);
+                        
+                        // Show the redirect dialog
+                        $('#redirectDialog').modal('show');
+                        
+                        // Remove the onClick event
+                        $('#redirectDialog').on('hidden.bs.modal', function () {
+                            $('#redirectDialog .btn-primary').unbind( "click", YESButtonInRedirectModalOnClick);
+                            $('#redirectDialog .btn-default').unbind( "click", NOButtonInRedirectModalOnClick);
+                        })
+                    }
+                    
+                    </script>
+                    
+                    
+                    
+                </apex:outputPanel>
+                <!------------------closure end---------------------->
+                <!---------------------Adhoc Starts------------------------------>
+                
+                <apex:outputPanel rendered="{!AND(genTask.RecordType.Name=='AdhocTask',genTask.id==$CurrentPage.parameters.gtid)}">
+                    <apex:outputPanel rendered="{!OR(genTask.ownerid == $User.Id,$Profile.Name == 'System Administrator',CAPA.Ownerid == $User.Id)}">
+                        <apex:outputPanel rendered="{!AND(genTask.Status__c != 'Pending Approval',genTask.Status__c != 'Closed',genTask.Status__c != 'Void',genTask.ChangeFieldApprovalStatus__c!='Pending')}">
+                            <button type="button" id="Cancel" class="btn btn-default" onclick="cancelPopup()"><span class="fa fa-close"></span> Cancel</button>
+                            <button type="button" id="Save" class="btn btn-primary dont-allow-multiple-clicks" onclick="onSave();"><span class="fa fa-floppy-o"></span> Save </button> 
+                            <apex:outputPanel rendered="{!NOT(genTask.Status__c == 'Created')}">
+                                <button type="button" id="Submit" class="btn btn-success dont-allow-multiple-clicks" onclick="onSubmit();"><span class="fa fa-send"></span> Submit </button>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!if(genTask.Status__c=='Pending Approval',true,false)}">   
+                        <apex:outputPanel rendered="{!OR($User.Id==genTask.Approver__c,$User.Id==genTask.Approver_1__c,$User.Id==genTask.Approver_2__c,$User.Id==genTask.Approver_3__c,$User.Id==genTask.Approver_4__c,$User.Id==genTask.Approver_5__c,$User.Id==genTask.Approver_6__c,$User.Id==genTask.Approver_7__c,$User.Id==genTask.Approver_8__c,$User.Id==genTask.Approver_9__c)}">
+                            <button type="submit" id="ApprovaButtonIdNcContainment"  onclick="ApprovePopupModal();" class="btn btn-success dont-allow-multiple-clicks"><span class='fa fa-thumbs-o-up'></span> Decision</button>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!(genTask.Initial_Submitter__c==$User.Id)}">
+                            <button type="submit" id="RecallButtonIdNcContainment"  onclick="RecallPopupModal();" class="btn btn-primary  dont-allow-multiple-clicks "><span class="fa fa-mail-reply-all"></span> Recall</button>     
+                        </apex:outputPanel>                                                                             
+                    </apex:outputPanel>
+                </apex:outputPanel>
+                <!------------------Ahhoc ends --------------------------------->
+                <!---next button--------------->
+                   <apex:outputPanel rendered="{!AND(OR(genTask.Status__c=='Closed',genTask.Status__c=='Void'),genTask.id==$CurrentPage.Parameters.gtid)}">
+                    <c:wiz_nextButton currentTask="{!genTask}" subTask="{!CAPA__c.General_Tasks__r}" currentPosition="{!genTask.Sequence_Position__c}"></c:wiz_nextButton>
+                    </apex:outputPanel>
+            </apex:repeat>
+        </apex:define>
+        
+         <!-- Attachment section -->
+        <apex:define name="rightpane">
+            <!-- Right container -->
+            <div class="tab-content">  
+               
+                
+                <!-- Help Pane -->
+                <div class="tab-pane active help" id="help">
+                  <!--<c:Contextual_Help currentpage1="CAPA_invest"/> -->
+                  <c:Contextual_Help currentpage1="CAPA_{!LOWER(Left($CurrentPage.parameters.type,4))}" />
+                </div>
+                <!-- Help Pane -->
+                
+                <!-- Attachment List -->
+                
+                <c:wiz_attachments record_id="{!CAPA.Id}" showAddButtonLink="{! CAPA.CAPA_Status__c != 'Closed' }"></c:wiz_attachments>
+            </div>        
+            <!-- Right container -->
+        </apex:define>
+        
+         <apex:define name="approvalHistory">
+                    <c:wiz_approvalHistory TargetobjectId="{!$CurrentPage.Parameters.gtid}"></c:wiz_approvalHistory>
+         </apex:define>
+        
+    </apex:composition>
+    
+   <c:wiz_validator ignorehidden="false" onValid=""></c:wiz_validator>
+   
+  
+    
+    <script>
+    
+    function cancelPopup()
+    {
+        var YESButtonInRedirectModalOnClick = function () {
+               window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&type={!JSENCODE($CurrentPage.parameters.type)}';
+           };
+           var NOButtonInRedirectModalOnClick = function () {
+               
+           };
+           $('#redirectDialog .btn-primary').bind( "click", YESButtonInRedirectModalOnClick);
+           $('#redirectDialog .btn-default').bind( "click", NOButtonInRedirectModalOnClick);
+           
+           // Show the redirect dialog
+           $('#redirectDialog').modal('show');
+           
+           // Remove the onClick event
+           $('#redirectDialog').on('hidden.bs.modal', function () {
+               $('#redirectDialog .btn-primary').unbind( "click", YESButtonInRedirectModalOnClick);
+               $('#redirectDialog .btn-default').unbind( "click", NOButtonInRedirectModalOnClick);
+           }) 
+        
+    }
+    
+    function submitinvform(){
+        //alert('inside submitRootCauseActionform');
+        if(!$('.dont-allow-multiple-clicks').attr('disabled')){
+            $('.dont-allow-multiple-clicks').attr('disabled', true);
+            console.log('prodform inside wiz_add_product');
+            tinyMCE.triggerSave();
+            //$('#capaForm').submit();
+            // alert('SubmitwithApproval------->'+SubmitwithApproval);
+          
+            
+        }
+    }
+    
+  
+    
+    function validateInvFields(){
+        var validflag = true;
+        var codestartid = 0;
+        var decstartid = 0;
+        numberofRootCauseSections = $('#add_root_cause_holder>div').length
+        console.log('numberofRootCauseSections='+numberofRootCauseSections);
+        
+        $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Investigation_Summary__c_error' ).empty();
+        $('#add_root_cause_holder>div').each(function(){
+            var causeid = '#rcause'+(codestartid++)+'_causecode';
+            var causedec='#rcause'+(decstartid++)+'_dec';
+             $(causeid+'_error').empty();
+             $(causedec+'_error').empty();
+            console.log('causeid val='+$(causeid).val()+':'+$(causeid+' :selected').text());
+            console.log('causedec val='+$(causedec).val());
+            if($(causeid).val()==null){
+                $(causeid+'_error').html( "<p><font color='red'>This field is required</font></p>");
+                validflag = false;
+            }
+             if($(causedec).val()==''){
+                $(causedec+'_error').html( "<p><font color='red'>This field is required</font></p>");
+                validflag = false;
+            }
+            
+        });
+        
+        var invsumry = $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Investigation_Summary__c').val();
+        console.log( 'invsumry-------->'+invsumry);
+        if(!invsumry.trim()){
+           
+             $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Investigation_Summary__c_error' ).html( "<p><font color='red'>This field is required</font></p>");
+              validflag = false;
+              }
+        
+        console.log('inside validation validflag:'+validflag);
+        return validflag;
+    }
+    function ApproversValidate(){
+        ApprovalValid=true;
+  
+    }
+    function riskvalidate(){
+        riskvalid=true;
+        }
+    function updatecapaInvTask(){
+
+        //alert('from invupdate');
+        
+        var apprflagval = validate(null,ApproversValidate,'Taskapproval');
+        var customvalidflag= validateInvFields();
+        var riskvalidatate =  validate(null,riskvalidate,'capaForm');
+        console.log('apprflagval='+apprflagval+' :customvalidationflag='+customvalidflag+' :riskvalidatate='+riskvalidatate);
+        var invsumry = $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Investigation_Summary__c').val();
+        var invtoolval=$('#invTool').val();
+        if(apprflagval&&customvalidflag&&riskvalidatate){
+            
+       $('.dont-allow-multiple-clicks').attr('disabled', 'true');
+        console.log('collect all rootcauses');
+         var causedata = [];
+          var startid = 0;
+
+                $('#add_root_cause_holder>div').each(function(){
+                    
+                    var causeid = '#rcause'+startid+'_causecode';
+                    var causedec='#rcause'+startid+'_dec';
+                    var hiddenrcid='#rcause'+startid+'_rchid';
+                    console.log('causeid val to save='+$(causeid).val()+':'+$(causedec).val());
+                    causedata.push([$(causeid).val(),$(causedec).val(),$(hiddenrcid).val()]);
+                    startid++;
+                });
+                console.log(causedata);
+                var existingrclist = [];
+             <apex:repeat value="{!rootcauseList}" var="rc">
+                    existingrclist.push("{!rc.id}");   
+              </apex:repeat>
+
+
+             console.log(existingrclist); 
+            //console.log('approval reqchk--------->'+$('#tableId_chk').is(':checked')+'<---task close or not------>'+);
+            //alert('isClose---------->'+isClose);
+             Visualforce.remoting.Manager.invokeAction(
+            // @RemoteAction
+            '{!$RemoteAction.GeneralTaskController.CAPA_Investigation_saveRootCauses}',causedata,"{!JSENCODE($CurrentPage.parameters.gtid)}",invsumry,invtoolval,$('#tableId_chk').is(':checked'),SubmitwithApproval,
+            // Callback
+            function(result, event){
+                    if(result){
+                        console.log('Sucessfully..called');
+                        saveApprovalFromDigitalSignature("{!JSENCODE($CurrentPage.parameters.gtid)}");
+                           
+                    } 
+                    else{
+                        console.log('fails to save');
+                    }
+                });
+            
+            
+           
+            }else{
+                console.log('found validation error in page ')
+                }
+        
+        }
+    
+    //digital signature ==
+    function OnAuthenticated(){
+        if({!JSENCODE($CurrentPage.parameters.type)=='Investigation'}){
+        updatecapaInvTask();submitinvform();
+        }else if({!JSENCODE($CurrentPage.parameters.type)=='Implementation'}){
+        
+            
+            if(!isCompletedActionplan){
+                $('.dont-allow-multiple-clicks').attr('disabled', 'true');                                                                                                        
+                saveActionPlan('{!ImplTask}');
+                $('.dont-allow-multiple-clicks').attr('disabled', 'false');
+            }
+            
+            else{
+                $('.dont-allow-multiple-clicks').attr('disabled', 'true');                                                                                                        
+                completePendingActionPlan(completeActplanID);   
+                $('.dont-allow-multiple-clicks').attr('disabled', 'false');                                                                                                        
+            }
+            
+            
+        }else if({!JSENCODE($CurrentPage.parameters.type)=='EffectivenessReview'}){
+            $('.dont-allow-multiple-clicks').attr('disabled','true');saveVerificationPlans();
+        }else if({!JSENCODE($CurrentPage.parameters.type)=='Closure'}){
+            
+            if(!$('.dont-allow-multiple-clicks').attr('disabled'))
+            {  $('.dont-allow-multiple-clicks').attr('disabled', true); 
+             saveTheClosure();                                                                                                                                        
+             $('.dont-allow-multiple-clicks').attr('disabled', false); 
+             $('.dont-allow-multiple-clicks').attr('disabled', true);                                                                                                                                             
+            }
+        }else if({!JSENCODE($CurrentPage.parameters.type)=='AdhocTask'}){
+        $('.dont-allow-multiple-clicks').attr('disabled','true');saveAdhocActions();
+        }
+    }
+    
+    </script>
+    <c:digital_signature rendered="{!JSENCODE($CurrentPage.parameters.type)=='Investigation'}"  modalid="investigation_digital_signature_modalid" returl="/apex/capa_task?id={!$CurrentPage.parameters.id}&gtid={!$CurrentPage.parameters.gtid}" onSuccess="OnAuthenticated();"/>   
+    
+    
+</apex:page>

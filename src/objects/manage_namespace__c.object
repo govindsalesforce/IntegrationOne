@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customSettingsType>Hierarchy</customSettingsType>
+    <customSettingsVisibility>Public</customSettingsVisibility>
+    <enableFeeds>false</enableFeeds>
+    <fields>
+        <fullName>prefix__c</fullName>
+        <defaultValue>&quot;QBEN&quot;</defaultValue>
+        <description>Namespace prefix (e.g. &quot;QPMS&quot;)</description>
+        <externalId>false</externalId>
+        <label>prefix</label>
+        <length>10</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <label>manage_namespace</label>
+</CustomObject>

@@ -1,0 +1,19 @@
+<apex:component controller="Component_Handler" extensions="QC_custom_settings">
+<apex:attribute name="GlobalVariableName" description="Name of global variable to hold the risk priority grid" type="string" required="true"/>
+<apex:attribute name="ReturnNames" description="Return names in the grid instead of IDs. Overridden by 'ReturnAll'." type="boolean" required="false"/>
+<apex:attribute name="ReturnAll" description="Return Risk_Priority__c objects in the grid instead of IDs. Overrides 'ReturnNames'." type="boolean" required="false"/>
+<apex:attribute name="CallBackFunctionName" description="Name of function (no parentheses) to be called after Data is available. No params are passed." type="string" required="false"/>
+<script>
+ var {!GlobalVariableName} = null;
+ $(document).ready(getRiskPriorityData());
+  function getRiskPriorityData(){
+      
+       {!IF(NOT(ISBLANK(Prefix)),Prefix+'.','')}Component_Handler.{! If(ReturnAll, "getRiskPriorityGridAll", If(ReturnNames, "getRiskPriorityNameGrid", "getRiskPriorityGrid")) }(function(result , event){
+                                                                                                                                                  {!GlobalVariableName} = result;
+                                                                                                                                                  {!IF(ISBLANK(CallBackFunctionName),'',CallBackFunctionName + '();')
+                                                                                                                                            }
+     });
+      
+    }
+</script>
+</apex:component>

@@ -1,0 +1,29 @@
+<apex:component >
+<apex:attribute name="PartNumber" description="Part Number" type="String" required="true"/>
+<apex:attribute name="Site" description="Site" type="string" required="true"/>
+<apex:attribute name="numberoferrors" description="number of errors" type="integer" default="0"/>
+
+    <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+
+            <div class="panel-heading" role="tab" id="headingOne">
+                <h4 class="panel-title">
+                            <button class="btn btn-link btn-xs pull-right" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                            </button>
+                            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                              PN. {!PartNumber}  |  {!site}   |   <span class="badge red-badge">{!numberoferrors}</span>
+                            </a>
+                          </h4>
+            </div>
+
+            <div id="collapseOne" class="panel-collapse collapse out" role="tabpanel" aria-labelledby="headingOne">
+                <div class="panel-body">
+                    <!-- add-prod-wrapper -->
+                    <apex:componentBody />
+                    <!-- add-prod-wrapper -->
+
+                </div>
+            </div>
+        </div>
+    </div>
+</apex:component>

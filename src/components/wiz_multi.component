@@ -1,0 +1,190 @@
+<apex:component >
+<apex:attribute name="filtervalue" description="Filter" type="String"/>
+<apex:attribute name="filter" description="Filter" type="String"/>
+<apex:attribute name="width" description="Field Width" type="string" default="80%" />
+<apex:attribute name="multiple" description="Is Multi Select" default="false" type="boolean"/>
+<apex:attribute name="FieldId" description="Unique Field Id" required="true" type="string"/>
+<apex:attribute name="FieldName" description="Field Name" type="string"/>
+<apex:attribute name="formatResult" description="formatter Function" type="string" default="result" />
+<apex:attribute name="formatSelection" description="formatter Function" type="string" default="selection" />
+<apex:attribute name="queryfields" description="Comma seperated list of fields. Do Not include Id" type="string" Default="Name"/>
+<apex:attribute name="querytable" description="object to query" type="string" required="true"/>
+<apex:attribute name="queryorderby" description="Comma separated list of fields to order by." type="string" required="false"/>
+<apeX:attribute name="onchange" description="js to execute on change" type="string"/>
+<apex:attribute name="disabled" description="Disabled" type="boolean" default="false"/>
+<apex:attribute name="type" description="Available values: prod" type="string"/>
+<apex:attribute name="placeholder" description="Placeholder" type="string" default="Select ...."/>
+<apex:attribute name="initValues" type="string" description="Comma Seperated List of Initial value / label pairs in JSON format ex: {value: 'myvalue', label: 'mylabel'}" default=""/>
+<apex:attribute name="Required" type="boolean" default="true" description="Field is Required"/>
+<apex:attribute name="AllowClear" type="boolean" default="true" description="Allow field to be cleared"/>
+<apex:attribute name="dataid" type="string" description="initial data-id value"/>
+<apex:attribute name="typeofuser" type="string"  description="Type of user to be filtered based on groups"/>
+
+<script>
+  function {!FieldId}_result(record){
+    var fields='{!queryfields}'.split(',');
+    if (record.loading) return record.text;
+    var markup = '<div class="clearfix">';
+    
+    for(var i=0; i<fields.length; i++){  
+      markup += '<div class="col-sm-6">' + record.item[fields[i]] + '</div>' 
+    }
+    
+    markup += '</div>';
+
+    return $(markup);
+
+  }
+  
+  function {!FieldId}_selection(record){
+    var fields='{!queryfields}'.split(',');
+    if(typeof record.item != 'undefined'){
+      return record.item[fields[0]];
+    }else if(record.text != '' && typeof record.text != 'undefined'){
+      return record.text;
+    }else{
+      return '{!placeholder}'
+    }
+  }
+  
+  $(document).ready(function(){
+  
+    $("#{!fieldId}").each(function(i, r){
+    
+    var opts = [{!initvalues}]
+    
+    $(r).on("select2:select", function (e) { 
+
+    {!onChange} });
+    
+    /*for(var n=0; n<opts.length; n++)
+      $(r).append('<option selected="selected" value="' + opts[n].value + '">' + opts[n].label + '</option>');*/
+      
+    for(var n=0; n<opts.length; n++)
+    {
+      var escapedstr =  escapeHtml(escapeHtml(opts[n].label));
+      $(r).append('<option selected="selected" value="' + opts[n].value + '">' + escapedstr + '</option>');
+    }
+   
+    $(r).select2({
+
+    disabled: {!disabled},
+  
+    ajax: {
+       url: '/apex/vfsearch',
+       dataType: 'json',
+       delay: 250,
+       data: function (params, page) {
+                  var q = "select Id,{!queryfields} from {!querytable} {!IF(NOT(ISBLANK(FILTER)), 'where ' + Filter, '')}";
+                  if ("{!queryorderby}") {
+                   q = q + " ORDER BY {!queryorderby}";
+                   
+                  }
+                  var productStyle= $('#select_Product').css('display');
+                  var processStyle= $('#select_Process').css('display');
+                  
+                  var type = 'soql';
+                  var id = $('#{!FieldId}').data('id');
+                  //console.log('wiz_multi.vfc: after \"var id = $(\'#QPMS__Defect__c\').data(\'id\');" the id="'+id+'"');
+
+                 //console.log('wiz_multi.vfc: after \"if(id == null)\n   var id = $(\'#QPMS__Process__c\').data(\'id\');" the id="'+id+'"');
+                  
+                  var qsosl;
+                  if(typeof params.term != 'undefined'){
+                    q = "Find '" + params.term + "*' IN ALL FIELDS RETURNING {!QueryTable}(Id,{!queryfields} {!IF(NOT(ISBLANK(FILTER)), 'where ' + Filter, '')})";
+                    if ("{!queryorderby}") {
+                         q = q + " ORDER BY {!queryorderby}";
+                    }
+                   qsosl= "Find '" + params.term + "*'";
+                    type = 'sosl';
+                  }
+                  var causetype='Product';
+                  if('{!type}' != ''){
+                     var typeval = '{!type}';
+                     
+                  if(productStyle == 'none')
+                  {
+                    typeval= 'proc';
+                    causetype='Process';
+                  }
+                  if(processStyle == 'none')
+                  {
+                    typeval='prod';
+                    causetype='Product';
+                  }
+                  type = typeval + type;
+                  if('{!type}' == 'defcsoql'){
+                    type='{!type}';
+                  }
+                    q = params.term;
+                    qsosl = "Find '" + params.term + "*'";
+                  }
+                 
+                  var ps = {
+                      q: q,
+                      type: type,
+                      f: 'Id,{!queryfields}',
+                      qt: '{!querytable}',
+                      o: '{!queryorderby}',
+                      qsearchterm: params.term,
+                      qsosl: qsosl,
+                      filter: '{!filter}',
+                      filtervalue: '{!filtervalue}',
+                      id: id,
+                      tou: '{!typeofuser}',
+                      causetype:causetype
+                  };
+                 
+                  return ps;
+       },     
+       processResults: function (data, page) {
+
+            return {
+                results: $.map(data, function (item) {
+                    var elementArray = "{!queryfields}".split(/[, ]/);                    
+                    // Escape all fields
+                    for(var n=0; n<elementArray.length; n++)
+                    {
+                        item[elementArray[n]] = escapeHtml(item[elementArray[n]]);
+                    }
+                    return {
+                        text: item.Name,
+                        id: ('{!type}'=='nccapa')?item.Name:item.Id,
+                        item: item
+                    }
+                })
+            };
+    },
+    
+    cache: true
+    },
+    placeholder: '{!placeholder}',
+    escapeMarkup: function (markup) { return markup; },
+    templateResult: {!FieldId}_{!formatResult},
+    templateSelection: {!FieldId}_{!formatSelection},
+    allowClear: {!IF(multiple, false, allowClear)}
+   
+
+  });
+  
+});
+  
+  });
+  
+</script>
+<apex:outputpanel layout="block" rendered="{!multiple}">
+<select id="{!FieldId}" name="{!IF(ISBLANK(FieldName), FieldId, FieldName)}" class="multiple form-control {!IF(Required, 'required', '')}" multiple="multiple" style="width:{!width};" data-id="{!dataid}">
+<apex:componentbody />
+</select>
+<div class="help-block with-errors" id="{!FieldId}_error"></div>
+</apex:outputpanel>
+
+
+<apex:outputpanel layout="block" rendered="{!not(multiple)}">
+<select id="{!FIeldId}" name="{!IF(ISBLANK(FieldName), FieldId, FieldName)}" class="form-control {!IF(Required, 'required', '')}" style="width:{!width};" data-id="{!dataid}">
+</select>
+<div class="help-block with-errors" id="{!FieldId}_error"></div>
+</apex:outputpanel>
+
+
+</apex:component>

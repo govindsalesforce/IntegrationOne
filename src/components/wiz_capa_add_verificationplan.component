@@ -1,0 +1,322 @@
+<apex:component controller="Component_Handler" extensions="QC_custom_settings">
+    <apex:attribute name="GTRecord" type="General_Task__c" Description="General Task Record" required="true" assignTo="{!effectivenessReview}"/>
+    <apex:attribute name="divId"  description="Holds the id value for div" type="String" required="true" />
+    <apex:attribute name="capaid" type="CAPA__c" required="true" description="capa"/>
+    <apex:attribute name="efvpdueDate"  description="Holds the id value for due date" type="String" required="true" />
+    <apex:attribute name="efvplanStatement"  description="Holds the id value for actionplan completion comment" type="String" required="true" />
+    <apex:attribute name="isLock" description="weatenr the record is lock" type="boolean" required="true"/>
+    <input type="hidden" value="{!VerificationPlanData}"/>
+    <script>
+    $( document ).ready(function() {
+        $("#effectiveVerificationPlanSection").hide(); 
+        $("#EVF_button").hide();
+        $("#{!divId}").hide();
+        var length = $("#effectiveVerificationPlanSection>div").length;
+        if(length>=1){
+            $("#effectiveVerifivation0").hide();
+            assignedEfvpDynamicIds();
+            disableEfvpDiv();
+        }else{
+            $("#effectiveVerifivation0").prependTo( "#effectiveVerificationPlanSection" ).show();
+            $("#effectiveVerifivation0").find('a').eq(2).hide();
+            //disableEfvpDiv();
+        }
+        if($('#Add_Effectiveness_verificiation__c').is(':checked')){
+            $("#effectiveVerificationPlanSection").show(); 
+            $("#EVF_button").show();
+        }else{
+        	$("#effectiveVerificationPlanSection").hide();
+            $("#EVF_button").hide();
+        }
+    });
+    
+    function evfEnable(ele){
+        if(ele.checked){                                               
+            //$("#effectiveVerifivation0").show();
+            $("#effectiveVerificationPlanSection").show(); 
+            $("#EVF_button").show();
+        }
+        if(!ele.checked){                                               
+            $("#effectiveVerificationPlanSection").hide();
+            //$("#effectiveVerifivation0").hide();
+            $("#EVF_button").hide();
+        }
+    }
+    
+    function addEffectVerifyPlan(){
+        if(efvPlanValidation()){
+            assignCancelEfvPlan();
+           	$("#{!divId}").clone().prependTo("#effectiveVerificationPlanSection").show();
+            assignedEfvpDynamicIds();   
+        //disableEfvpDiv();
+        }
+    }
+    
+    function assignCancelEfvPlan(){
+        var id_start = 0,divId;
+        $("#effectiveVerificationPlanSection > div").each(function(){
+            divId = '{!divId}'+ (id_start++);
+            $("#"+divId).find('a').eq(2).show();
+        });
+    }
+    
+    function assignedEfvpDynamicIds(){
+        var selectId,length,dueDateVal,compDateVal;
+        var splitSelectedOptions = new Array();
+        var id_start = 0;
+        $("#effectiveVerificationPlanSection>div").each(function() {
+            var divId= '{!divId}' + (id_start++);
+            $(this).attr('id',divId);
+            $('.usetwentyfour').remove(); //added
+            var findDiv = $("#"+divId+">div").find('div').eq(1).find('div'); 
+            $("#"+divId+">div>div>h4 ").find('a').eq(0).attr('href','#'+divId+'href');
+            //$("#"+divId+">div>div>h4 ").find('a').eq(1).attr('href','#'+divId+'href');
+            $("#"+divId+">div>div>h4 ").find('a').eq(2).attr('href','#'+divId+'href');
+            $("#"+divId+">div>div>h4 ").find('a').eq(3).attr('href','#'+divId+'href');
+            $("#"+divId+">div").find('div').eq(1).attr('id',divId+'href');
+            findDiv.eq(0).attr('id',divId+'panel');
+            findDiv.eq(1).attr('id',divId+'planStatement'+(id_start));
+            findDiv.eq(1).find('textarea').attr('id',divId+'stmt');
+            findDiv.eq(1).find('div').eq(0).attr('id',divId+'stmt'+'_error');
+            var efvpchid = $(this).find('.hiddenefvpid input').attr('id',divId+'_efvpchid');
+            
+        });
+    }
+    
+    function disableEfvpDiv(){
+    	var loggedInUser = "{!JSENCODE($User.id)}";
+        var profilename = "{!JSENCODE($Profile.Name)}";
+        var gtOwner= "{!JSENCODE(GTRecord.Ownerid)}";
+        var capaOwner = "{!capa.Owner}";
+        var gtStatus = "{!JSENCODE(GTRecord.Status__c)}";
+        var gtChangefieldapprovalstatus = "{!JSENCODE(GTRecord.ChangeFieldApprovalStatus__c)}";
+        var id_start = 0,cancel;
+        if(gtStatus == 'Closed' || gtStatus == 'Void' || gtStatus == 'Pending Approval' || gtChangefieldapprovalstatus =='Pending' || gtStatus == 'Pending ActionPlan'){
+            $("#effectverifyplanbuttonid").attr('disabled',true);
+            $("#effectiveVerificationPlanSection > div").each(function(){
+                var divId = '{!divId}'+ (id_start++);
+                $("#"+divId+" *").attr("disabled","true");
+                $("#"+divId+" a").eq(0).removeAttr("disabled");	
+                $("#"+divId+">div>div>h4 ").find('a').eq(2).hide();
+                $("#"+divId+">div>div>h4 ").find('a').eq(3).hide();
+            });
+        }
+        /*$("#effectiveVerificationPlanSection > div").each(function(){
+            $("div[id$='_error']").empty();
+            var divId = '{!divId}'+ (id_start++);
+            $("#"+divId+" *").attr("disabled","true");
+            var aText = $("#"+divId).find('a').eq(3).text();
+            if(aText == 'Cancel'){
+                $("#"+divId).find('a').eq(3).text('');
+            }
+            $("#"+divId).find('a').eq(0).removeAttr("disabled");
+            $("#"+divId).find('a').eq(2).removeAttr("disabled");
+            $("#"+divId).find('a').eq(3).removeAttr("disabled");
+            
+        });*/
+    }
+    
+    function cancelEfvpDiv(id){
+        $("#"+id).remove();
+        assignedEfvpDynamicIds();
+    }
+    
+    function efvPlanValidation(){
+        var isValid = true;
+        var start = 0;
+        var divId,findDiv,efvpPlanStatement,efvpDueDate;
+        $("#effectiveVerificationPlanSection>div").each(function(){
+            divId = 'effectiveVerifivation'+ (start++);
+            findDiv = $("#"+divId+">div").find('div').eq(1).find('div');
+            console.log('efvPlanValidation findDiv  div  '+findDiv);
+            console.log(findDiv);
+            console.log('efvPlanValidation findDiv  id  '+$(findDiv).attr('id'));
+            findDiv.eq(1).find('div').empty(); 
+            efvpPlanStatement = findDiv.eq(1).find('textarea').val();//5 
+            if(efvpPlanStatement==null || efvpPlanStatement==''){
+                isValid = false;
+                findDiv.eq(1).find('div').eq(0).append('This Field is Required').css('color','red');
+            }
+            return isValid;
+        });
+        return isValid;
+    }
+    
+    function deleteEfvPlan(id){
+        var loggedInUser = "{!JSENCODE($User.id)}";
+        var capaOwner = "{!capa.Owner}";
+        var gtStatus = "{!JSENCODE(GTRecord.Status__c)}";
+        var gtChangefieldapprovalstatus = "{!JSENCODE(GTRecord.ChangeFieldApprovalStatus__c)}";
+        if( loggedInUser != capaOwner || gtStatus == "Pending ActionPlan" || gtStatus == "Closed" || gtStatus == "Void" || gtStatus == "Pending Approval" || gtChangefieldapprovalstatus == "Pending"){
+            return false;
+        }
+        
+        Visualforce.remoting.Manager.invokeAction(
+            // @RemoteAction
+            '{!$RemoteAction.Component_Handler.deleteEffectivenessVerificationPlan}',id,
+            // Callback
+            function(result, event){
+                    if(result){
+                        console.log('Sucessfully..Deleted');
+                        window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE(GTRecord.Id)}&type=EffectivenessReview';
+                    } 
+                    else{
+                        console.log('fails to delete');
+                    }
+                });
+    }
+    
+    function editEfvPlan(loc,id){
+        var status = "{!JSENCODE(effectivenessReview.Status__c)}";
+        var changeFieldStatus = "{!JSENCODE(effectivenessReview.ChangeFieldApprovalStatus__c)}";
+        var loggedInUser = "{!JSENCODE($User.id)}";
+        var capaOwner = "{!capa.Owner}";
+        var saveSubTaskFlag = true;
+        var gtStatus = "{!JSENCODE(GTRecord.Status__c)}";
+        var gtChangefieldapprovalstatus = "{!JSENCODE(GTRecord.ChangeFieldApprovalStatus__c)}"
+        //alert('status...'+status); 
+        if((loggedInUser == capaOwner && gtStatus == "Pending ActionPlan") || gtStatus == "Closed" || gtStatus == "Void" || gtStatus == "Pending Approval" || gtChangefieldapprovalstatus == "Pending"){
+            return false;
+        }
+        if($(loc).attr('disabled') && (status == 'Closed' || status == 'Pending Approval' || changeFieldStatus =='Pending' || status == 'Pending ActionPlan') && loggedInUser != assignedUser){
+            return false;
+        }else if(loggedInUser == capaOwner){
+                 $("#"+id+" *").removeAttr("disabled");
+            }
+        }
+    </script>
+    
+    <div class="col-md-12">
+        <div class="well" style="padding:6px;margin-bottom:10px;">
+            <div class="row">
+                <div class="form-group">
+                    <div class="col-md-6 checkbox">
+                        <label>
+                            <c:wiz_checkbox FieldId="Add_Effectiveness_verificiation__c" disabled="{!OR(GTRecord.Status__c=='Pending Approval',GTRecord.Status__c=='Closed',GTRecord.Status__c=='Pending ActionPlan',GTRecord.ChangeFieldApprovalStatus__c == 'Pending')}" FieldName="Add_Effectiveness_verificiation__c" initvalue="{!if(GTRecord.Add_Effectiveness_verificiation__c==true,'Yes','No')}" ObjectName="General_Task__c" onChangeFunction="evfEnable(this);"></c:wiz_checkbox><b>Add Verification Plan</b>
+                        </label>
+                    </div>
+                    <apex:outputpanel layout="none" >
+                        <div class="col-md-6 text-right" id="EVF_button" >
+                            <button id="effectverifyplanbuttonid" class="btn btn-primary navbar-right" onclick="addEffectVerifyPlan();"> <span class="fa fa-plus-square-o"></span> Add </button>
+                        </div>
+                    </apex:outputpanel>
+                </div>
+            </div>
+        </div>
+        
+    </div>   
+    <div id="effectiveVerificationPlanSection" class="col-md-12"> 
+        <apex:repeat value="{!verificationPlans}" var="efvpsm">
+            <div class="{!efvpsm.Id}" id="{!efvpsm.Id}" role="tablist" aria-multiselectable="true">
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="headingOne">
+                        <h4 class="panel-title">
+                            <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" data-parent="#accordion" href="#{!efvpsm.Id}href" aria-expanded="true" aria-controls="collapse0">
+                                <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"> </span>
+                            </a>
+                            
+                            <a data-toggle="" href="#{!JSENCODE(efvpsm.Id)}href"> Verification Plan : <apex:outputLabel >({!JSENCODE(LEFT(efvpsm.Plan_Statement__c,25))}....)</apex:outputLabel> </a>
+                            <apex:outputPanel >
+                                <apex:outputPanel >
+                                    <a href="#{!JSENCODE(efvpsm.Id)}href" class="btn-link pull-right" onclick="deleteEfvPlan('{!JSENCODE(efvpsm.Id)}');"> Delete</a>
+                                    <a href="#{!JSENCODE(efvpsm.Id)}href" class="btn-link pull-right" onclick="editEfvPlan(this,this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute('id'))"></a>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </h4>
+                    </div>
+                    <div id="{!efvpsm.Id}href" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne" aria-expanded="true">
+                        <div class="panel-body">
+                            <!--<c:wiz_field FieldLabel="Due Date" JSId="due_date" Required="false" Wide="false">
+                                <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"  FieldId="Due_Date"  initdate="{!efvpsm.Due_Date__c}" updateable="true"/>
+                            </c:wiz_field>-->
+                            
+                            <div class="wiz-fields-wide col-md-12">
+                                <label for="Plan Statement"><span class="mandatory">*</span> Plan Statement:</label>
+                                <textarea id="efvPlanInst{!efvpsm.Id}" style="overflow: auto; height: 100px;" type="text" class="form-control" required="true" maxlength="255"  oninput="maxlengthvalidation(this)">{!JSENCODE(efvpsm.Plan_Statement__c)}</textarea>
+                                <div id="{!efvpsm.Plan_Statement__c}_error" class="help-block with-errors"></div>
+                                <script type="text/javascript">
+                                //    $('#efvPlanInst{!efvpsm.Id}').html('{!JSENCODE(efvpsm.Plan_Statement__c)}');
+                                </script>
+                                
+                            </div>
+                            
+                            <div class="hiddenefvpid">
+                                <input  id="efvpid" name="efvpid" type="hidden" value="{!efvpsm.Id}" />
+                            </div>
+                            
+                           
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </apex:repeat>
+    </div>
+    
+    <div class="" id="{!divId}" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingOne">
+                <h4 class="panel-title">
+                    <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" data-parent="#accordion" href="#{!divId}href" aria-expanded="true" aria-controls="collapse0">
+                        <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"> </span>
+                    </a>
+                    
+                    <a data-toggle="" href=""> Verification Plan </a>
+                    <a href="#{!divId}href" class="btn-link pull-right" onclick=""></a>
+                    <a href="#{!divId}href" class="btn-link pull-right" onclick="cancelEfvpDiv(this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));">Cancel</a>
+                    
+                </h4>
+            </div>
+            <div id="{!divId}href" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne" aria-expanded="true">
+                <div class="panel-body" id="{!divId}panel">
+                    <!--<c:wiz_field FieldLabel="Due Date" JSId="efvpdue_date" Required="false" Wide="false">
+                        <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"  FieldId="efvpDue_Date"  initdate="{!IF(NOT(ISBLANK(effectivenessReview.New_Due_Date__c)),effectivenessReview.New_Due_Date__c,effectivenessReview.Due_Date__c)}" updateable="true"/>
+                    </c:wiz_field>-->
+                    
+                    <div class="wiz-fields-wide col-md-12" id="planDetails">
+                        <label><span class="mandatory">*</span> Plan Details: </label>
+                        <textarea id="planDetailsTextArea" type="text" class="form-control" required="true" maxlength="255"  oninput="maxlengthvalidation(this)"></textarea>
+                        <div id="planDetailsTextArea_errors" class="help-block with-errors"></div>
+                    </div>
+                    
+                    <div class="hiddenefvpid">
+                        <input  id="hiddenefvpid" name="hiddenefvpid" type="hidden" value='null' />
+                    </div> 
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="" id="effectiveVerifivation0" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingOne">
+                <h4 class="panel-title">
+                    <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" data-parent="#accordion" href="#effectiveVerifivationPlan0collapse" aria-expanded="true" aria-controls="collapse">
+                        <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                    </a>
+                    <a data-toggle="" href=""> Verification Plan </a>
+                    <a href="#effectiveVerifivationPlan0collapse" class="btn-link pull-right" onclick="cancelDiv(this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));"> Cancel </a>
+                    <a href="#effectiveVerifivationPlan0collapse" class="btn-link pull-right" onclick=""> </a>
+                </h4>
+            </div>
+            <div id="effectiveVerifivationPlan0collapse" class="panel-collapse out collapse in" role="tabpanel" aria-labelledby="headingOne" aria-expanded="true"> 
+                <div class="panel-body">
+                   <!-- <c:wiz_field FieldLabel="Due Date" JSId="effectiveVerifivationPlan0DueDate" Required="false" Wide="false">
+                        <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"  FieldId="effectiveVerifivationPlan0DueDate"  initdate="{!IF(NOT(ISBLANK(effectivenessReview.New_Due_Date__c)),effectivenessReview.New_Due_Date__c,effectivenessReview.Due_Date__c)}" updateable="true"/>
+                    </c:wiz_field>--->
+                    
+                    <div class="wiz-fields-wide col-md-12" id="effectiveVerifivationPlan0Statement">
+                        <label><span class="mandatory">*</span> Plan Details:</label>
+                        <textarea id="effectiveVerifivationPlan0stmt" type="text" class="form-control" required="true" maxlength="255"  oninput="maxlengthvalidation(this)"></textarea>
+                        <div id="effectiveVerifivationPlan0stmt_error" class="help-block with_errors"></div>
+                    </div>
+                    
+                    <div class="hiddenefvpid">
+                        <input  id="effectiveVerifivation0_efvpchid" name="hiddenefvpid" type="hidden" value='null' />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</apex:component>

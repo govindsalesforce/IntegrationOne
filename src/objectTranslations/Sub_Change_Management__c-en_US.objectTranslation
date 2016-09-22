@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Sub Change Management</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Sub Change Management</value>
+    </caseValues>
+    <fields>
+        <label><!-- Action Plan Due Date --></label>
+        <name>Action_Plan_Due_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- AssignedOwner --></label>
+        <name>AssignedOwner__c</name>
+    </fields>
+    <fields>
+        <label><!-- Change Management --></label>
+        <name>Change_Management__c</name>
+        <relationshipLabel><!-- Sub Change Management --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Change Managenent Owner Name --></label>
+        <name>Change_Managenent_Owner_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Current Rev --></label>
+        <name>Current_Rev__c</name>
+    </fields>
+    <fields>
+        <label><!-- Document Name --></label>
+        <name>Document_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Document Profile --></label>
+        <name>Document_Profile_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Document Profile Owner Name --></label>
+        <name>Document_Profile_Owner_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Document Number --></label>
+        <name>Document_Profile__c</name>
+        <relationshipLabel><!-- Sub Change Management --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Document Specific Changes --></label>
+        <name>Document_Specific_Changes__c</name>
+    </fields>
+    <fields>
+        <label><!-- General Task Due Date --></label>
+        <name>General_Task_Due_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- General Task --></label>
+        <name>General_Task__c</name>
+        <relationshipLabel><!-- Sub Change Management --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- New Rev --></label>
+        <name>New_Rev__c</name>
+    </fields>
+    <fields>
+        <label><!-- Owner --></label>
+        <name>Owner__c</name>
+    </fields>
+    <fields>
+        <label><!-- Relation --></label>
+        <name>Relation__c</name>
+    </fields>
+    <fields>
+        <label><!-- Relation --></label>
+        <name>Relations__c</name>
+    </fields>
+    <fields>
+        <label><!-- Status --></label>
+        <name>Status__c</name>
+    </fields>
+    <fields>
+        <label><!-- Type --></label>
+        <name>Type__c</name>
+    </fields>
+    <fields>
+        <label><!-- isDocCreated --></label>
+        <name>isDocCreated__c</name>
+    </fields>
+    <fields>
+        <label><!-- isPrimary --></label>
+        <name>isPrimary__c</name>
+    </fields>
+    <layouts>
+        <layout>Sub Change Management Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <startsWith>Consonant</startsWith>
+</CustomObjectTranslation>

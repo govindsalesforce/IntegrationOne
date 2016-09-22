@@ -1,0 +1,71 @@
+<!---  
+
+v1.0.1(SB)   added droupup for clear Adhoc tasks
+
+
+
+--->
+
+<apex:component >
+    <apex:attribute name="currentTask" type="General_Task__c" description="sobjects" default="{'sobjectType': 'General_Task__c'}"/>
+    <apex:attribute name="tempTask" type="Decimal" description="sobjects" default="0"/>
+    <apex:attribute name="nextid" type="id" description="objectid" default=""/>
+    <apex:attribute name="subTask" type="General_Task__c[]" description="sobjects" default="{'sobjectType': 'General_Task__c'}"/>
+    <apex:attribute name="currentPosition" type="Decimal" description="sobjects" required="true"/>
+   <apex:variable value="{!0}" var="isclosure"/>
+    <apex:variable value="{!0}" var="counter"/>
+    <apex:repeat value="{!subTask}" var="task" >
+      
+        <apex:outputPanel rendered="{!currentPosition<task.Sequence_Position__c}">
+            <apex:outputPanel rendered="{!counter==0}">
+             <apex:variable value="{!counter+1}" var="counter"/>
+             <apex:variable value="{!task.Sequence_Position__c}" var="tempTask"/>
+             <apex:variable value="{!task.id}" var="nextid"/>
+            </apex:outputPanel>
+            
+           
+            <apex:outputPanel rendered="{!task.Sequence_Position__c<tempTask}">
+                <apex:variable value="{!task.Sequence_Position__c}" var="tempTask"/>
+                <apex:variable value="{!task.id}" var="nextid"/>
+            </apex:outputPanel>
+        </apex:outputPanel>
+    </apex:repeat>
+    <apex:variable value="{!0}" var="counter"/>
+    <apex:repeat value="{!subTask}" var="tsk">
+    <apex:outputPanel rendered="{!tsk.Sequence_Position__c==tempTask}">
+        <apex:variable value="{!counter+1}" var="counter"/>
+    </apex:outputPanel>
+    <apex:outputPanel rendered="{!AND(tsk.Sequence_Position__c==tempTask,tsk.RecordType.Name=='Closure')}">
+        <apex:variable value="{!isclosure+1}" var="isclosure"/>
+    </apex:outputPanel>        
+    </apex:repeat>
+    
+    
+    <apex:outputPanel rendered="{!AND(counter==1)}">
+        <button type="button" id="nextbtn" onclick="window.location='/{!nextid}'" class="btn btn-primary dont-allow-multiple-clicks"><span class="fa fa-step-forward"></span> Next </button>
+    </apex:outputPanel>
+    <!--
+    <apex:outputPanel rendered="{!AND(counter==1,isclosure==1)}">
+        <button type="button" id="nextbtn" onclick="window.location='/apex/capa_closure?id={!$currentpage.parameters.id}'" class="btn btn-primary dont-allow-multiple-clicks"><span class="fa fa-step-forward"></span> Next </button>
+    </apex:outputPanel>-->
+    <apex:outputPanel rendered="{!counter==2}">
+        <!-- v1.0.1 satish start --->
+        <div class="btn-group dropup"  >
+         <!-- v1.0.1 satish end --->   
+            <button type="button" id="nextbtn" class="btn btn-primary dont-allow-multiple-clicks"><span class="fa fa-step-forward"></span> Next </button>
+            <button type="button" id="butdropdwn" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="caret"></span>
+                <span class="sr-only">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu" >
+                <apex:repeat value="{!subTask}" var="task" >
+                    <apex:repeat rendered="{!tempTask==task.Sequence_Position__c}" value="{!subTask[0]}" var="as">
+                        <li>
+                            <a href='/{!task.id}'>{!task.AdhocTask_Title__c}</a>
+                        </li>
+                    </apex:repeat>
+                </apex:repeat>
+            </ul>
+        </div>
+    </apex:outputPanel>
+</apex:component>

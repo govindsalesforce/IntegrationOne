@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Document Type</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Document Types</value>
+    </caseValues>
+    <fields>
+        <label><!-- Authorised Entity Groups Name --></label>
+        <name>Authorised_Entity_Groups_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Authorised Entity Groups --></label>
+        <name>Authorised_Entity_Groups__c</name>
+    </fields>
+    <fields>
+        <label><!-- Authorised Entity Users Name --></label>
+        <name>Authorised_Entity_Users_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Authorised Entity Users --></label>
+        <name>Authorised_Entity_Users__c</name>
+    </fields>
+    <fields>
+        <label><!-- Automatically Expire Previous Revision --></label>
+        <name>Automatically_Expire_Previous_Revision__c</name>
+    </fields>
+    <fields>
+        <label><!-- Business Unit --></label>
+        <name>Business_Unit__c</name>
+        <picklistValues>
+            <masterLabel>BU1</masterLabel>
+            <translation><!-- BU1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>BU2</masterLabel>
+            <translation><!-- BU2 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Bu3</masterLabel>
+            <translation><!-- Bu3 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Bu4</masterLabel>
+            <translation><!-- Bu4 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Categories --></label>
+        <name>Categories__c</name>
+        <picklistValues>
+            <masterLabel>Cat1</masterLabel>
+            <translation><!-- Cat1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Category1</masterLabel>
+            <translation><!-- Category1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Category2</masterLabel>
+            <translation><!-- Category2 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Category3</masterLabel>
+            <translation><!-- Category3 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Category4</masterLabel>
+            <translation><!-- Category4 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Category5</masterLabel>
+            <translation><!-- Category5 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Yes</masterLabel>
+            <translation><!-- Yes --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Description --></label>
+        <name>Description__c</name>
+    </fields>
+    <fields>
+        <label><!-- Document Owner --></label>
+        <name>Document_Owner__c</name>
+    </fields>
+    <fields>
+        <label><!-- Document Status --></label>
+        <name>Document_Status__c</name>
+    </fields>
+    <fields>
+        <label><!-- Enable Security --></label>
+        <name>Enable_Security__c</name>
+    </fields>
+    <fields>
+        <label><!-- Expiration Date --></label>
+        <name>Expiration_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Expire After(In days) --></label>
+        <name>Expire_After__c</name>
+    </fields>
+    <fields>
+        <label><!-- Followers --></label>
+        <name>Followers__c</name>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Footer --></label>
+        <name>Footer__c</name>
+    </fields>
+    <fields>
+        <label><!-- Grace Period for Release(In days) --></label>
+        <name>Grace_Period_for_Release__c</name>
+    </fields>
+    <fields>
+        <label><!-- Header --></label>
+        <name>Header__c</name>
+    </fields>
+    <fields>
+        <label><!-- Initiating Site --></label>
+        <name>Initiating_Site_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Initiating Site --></label>
+        <name>Initiating_Site__c</name>
+        <relationshipLabel><!-- Document Types --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Left(vertically) --></label>
+        <name>Left_vertically__c</name>
+    </fields>
+    <fields>
+        <label><!-- Number Scheme --></label>
+        <name>Number_Scheme_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Number Scheme --></label>
+        <name>Number_Scheme__c</name>
+        <relationshipLabel><!-- Document Types --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Owner --></label>
+        <name>Owner_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Protected Draft --></label>
+        <name>Protected_Draft__c</name>
+    </fields>
+    <fields>
+        <label><!-- Reason --></label>
+        <name>Reason__c</name>
+    </fields>
+    <fields>
+        <label><!-- Release Date --></label>
+        <name>Release_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Retention Duration(In days) --></label>
+        <name>Retention_Duration__c</name>
+    </fields>
+    <fields>
+        <label><!-- Right(vertically) --></label>
+        <name>Right_vertically__c</name>
+    </fields>
+    <fields>
+        <label><!-- Secondary Format --></label>
+        <name>Secondary_Format__c</name>
+        <picklistValues>
+            <masterLabel>Autosync</masterLabel>
+            <translation><!-- Autosync --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Manual</masterLabel>
+            <translation><!-- Manual --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Effectiveness Review In Advance(In days) --></label>
+        <name>Start_Effectiveness_Review_In_Advance__c</name>
+    </fields>
+    <fields>
+        <label><!-- Status --></label>
+        <name>Status__c</name>
+        <picklistValues>
+            <masterLabel>Active</masterLabel>
+            <translation><!-- Active --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Inactive</masterLabel>
+            <translation><!-- Inactive --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Supersede Previous Revision --></label>
+        <name>Supersede_Previous_Revision__c</name>
+    </fields>
+    <fields>
+        <label><!-- Title --></label>
+        <name>Title__c</name>
+    </fields>
+    <fields>
+        <label><!-- Valid Duration --></label>
+        <name>Valid_Duration__c</name>
+    </fields>
+    <fields>
+        <label><!-- Viewonly Entity Groups Name --></label>
+        <name>Viewonly_Entity_Groups_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Viewonly Entity Groups --></label>
+        <name>Viewonly_Entity_Groups__c</name>
+    </fields>
+    <fields>
+        <label><!-- Viewonly Entity Users Name --></label>
+        <name>Viewonly_Entity_Users_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Viewonly Entity Users --></label>
+        <name>Viewonly_Entity_Users__c</name>
+    </fields>
+    <fields>
+        <label><!-- Watermark Text --></label>
+        <name>Watermark_Text__c</name>
+    </fields>
+    <fields>
+        <label><!-- isEditable --></label>
+        <name>isEditable__c</name>
+    </fields>
+    <layouts>
+        <layout>Document Type Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <startsWith>Consonant</startsWith>
+</CustomObjectTranslation>

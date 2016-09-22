@@ -1,0 +1,749 @@
+<!--
+v1.0     Qualityze Inc(GRT)          08-JULY-2016     Initial Version.
+This page includes Document Type Header belonging to the Document Type.
+
+v1.1      Qualityze Inc(ST)          19-AUG-2016      For Void DocumentProfile
+v1.2      Qualityze Inc(ST)          19-AUG-2016      For Audit Trail
+v1.3      Qualityze Inc(BK)          25-AUG-2016      For change field Doc Menu 
+v1.4      Qualityze Inc(ST)          09-SEP-2016      For PRINT
+-->
+<apex:component controller="Component_Handler" extensions="QC_custom_settings">
+    <apex:attribute name="docrecordID" type="string" description="Doc Header record" assignto="{!doc_Id}"/>
+    
+    
+    <script>
+    $( document ).ready(function() {                    
+        var followers ='{!JSENCODE(doc.Followers__c)}';
+        console.log('followers  '+followers);
+        if(followers.indexOf('{!$User.Id}') == -1){
+            console.log('Not a follower');
+            $('.followBtn').attr('title','Follow');
+            $('.followBtn').html('<span class="fa fa-plus-circle"></span>');
+            $(".followBtn").click(function() {
+                console.log('inside click');
+                followDocument();
+            });
+            
+        }
+        else{
+            console.log('Follower');
+            $('.followBtn').attr('title','Un Follow');
+            $('.followBtn').html('<span class="fa fa-minus-circle"></span>');
+            $(".followBtn" ).click(function() {
+                unfollowDocument();
+            });
+        } 
+    });
+    
+    function followDocument(){
+        
+        Visualforce.remoting.Manager.invokeAction(
+            // @RemoteAction
+            '{!$RemoteAction.Component_Handler.followDocument}',                                 
+            '{!doc_Id}','{!$User.Id}',
+            
+            // Callback
+            function(result, event){
+                if(result=='0'){
+                    location.reload();
+                }
+                
+            },
+            
+            {escape: true}
+        );
+    }
+    function unfollowDocument(){
+        Visualforce.remoting.Manager.invokeAction(
+            // @RemoteAction
+            '{!$RemoteAction.Component_Handler.unfollowDocument}',
+            
+            '{!doc_Id}','{!$User.Id}',
+            
+            
+            function(result, event){
+                
+                if(result=='0'){
+                    location.reload();
+                }
+                
+            },
+            
+            {escape: true}
+        );
+    }
+    
+    function clearDesErrors(opentasks,actionType,reasondesc){
+        console.log('opentasks: '+opentasks+' actionType: '+actionType +'   reasondesc: '+reasondesc);
+        var erroractionid = '#'+reasondesc+'_error'
+        $(erroractionid).empty();
+        $('#'+reasondesc).val('');
+        $("#unameFrtask_"+actionType+"_error").empty();
+        $("#unameFrtask_"+actionType).val('');
+        $("#pwdFrtask_"+actionType+"_error").empty();
+        $("#pwdFrtask_"+actionType).val('');
+    }
+    
+    function VerifyDocData(opentasks,actionType,reasondesc){
+        console.log('opentasks: '+opentasks+' actionType: '+actionType +'   reasondesc: '+reasondesc);
+        var erroractionid = '#'+reasondesc+'_error';
+        var actionid ='#'+reasondesc;
+        $(erroractionid).empty();
+        $("#unameFrtask_"+actionType+"_error").empty();
+        $("#pwdFrtask_"+actionType+"_error").empty();
+        var tskdescription = $(actionid).val();
+        
+        console.log("after errorempty = " +tskdescription);
+        console.log("Before validation ="+tskdescription);
+        
+        if(tskdescription ==''){
+            console.log("tskdescription is empty");
+            $(erroractionid).html( "<p>This Field is Required</p>");
+            return false;
+        }
+        
+        $(opentasks).attr('disabled', true);
+        $("#resettskBtn_"+actionType).attr('disabled',true);
+        
+        if({!DigitalSignatureNeeded}){
+            console.log('digital signature needed');
+            var uname=$("#unameFrtask_"+actionType).val();
+            console.log(uname);
+            if(uname!= '{!JSENCODE($User.Username)}'){              
+                $("#unameFrtask_"+actionType+"_error").html( "<p>Invalid Username</p>");
+                $(opentasks).attr('disabled', false);
+                $("#resettskBtn_"+actionType).attr('disabled',false);              
+                isValid = false;                
+            }
+            
+            if(!uname){
+                //alert('Please enter username');
+                $("#unameFrtask_"+actionType+"_error").html( "<p>Please enter username</p>");
+                $(opentasks).attr('disabled', false);
+                $("#resettskBtn_"+actionType).attr('disabled',false);
+                return false;
+            }
+            
+            var pwd=$("#pwdFrtask_"+actionType).val();
+            
+            if(!pwd){
+                $("#pwdFrtask_"+actionType+"_error").html( "<p>Please enter password..</p>");
+                $(opentasks).attr('disabled', false);
+                $("#resettskBtn_"+actionType).attr('disabled',false);
+                return false;
+            }
+            
+            Visualforce.remoting.Manager.invokeAction(
+                // @RemoteAction
+                '{!$RemoteAction.Component_Handler.doVerify}',pwd,function(result, event){
+                    console.log('Inside verifypassword remote function');
+                    if(event.status){                            
+                        if(result){
+                            
+                            if(actionType  == "Void")
+                            {
+                                console.log('call updateDocProfileStatus() method');
+                                updateDocProfileStatus();
+                            } 
+                            
+                            else if(actionType == "Current")
+                            {
+                                console.log('call MakeDocCurrent() method');
+                                MakeDocCurrent();
+                            }
+                        }
+                        
+                        else{
+                            $(opentasks).attr('disabled',false);                              
+                            $("#pwdFrtask_"+actionType+"_error").html( "<p>Unable to verify password!</p>");
+                        }
+                    }
+                    
+                    else{
+                        $(opentasks).attr('disabled',false);                              
+                        $("#pwdFrtask_"+actionType+"_error").html( "<p>Unable to verify password!</p>");
+                    }
+                });           
+        }  //is digital signature brace ends
+        
+        else{
+            
+            if(actionType  == "Void")
+            {
+                console.log('call updateDocProfileStatus() method');
+                updateDocProfileStatus();
+            }             
+            else if(actionType == "Current")
+            {
+                console.log('call MakeDocCurrent() method');
+                MakeDocCurrent();
+            }            
+        }
+        
+    }  //VerifyTask tada brace ends
+    
+    function updateDocProfileStatus(){
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.Component_Handler.voidDocumentProfile}',"{!JSENCODE(doc.Id)}",$('#voidDPreason').val(),function(result, event){
+            if(event.status){
+                console.log(result);
+                if(result)
+                {
+                    location.reload();  
+                }else{ 
+                    console.log('!Error');
+                }
+            }  
+        });
+    }
+    
+    function MakeDocCurrent(){
+        var currentpagename=$('#page').val();
+        
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.Component_Handler.DocmadeCurrent}',"{!DOC.id}",$('#voidreasonforchange').val(),function(result, event) {
+            
+            if(event.status){
+                console.log(result);
+                if(result){                
+                    window.location.href = '/apex/DocumentProfile?id={!Doc.Id}&pg=doc_prof';  
+                }else{ 
+                    console.log('!Error');
+                }
+            }   
+        });
+        
+    }   
+    
+        /*----Document Revise and Temp story(Start)----*/
+        function nextChar(c) {
+            var u = c.toUpperCase();
+            if(isNumeric(u))
+            {
+                if(u.indexOf('.') > -1)
+                {
+                    var y = u+"";
+                    var num = y.slice(y.indexOf('.')+1, u.length);
+                    
+                    return y.slice(0,y.indexOf('.')+1) + (++num);
+                }
+                else{
+                    var y =parseInt(u);
+                    var num = ++y;
+                    return num;
+                }
+            }
+            else{
+                if (same(u,'Z')){
+                    var txt = '';
+                    var i = u.length;
+                    while (i--) {
+                        txt += 'A';
+                    }
+                    return (txt+'A');
+                } else {
+                    var p = "";
+                    var q = "";
+                    
+                    if(u.length > 1){
+                        p = u.substring(0, u.length - 1);
+                        q = String.fromCharCode(p.slice(-1).charCodeAt(0));
+                    }
+                    if(u.indexOf('.') > -1)
+                    { 
+                        var y=u+"";
+                        var num = y.slice(y.indexOf('.')+1, u.length);
+                        if(isNumeric(num)) // checking numeric condition after '.'
+                            return p.slice(0,y.indexOf('.')+1) + (++num);
+                        else
+                        { // executing alphabet condition after '.'
+                            var chlen = num.length;
+                            var charAppnd="";
+                            for(var i=1; i<=chlen;i++)
+                            { 
+                                charAppnd = charAppnd + nextLetter(num.slice(-1).charCodeAt(0));
+                                if((num.slice(-1).charCodeAt(0))==90 && i==chlen)
+                                    charAppnd =charAppnd + 'A';
+                            }
+                            return p.slice(0,y.indexOf('.')+1) + charAppnd;
+                        }
+                    }
+                    else{
+                        var l = u.slice(-1).charCodeAt(0);
+                        var z = nextLetter(l);
+                        if(z==='A'){ 
+                            return p.slice(0,-1) + nextLetter(q.slice(-1).charCodeAt(0)) + z;
+                        } else 
+                            return p + z;
+                    }
+                }
+            }
+        }
+    
+    function nextLetter(l){
+        if(l<90 && l!=46){
+            return String.fromCharCode(l + 1);
+        }
+        else{
+            return 'A';
+            
+        }
+    }
+    
+    function same(str,char){
+        var i = str.length;
+        while (i--) {
+            if (str[i]!==char){
+                return false;
+            }
+        }
+        return true;
+    }
+    /* checks whether given str is numeric or not*/
+    function isNumeric(str) {
+        var code, i, len,len1=0;
+        
+        for (i = 0, len = str.length; i < len; i++) {
+            code = str.charCodeAt(i);
+            if ((code > 47 && code < 58)||(code==46)) { 
+                len1++;
+            }
+        }
+        if(len==len1)
+            return true;
+        else
+            return false;
+    }    
+    
+    
+   var next;
+    
+    function showrevise(){
+        //alert("hello");
+        var r = "{!JSENCODE($CurrentPage.parameters.id)}";
+        var r2 = "{!JSENCODE(doc.name)}";
+        //alert(r2);
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.Component_Handler.revisecheck}',r,r2,
+                                                  function(result, event) {
+                                                      if(result == "true"){
+                                                          
+                                                          //alert("Record with status Draft already exists");
+                                                          showDialog(1,'Revised Document already exists');
+                                                      }else{
+                                                          var splitz=result.split("-");
+                                                          // alert(splitz[1]);
+                                                          next = nextChar(splitz[1]);
+                                                          //alert(next);
+                                                          
+                                                          
+                                                          
+                                                          var YESButtonInRedirectModalOnClick = function () {
+                                                              //window.location.href = '/apex/qlt_dashboard';
+                                                               if(!$('.dont-allow-multiple-clicks').attr('disabled')){
+                                                               $('.dont-allow-multiple-clicks').attr('disabled', true);
+                                                              
+                                                              var r3 = "{!JSENCODE($CurrentPage.parameters.id)}";
+                                                              //alert(r3);
+                                                              //next = nextChar(entry);
+                                                              //alert(next);
+                                                              
+                                                              Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.Component_Handler.revise}',r3,next,
+                                                                                                        function(result, event) {
+                                                                                                            //alert(result);
+                                                                                                            
+                                                                                                                window.location= '/apex/DocumentProfile?id='+result;
+                                                                                                           
+                                                                                                        });
+                                                                   }
+                                                          };
+                                                          var NOButtonInRedirectModalOnClick = function () {
+                                                              
+                                                          };
+                                                          $('#redirectDialog1 .btn-primary').bind( "click", YESButtonInRedirectModalOnClick);
+                                                          $('#redirectDialog1 .btn-default').bind( "click", NOButtonInRedirectModalOnClick);
+                                                          
+                                                          // Show the redirect dialog
+                                                          $('#redirectDialog1').modal('show');
+                                                          
+                                                          // Remove the onClick event
+                                                          $('#redirectDialog1').on('hidden.bs.modal', function () {
+                                                              $('#redirectDialog1 .btn-primary').unbind( "click", YESButtonInRedirectModalOnClick);
+                                                              $('#redirectDialog1 .btn-default').unbind( "click", NOButtonInRedirectModalOnClick);
+                                                          })                                 
+                                                          
+                                                      }
+                                                  }
+                                                 );
+    }
+    
+    
+    function showtemp(){
+        //alert('{!documentProfile.isTempRevise__c}');
+        //var TempOriginal = '{!documentProfile.isTempRevise__c}';
+        //alert("hello");
+        var r = "{!JSENCODE($CurrentPage.parameters.id)}";
+        var r2 = "{!JSENCODE(doc.name)}";
+        //alert(r2);
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.Component_Handler.tempcheck}',r,r2,
+                                                  function(result, event) {
+                                                      if(result == "true"){                                                             
+                                                          //alert("Record with status Draft already exists");
+                                                          showDialog(1,'Temporary Deviated document already exists');
+                                                      }else{
+                                                          var splitz=result.split("-");
+                                                          //alert(splitz);
+                                                          next = nextChar(splitz[1]);
+                                                          //alert(next);
+                                                          
+                                                          
+                                                          
+                                                          
+                                                          var YESButtonInRedirectModalOnClick = function () {
+                                                              if(!$('.dont-allow-multiple-clicks').attr('disabled')){
+                                                               $('.dont-allow-multiple-clicks').attr('disabled', true);
+                                                              var r4 = "{!JSENCODE($CurrentPage.parameters.id)}";
+                                                              //alert(r4);
+                                                              //next = nextChar(entry);
+                                                              //alert(next);
+                                                              
+                                                              Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.Component_Handler.temp}',r4,next,
+                                                                                                        function(result, event) {
+                                                                                                            //alert(result);
+                                                                                                            window.location= '/apex/DocumentProfile?id='+result;
+                                                                                                        });
+                                                                  }
+                                                          };
+                                                          var NOButtonInRedirectModalOnClick = function () {
+                                                              
+                                                          };
+                                                          $('#redirectDialog2 .btn-primary').bind( "click", YESButtonInRedirectModalOnClick);
+                                                          $('#redirectDialog2 .btn-default').bind( "click", NOButtonInRedirectModalOnClick);
+                                                          
+                                                          // Show the redirect dialog
+                                                          $('#redirectDialog2').modal('show');
+                                                          
+                                                          // Remove the onClick event
+                                                          $('#redirectDialog2').on('hidden.bs.modal', function () {
+                                                              $('#redirectDialog2 .btn-primary').unbind( "click", YESButtonInRedirectModalOnClick);
+                                                              $('#redirectDialog2 .btn-default').unbind( "click", NOButtonInRedirectModalOnClick);
+                                                          })
+                                                      }
+                                                  }
+                                                 );
+    }
+    
+    
+    $(document).ready(function() {
+        //alert('{!documentprofile.isTemp__c}');
+        //var trc = "{!documentprofile.isTemp__c}";
+       var trc = "<apex:outputtext value="{!doc.isTemp__c}" />"
+       // alert(trc);
+        if(trc == "true"){
+            $("#Tempnewmessage").removeClass("hidden");
+            $("#Tempnewmessage").show();
+            }
+        
+        
+        //alert('{!documentprofile.isTempRevise__c}');
+        //var trc1 = "{!documentprofile.isTempRevise__c}";
+        var trc1 = "<apex:outputtext value="{!doc.isTempRevise__c}" />"
+        // alert(trc1);
+        if(trc1 == "true"){
+            $("#Tempoldmessage").removeClass("hidden");
+            $("#Tempoldmessage").show();
+            }
+});
+    
+    /*----Document Revise and Temp story(Stop)----*/   
+    
+    function editDocProfile(){
+        var nonEditFields='';
+        nonEditFields="{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Grace_Period_for_Release__c@{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Pre_Release_Duration_Date__c@{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Effective_Date__c";
+        window.location.href = '/apex/DocumentProfile?id={!Doc.Id}&pg=doc_prof&isedit=true&nonEditFlds='+nonEditFields;
+    }
+    
+    </script>
+    
+    <div class="row nc-header" style="height: auto;">
+        
+        <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1 expand-menu visible-xs visible-sm hidden-md hidden-lg" role="button" onclick="headerExpand();">
+            <div class="dropdn-btn"><span class="fa fa-2x fa-angle-double-up"></span></div>
+        </div>
+        
+        <div class="col-lg-2 col-md-2 col-sm-4 col-xs-4 cell ">
+            <label>{!$ObjectType.Document_Profile__c.Fields.Name.Label}</label>
+            <div class="text-nowrap header-val">{!doc.Name}</div>
+        </div>
+        
+        <div class="col-lg-1 col-md-1 col-sm-3 col-xs-3 cell ">
+            <label>{!$Label.Revision}:</label>
+            <div class="text-nowrap header-val">{!doc.Current_Rev__c}</div>
+        </div>
+        
+        <div class="col-lg-2 col-md-2 col-sm-4 col-xs-4 cell">
+            <label>Owner:</label>
+            <div class="text-nowrap header-val">{!doc.Owner.Name}</div>
+        </div>
+
+      <div class="col-lg-1 col-md-2 col-sm-3 col-xs-3 cell">
+            <label>{!$ObjectType.Document_Profile__c.Fields.CD_Customer__c.Label}:</label>
+            <div class="text-nowrap header-val">{!doc.CD_Customer__r.Name}</div>
+        </div>
+
+        <div class="col-lg-1 col-md-1 col-sm-2 col-xs-3 cell">
+            <label>{!$ObjectType.Document_Profile__c.Fields.Effective_Date__c.Label}:</label>
+            <div class="text-nowrap header-val"> 
+                <apex:outputText value="{0,date, dd MMM yyyy}"> 
+                    <apex:param value="{!doc.Effective_Date__c}"/>
+                </apex:outputText> </div>
+        </div>
+        
+        
+        <div class="col-lg-1 col-md-1 col-sm-2 col-xs-6 cell">
+            <label>{!$ObjectType.Document_Profile__c.Fields.Expiration_Date__c.Label}:</label>  
+            <div class="text-nowrap header-val">
+                <apex:outputText value="{0,date, dd MMM yyyy}"> 
+                    <apex:param value="{!doc.Expiration_Date__c}"/>
+                </apex:outputText></div>
+        </div>
+        <!-- Split for mobile phone -->
+        <div class="col-lg-1 col-md-2 col-sm-3 col-xs-6 cell">
+            <label>Document Type:</label>
+            <div class="text-nowrap header-val">{!doc.Document_Type__r.Title__c}</div>
+        </div>
+        
+        <div class="col-lg-1 col-md-1 col-sm-4 col-xs-6 cell">
+            <label>{!$ObjectType.Document_Profile__c.Fields.Status__c.Label}:</label>
+            <div class="text-nowrap header-val">{!doc.Status__c}</div>
+        </div>
+        
+       <!--code added for mobile navigation view starts--> 
+        <div class="mobile-menu visible-xs visible-sm hidden-md hidden-lg">
+            <div class="clearfix"></div>
+            <ul class="nav nav-pills nav-stacked">                            
+                    <!--v1.1 start-->
+                 <apex:outputPanel layout="none" rendered="{!AND(doc.Status__c !='Draft',doc.Status__c !='Revised',doc.Status__c !='Expired',doc.Status__c !='Obsolete',doc.Approval_Status__c!='Pending Approval')}">
+                	  	<li><a href="#" onclick="editDocProfile()">Edit</a></li>
+                </apex:outputPanel>
+                    <apex:outputPanel layout="none" rendered="{!doc.Status__c =='Draft'}">
+                        <li><a href="#" onclick="$('#voidDocProfile').modal('show');">Void Document</a></li>
+                    </apex:outputPanel>
+                    
+                    <apex:outputPanel layout="none" rendered="{!AND(doc.Status__c !='Current',doc.Status__c !='Revised',doc.Status__c !='Draft',doc.Status__c !='Expired',doc.Approval_Status__c!='Pending Approval')}">
+                        <apex:outputPanel layout="none">                            
+                            <li><a href="#" onclick="$('#MakeDocCurrent').modal('show');">Make Current</a></li>                                 
+                        </apex:outputPanel>                                 
+                    </apex:outputPanel>  
+                    
+                    <apex:outputpanel layout="none" rendered="{!AND( doc.Status__c == 'Current', doc.isTemp__c != True)}">
+                        <li><a href="#" onclick="showrevise()"><apex:outputtext value="{!$Label.Revise}" /></a></li>
+                        <li><a href="#" onclick="showtemp()"><apex:outputtext value="{!$Label.Temp}" /></a></li>
+                    </apex:outputpanel>                        
+                    
+                    
+                    <!--v1.1 end -->
+                    <!--v1.3   start-->
+                   <!-- <apex:repeat value="{!$ObjectType.Document_Profile__c.FieldSets.Document_Menu}" var="f" rendered="{!doc.Status__c=='Current'}" > 
+                        <li><a href="#" onclick="{!f}DocModal_show();"><apex:outputText value="{!$Label.Change} {!$ObjectType.Document_Profile__c.Fields[f].label}"></apex:outputText></a></li> 
+                    </apex:repeat>-->
+                </ul>
+            <div class="menu-item text-right">
+                <button class="btn btn-default ">
+                    <span class="glyphicon glyphicon-print" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>        
+       <!--code added for mobile navigation view ends--> 
+        
+        <div class="col-lg-2 col-md-12 col-sm-12 col-xs-12 text-right cell hidden-sm hidden-xs">
+            <!-- Dropdown Menu for Document Profile Actions -->
+            <div class="dropdown pull-right">
+                <button class="btn btn-default" id="dLabel" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dLabel">
+                    <!--v1.1 start-->
+                   <apex:outputPanel layout="none" rendered="{!AND(doc.Status__c !='Draft',doc.Status__c  !='Void',doc.Status__c !='Revised',doc.Status__c !='Expired',doc.Status__c !='Obsolete',doc.Approval_Status__c!='Pending Approval')}">
+                	<li><a href="#" onclick="editDocProfile()">Edit</a></li>
+                </apex:outputPanel>
+                    <apex:outputPanel layout="none" rendered="{!doc.Status__c =='Draft'}">
+                        <li><a href="#" onclick="$('#voidDocProfile').modal('show');">Void Document</a></li>
+                    </apex:outputPanel>
+                    
+                    <apex:outputPanel layout="none" rendered="{!AND(doc.Status__c !='Current',doc.Status__c  !='Void',doc.Status__c !='Draft',doc.Status__c !='Revised',doc.Status__c !='Expired',doc.Approval_Status__c!='Pending Approval')}">
+                        <apex:outputPanel layout="none">                            
+                            <li><a href="#" onclick="$('#MakeDocCurrent').modal('show');">Make Current</a></li>                                 
+                        </apex:outputPanel>                                 
+                    </apex:outputPanel>  
+                    
+                    <apex:outputpanel layout="none" rendered="{!AND( doc.Status__c = 'Current', doc.isTemp__c != True)}">
+                        <li><a href="#" onclick="showrevise()">Revise</a></li>
+                        <li><a href="#" onclick="showtemp()">Temp</a></li>
+                    </apex:outputpanel>                        
+                    
+                    
+                    <!--v1.1 end -->
+                    <!--v1.3   start-->
+                   <!-- <apex:repeat value="{!$ObjectType.Document_Profile__c.FieldSets.Document_Menu}" var="f" rendered="{!doc.Status__c=='Current'}" > 
+                        <li><a href="#" onclick="{!f}DocModal_show();"><apex:outputText value="{!$Label.Change} {!$ObjectType.Document_Profile__c.Fields[f].label}"></apex:outputText></a></li> 
+                    </apex:repeat>-->
+                    <!--v1.3   End-->
+                </ul>
+            </div>
+            <!-- Print Button -->
+            <!-- v1.4 start-->
+			<button
+				onClick="window.open('/apex/DocumentProfile?id={!$CurrentPage.parameters.id}&pg=doc_Details_Print');"
+				class="btn btn-pills pull-right">
+				<span class="glyphicon glyphicon-print" aria-hidden="true"></span>
+			</button>
+            <!--- v1.4 end --->
+            
+            <button id="followBtn" class="btn btn-success pull-right followBtn"
+                    data-toggle="tooltip" data-placement="top" title="Follow">
+            </button>
+            
+            
+            
+            <!---v1.2 start --->
+            <apex:outputPanel id="auditTrail">
+                <c:documentprofile_audit rendered="{!$Setup.QC_settings__c.Enable_Audit_Trail__c}" dcpId="{!docrecordID}" dp="{!doc}"/>
+            </apex:outputPanel>
+            <!--v1.2  end--->
+            
+            <div class="clearfix"></div>
+            
+        </div>
+    </div>
+    
+    <!--v1.1 start    Signature Dialog        -->
+    <div class="modal fade" id="voidDocProfile" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close"
+                            onClick="clearDesErrors(this,'Void','voidDPreason');">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">Void Document Profile</h4>
+                </div>
+                <div class="modal-body" style="overflow: auto;">
+                    <div id="signature-section-adding-fields">
+                        <apex:outputPanel layout="none"
+                                          rendered="{!DigitalSignatureNeeded}">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="UserName"><span class="mandatory">*</span>
+                                        User Name:</label> <br /> <input class="form-control" type="text"
+                                                                         id="unameFrtask_Void" />
+                                    <div class="help-block with-errors" id="unameFrtask_Void_error"
+                                         style="color: red;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="exampleInputEmail1"><span class="mandatory">*</span>
+                                        Password:</label> <input class="form-control" type="password"
+                                                                 id="pwdFrtask_Void" />
+                                    <div class="help-block with-errors" id="pwdFrtask_Void_error"
+                                         style="color: red;"></div>
+                                </div>
+                            </div>
+                        </apex:outputPanel>
+                        
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="exampleInputEmail1"><span class="mandatory">*</span>
+                                    Description:</label>
+                                <textarea id='voidDPreason' class="form-control" rows="5"></textarea>
+                                <div class="help-block with-errors" id="voidDPreason_error"
+                                     style="color: red;"></div>
+                            </div>
+                        </div>
+                        <!--     screen content -->
+                        
+                    </div>
+                    <!--signature-section-adding-fields-->
+                    
+                    <div class="clearfix"></div>
+                    <div class="modal-footer">
+                        <button type="button" id="resettskBtn_Void"
+                                class="btn btn-default" data-dismiss="modal"
+                                onClick="clearDesErrors(this,'Void','voidDPreason');">Cancel</button>
+                        <!--<a href="#" class="btn btn-primary" onClick="VoidCAPA();">Ok</a>-->
+                        <button id="reopentaks" type="button" class="btn btn-primary"
+                                onClick="VerifyDocData(this,'Void','voidDPreason');">OK</button>
+                    </div>
+                    
+                </div>
+                <!-- modal-body -->
+            </div>
+            <!-- model-content -->
+        </div>
+        <!--modal-dialog modal-lg-->
+    </div>
+    <!--modal fade-->
+    
+    
+    <!--  v1.1 end  Signature Dialog        -->
+    
+    <!--   Make Current Dialog     -->
+    
+    <div class="modal fade in" id="MakeDocCurrent" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true" onClick="clearDesErrors(this,'Current','voidreasonforchange');">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Make Current</h4>
+                </div>
+                
+                <div class="modal-body">    
+                    <div id="signature-section-adding-fields">
+                        <apex:outputPanel layout="none" rendered="{!DigitalSignatureNeeded}">
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="UserName"><span class="mandatory">*</span> User Name:</label>
+                                    <input class="form-control" type="text" id="unameFrtask_Void_Make_Current"/>
+                                    
+                                    <div class="help-block with-errors" id="unameFrtask_Make_Current_error" style="color: red;"></div>                                      
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="exampleInputEmail1"><span class="mandatory">*</span> Password:</label>
+                                    <input class="form-control" type="password" id="pwdFrtask_Make_Current" />
+                                    
+                                    <div class="help-block with-errors" id="pwdFrtask_Make_Current_error" style="color: red;"></div>                                        
+                                </div>
+                            </div>
+                        </apex:outputPanel>  
+                        
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="exampleInputEmail1"><span class="mandatory">*</span> Reason for Change:</label>
+                                <textarea id='voidreasonforchange' class="form-control" rows="5"></textarea>
+                                
+                                <div class="help-block with-errors" id="voidreasonforchange_error" style="color: red;"></div>                                   
+                            </div>
+                        </div>
+                        <!--     screen content -->
+                    </div>
+                    <div class="clearfix"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" onClick="clearDesErrors(this,'Current','voidreasonforchange');">Cancel</button>
+                        <button id="reopentaks" type="button" class="btn btn-primary" onClick="VerifyDocData(this,'Current','voidreasonforchange');">OK</button>
+                    </div>          
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!--    Make Current Dialog     -->
+    
+    
+    
+</apex:component>

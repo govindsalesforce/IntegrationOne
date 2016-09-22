@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <encodingKey>ISO-8859-1</encodingKey>
+    <letterhead>Qualityze_Inc</letterhead>
+    <name>DueDatechangeApprovalRecall</name>
+    <style>freeForm</style>
+    <subject>Approval Request for the Due Date change of {!General_Task__c.Name} has been Recalled.</subject>
+    <textOnly>Hello,
+
+
+
+The approval process of the Due Date change of the {!General_Task__c.RecordType} task of {!IF(NOT(ISBLANK(General_Task__c.Non_Conformance__c)),&apos;NCR&apos;,&apos; &apos;)}{!IF(NOT(ISBLANK(General_Task__c.CAPA__c)),&apos;CAPA&apos;,&apos; &apos;)}{!IF(NOT(ISBLANK(General_Task__c.Change_Management__c)),&apos;CR&apos;,&apos; &apos;)}
+record {!General_Task__c.Non_Conformance__c} {!General_Task__c.CAPA__c}
+
+{!General_Task__c.Change_Management__c} is Recalled.
+
+
+Recall comment :
+
+{!ApprovalRequest.Comments} .
+
+
+Thank you.
+
+
+
+
+Click here for details</textOnly>
+    <type>html</type>
+</EmailTemplate>

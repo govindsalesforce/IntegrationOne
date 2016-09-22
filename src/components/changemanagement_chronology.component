@@ -1,0 +1,422 @@
+<apex:component controller="Component_Handler">
+    <apex:attribute type="ID" name="CMID" description="cm id for history " required="true" assignTo="{!cmcid}"/>  
+    
+    <script>
+    
+    function chronologyExpand(obj){
+        
+        var targetPanel = obj.getAttribute("href");
+        console.log($(targetPanel).is(":visible"));
+        if($(targetPanel).is(":visible")){
+            $(obj).find(".glyphicon").addClass("glyphicon-plus").removeClass("glyphicon-minus");
+        } else {
+            $(obj).find(".glyphicon").addClass("glyphicon-minus").removeClass("glyphicon-plus");
+        }
+    }
+    </script>
+    <div class="rightpane-content">
+        <h2>Chronology</h2>
+        <div class="line-accordian" id="chronology" role="tablist" aria-multiselectable="true">
+            <div class="panel-holder">
+            	<!-- Panel  -->
+                <apex:variable value="{!75}" var="jsidcm"/> 
+                <apex:repeat value="{!CMHistoryDate}" var="dt">
+                    <div role="tab">
+                        <div class="panel-title">
+                            <div class="row"> 
+                                <div class="col-md-10">
+                                    <a href="#cm_currentpannel{!jsidcm}" onclick="chronologyExpand(this)" data-toggle="collapse" data-parent="#accordion" aria-expanded="false" aria-controls="products" class="collapsed"><span class="glyphicon glyphicon-plus"></span> 
+                                        <apex:outputText value="{0,date,MMMM dd, yyyy}">
+                                            &nbsp;<apex:param value="{!chronology_cm[dt].currentDate}" />
+                                        </apex:outputText>  
+                                    </a>
+                                </div>
+                                
+                                <div class="col-md-2">
+                                    <div class="badge text-right"></div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    
+                    <div id="cm_currentpannel{!jsidcm}" class="panel-collapse collapse" aria-expanded="false" style="height: 0px;">
+                        <div class="line-panel">             
+                            <apex:outputPanel rendered="{!chronology_cm[dt].init.size>0}" >
+                                <apex:variable value="{!jsidcm+2503}" var="jsidcm"/>
+                                <p class="">
+                                    <button type="button" data-toggle="modal"  data-target="#jsidcm{!jsidcm}" class="btn btn-info btn-xs"> 
+                                        Initiation
+                                    </button>
+                                    Updated {!chronology_cm[dt].init.size} Fields 
+                                </p>
+                                <div class="modal fade in" id="jsidcm{!jsidcm}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false" style="display: none; padding-right: 17px;">
+                                    <div class="modal-dialog modal-lg" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button> 
+                                                <h4 class="modal-title" id="myModalLabel">Chronology Details</h4>
+                                            </div>
+                                            <div class="modal-body" style="height: 400px; overflow: auto;">
+                                                <table class="table table-responsive table-bordered table-striped">
+                                                    <tbody>
+                                                        <tr>
+                                                            <th>Modified Date</th>
+                                                            <th>Changed Record/Field</th>
+                                                            <th>Old Value</th>
+                                                            <th>New Value</th>
+                                                            <th>Action</th>
+                                                            <th>Modified By</th>                                                                            
+                                                        </tr>
+                                                        
+                                                        <apex:repeat value="{!chronology_cm[dt].init}" var="cmhis">                                                                        
+                                                            <tr>
+                                                                <td>
+                                                                    <apex:outputText value="{0,date,dd MMM yyyy hh:mm:ss}">
+                                                                        <apex:param value="{!cmhis.CreatedDate}" /> 
+                                                                    </apex:outputText></td>
+                                                                <td>{!cmhis.FieldName__c}</td>
+                                                                <td><apex:outputPanel layout="block" style="overflow: auto; height: 50px;" ><apex:outputField value="{!cmhis.OldValue__c}"/></apex:outputPanel></td>
+                                                                <td><apex:outputPanel layout="block" style="overflow: auto; height: 50px;" ><apex:outputField value="{!cmhis.NewValue__c}"/></apex:outputPanel></td>
+                                                                <td>{!if(cmhis.isCreated__c,'Created',if(cmhis.isDeleted__c,'Deleted','Updated'))}</td>
+                                                                <td>{!cmhis.CreatedBy.Name}</td>                                                                                
+                                                            </tr>    
+                                                        </apex:repeat>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>    
+                            </apex:outputPanel>
+                            
+                            
+                            <!--=======================================================end cm init=========================================--->
+                            <!--=====================================================Document Info Start=======================-->
+                            
+                            <apex:outputPanel rendered="{!chronology_cm[dt].DocumentInfo.size>0}" >
+                                    <apex:variable value="{!jsidcm+2503}" var="jsidcm"/>
+                                    <p class="">
+                                        <button type="button" data-toggle="modal"  data-target="#jsidcm{!jsidcm}" class="btn btn-info btn-xs"> 
+                                            Document Info
+                                        </button>
+                                        Updated {!chronology_cm[dt].DocumentInfo.size} Fields 
+                                    </p>
+                                    <div class="modal fade in" id="jsidcm{!jsidcm}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false" style="display: none; padding-right: 17px;">
+                                        <div class="modal-dialog modal-lg" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button> 
+                                                    <h4 class="modal-title" id="myModalLabel">Chronology Details</h4>
+                                                </div>
+                                                <div class="modal-body" style="height: 400px; overflow: auto;">
+                                                    <table class="table table-responsive table-bordered table-striped">
+                                                        <tbody>
+                                                            <tr>
+                                                                <th>Modified Date</th>
+                                                                <th>Changed Record/Field</th>
+                                                                <th>Old Value</th>
+                                                                <th>New Value</th>
+                                                                <th>Action</th>
+                                                                <th>Modified By</th>                                                                            
+                                                            </tr>
+                                                            
+                                                            <apex:repeat value="{!chronology_cm[dt].DocumentInfo}" var="scmhis">                                                                        
+                                                                <tr>
+                                                                    <td>
+                                                                        <apex:outputText value="{0,date,dd MMM yyyy hh:mm:ss}">
+                                                                            <apex:param value="{!scmhis.CreatedDate}" /> 
+                                                                        </apex:outputText></td>
+                                                                    <td>{!scmhis.FieldName__c}</td>
+                                                                    <td><apex:outputPanel layout="block" style="overflow: auto; height: 50px;" ><apex:outputField value="{!scmhis.OldValue__c}"/></apex:outputPanel></td>
+                                                                    <td><apex:outputPanel layout="block" style="overflow: auto; height: 50px;" ><apex:outputField value="{!scmhis.NewValue__c}"/></apex:outputPanel></td>
+                                                                    <td>{!if(scmhis.isCreated__c,'Created',if(scmhis.isDeleted__c,'Deleted','Updated'))}</td>
+                                                                    <td>{!scmhis.CreatedBy.Name}</td>                                                                                
+                                                                </tr>    
+                                                            </apex:repeat>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>    
+                                </apex:outputPanel>
+                            
+                            <!-------=======================================================Document Info End=================================================-------------->    
+                            <!-------========================================================================================================-------------->  
+                            <apex:outputPanel rendered="{!chronology_cm[dt].resolution.size>0}" >
+                                <apex:variable value="{!jsidcm+2503}" var="jsidcm"/>
+                                <p class="">
+                                    <button type="button" data-toggle="modal"  data-target="#jsidcm{!jsidcm}" class="btn btn-info btn-xs"> 
+                                        Resolution
+                                    </button>
+                                    Updated {!chronology_cm[dt].resolution.size} Fields 
+                                </p>
+                                <div class="modal fade in" id="jsidcm{!jsidcm}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false" style="display: none; padding-right: 17px;">
+                                    <div class="modal-dialog modal-lg" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                                                <h4 class="modal-title" id="myModalLabel">Chronology Details</h4>
+                                            </div>
+                                            <div class="modal-body" style="height: 400px; overflow: auto;">
+                                                <table class="table table-responsive table-bordered table-striped">
+                                                    <tbody>
+                                                        <tr>
+                                                            <th>Modified Date</th>
+                                                            <th>Changed Record/Field</th>
+                                                            <th>Old Value</th>
+                                                            <th>New Value</th>
+                                                            <th>Action</th>
+                                                            <th>Modified By</th>                                                                            
+                                                        </tr>
+                                                        <apex:repeat value="{!chronology_cm[dt].resolution}" var="cmhis">                                                                        
+                                                            <tr>
+                                                                <td>
+                                                                    <apex:outputText value="{0,date,dd MMM yyyy hh:mm:ss}">
+                                                                        <apex:param value="{!cmhis.CreatedDate}" /> 
+                                                                    </apex:outputText></td>
+                                                                <td>{!cmhis.FieldName__c}</td>
+                                                                <td><apex:outputPanel layout="block" style="overflow: auto; height: 50px;" ><apex:outputField value="{!cmhis.OldValue__c}"/></apex:outputPanel></td>
+                                                                <td><apex:outputPanel layout="block" style="overflow: auto; height: 50px;" ><apex:outputField value="{!cmhis.NewValue__c}"/></apex:outputPanel></td>
+                                                                <td>{!if(cmhis.isCreated__c,'Created',if(cmhis.isDeleted__c,'Deleted','Updated'))}</td>
+                                                                <td>{!cmhis.CreatedBy.Name}</td>                                                                                
+                                                            </tr>    
+                                                        </apex:repeat>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>       
+                            </apex:outputPanel>                                
+                            <!-------========================================================================================================-------------->  
+                            <!-------========================================================================================================-------------->  
+                            <apex:outputPanel rendered="{!chronology_cm[dt].DocumentChange.size>0}" >
+                                <apex:variable value="{!jsidcm+2503}" var="jsidcm"/>
+                                <p class="">
+                                    <button type="button" data-toggle="modal"  data-target="#jsidcm{!jsidcm}" class="btn btn-info btn-xs"> 
+                                        Document Change
+                                    </button>
+                                    Updated {!chronology_cm[dt].DocumentChange.size} Fields 
+                                </p>
+                                <div class="modal fade in" id="jsidcm{!jsidcm}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false" style="display: none; padding-right: 17px;">
+                                    <div class="modal-dialog modal-lg" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                                                <h4 class="modal-title" id="myModalLabel">Chronology Details</h4>
+                                            </div>
+                                            <div class="modal-body" style="height: 400px; overflow: auto;">
+                                                <table class="table table-responsive table-bordered table-striped">
+                                                    <tbody>
+                                                        <tr>
+                                                            <th>Modified Date</th>
+                                                            <th>Changed Record/Field</th>
+                                                            <th>Old Value</th>
+                                                            <th>New Value</th>
+                                                            <th>Action</th>
+                                                            <th>Modified By</th>                                                                            
+                                                        </tr>
+                                                        <apex:repeat value="{!chronology_cm[dt].DocumentChange}" var="cmhis">                                                                        
+                                                            <tr>
+                                                                <td>
+                                                                    <apex:outputText value="{0,date,dd MMM yyyy hh:mm:ss}">
+                                                                        <apex:param value="{!cmhis.CreatedDate}" /> 
+                                                                    </apex:outputText></td>
+                                                                <td>{!cmhis.FieldName__c}</td>
+                                                                <td><apex:outputPanel layout="block" style="overflow: auto; height: 50px;" ><apex:outputField value="{!cmhis.OldValue__c}"/></apex:outputPanel></td>
+                                                                <td><apex:outputPanel layout="block" style="overflow: auto; height: 50px;" ><apex:outputField value="{!cmhis.NewValue__c}"/></apex:outputPanel></td>
+                                                                <td>{!if(cmhis.isCreated__c,'Created',if(cmhis.isDeleted__c,'Deleted','Updated'))}</td>
+                                                                <td>{!cmhis.CreatedBy.Name}</td>                                                                                
+                                                            </tr>    
+                                                        </apex:repeat>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>         
+                            </apex:outputPanel>                              
+                            <!-------========================================================================================================-------------->  
+                            <!-------========================================================================================================----
+                            <apex:outputPanel rendered="{!chronology_cm[dt].CompleteActionPlan.size>0}" >
+                                <apex:variable value="{!jsidcm+2503}" var="jsidcm"/>
+                                <p class="">
+                                    <button type="button" data-toggle="modal"  data-target="#jsidcm{!jsidcm}" class="btn btn-info btn-xs"> 
+                                        Complete Action Plan
+                                    </button>
+                                    Updated {!chronology_cm[dt].CompleteActionPlan.size} Fields 
+                                </p>
+                                <div class="modal fade in" id="jsidcm{!jsidcm}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false" style="display: none; padding-right: 17px;">
+                                    <div class="modal-dialog modal-lg" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                                                <h4 class="modal-title" id="myModalLabel">Chronology Details</h4>
+                                            </div>
+                                            <div class="modal-body" style="height: 400px; overflow: auto;">
+                                                <table class="table table-responsive table-bordered table-striped">
+                                                    <tbody>
+                                                        <tr>
+                                                            <th>Modified Date</th>
+                                                            <th>Changed Record/Field</th>
+                                                            <th>Old Value</th>
+                                                            <th>New Value</th>
+                                                            <th>Action</th>
+                                                            <th>Modified By</th>                                                                            
+                                                        </tr>
+                                                        <apex:repeat value="{!chronology_cm[dt].CompleteActionPlan}" var="cmhis">                                                                        
+                                                            <tr>
+                                                                <td>
+                                                                    <apex:outputText value="{0,date,dd MMM yyyy hh:mm:ss}">
+                                                                        <apex:param value="{!cmhis.CreatedDate}" /> 
+                                                                    </apex:outputText></td>
+                                                                <td>{!cmhis.FieldName__c}</td>
+                                                                <td><apex:outputPanel layout="block" style="overflow: auto; height: 50px;" ><apex:outputField value="{!cmhis.OldValue__c}"/></apex:outputPanel></td>
+                                                                <td><apex:outputPanel layout="block" style="overflow: auto; height: 50px;" ><apex:outputField value="{!cmhis.NewValue__c}"/></apex:outputPanel></td>
+                                                                <td>{!if(cmhis.isCreated__c,'Created',if(cmhis.isDeleted__c,'Deleted','Updated'))}</td>
+                                                                <td>{!cmhis.CreatedBy.Name}</td>                                                                                
+                                                            </tr>    
+                                                        </apex:repeat>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>         
+                            </apex:outputPanel>                              
+                            <!-------========================================================================================================-------------->  
+
+                            <!-------========================================================================================================-------------->  
+                            <apex:outputPanel rendered="{!chronology_cm[dt].Adhoc.size>0}" >
+                                <apex:variable value="{!jsidcm+2503}" var="jsidcm"/>
+                                <p class="">
+                                    <button type="button" data-toggle="modal"  data-target="#jsidcm{!jsidcm}" class="btn btn-info btn-xs"> 
+                                        Adhoc Task
+                                    </button>
+                                    Updated {!chronology_cm[dt].Adhoc.size} Fields 
+                                </p>
+                                <div class="modal fade in" id="jsidcm{!jsidcm}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false" style="display: none; padding-right: 17px;">
+                                    <div class="modal-dialog modal-lg" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                                                <h4 class="modal-title" id="myModalLabel">Chronology Details</h4>
+                                            </div>
+                                            <div class="modal-body" style="height: 400px; overflow: auto;">
+                                                <table class="table table-responsive table-bordered table-striped">
+                                                    <tbody>
+                                                        <tr>
+                                                            <th>Modified Date</th>
+                                                            <th>Changed Record/Field</th>
+                                                            <th>Old Value</th>
+                                                            <th>New Value</th>
+                                                            <th>Action</th>
+                                                            <th>Modified By</th>                                                                            
+                                                        </tr>
+                                                        <apex:repeat value="{!chronology_cm[dt].Adhoc}" var="cmhis">                                                                        
+                                                            <tr>
+                                                                <td>
+                                                                    <apex:outputText value="{0,date,dd MMM yyyy hh:mm:ss}">
+                                                                        <apex:param value="{!cmhis.CreatedDate}" /> 
+                                                                    </apex:outputText></td>
+                                                                <td>{!cmhis.FieldName__c}</td>
+                                                                <td><apex:outputPanel layout="block" style="overflow: auto; height: 50px;" ><apex:outputField value="{!cmhis.OldValue__c}"/></apex:outputPanel></td>
+                                                                <td><apex:outputPanel layout="block" style="overflow: auto; height: 50px;" ><apex:outputField value="{!cmhis.NewValue__c}"/></apex:outputPanel></td>
+                                                                <td>{!if(cmhis.isCreated__c,'Created',if(cmhis.isDeleted__c,'Deleted','Updated'))}</td>
+                                                                <td>{!cmhis.CreatedBy.Name}</td>                                                                                
+                                                            </tr>    
+                                                        </apex:repeat>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>   
+                            </apex:outputPanel>
+                            <!-------========================================================================================================-------------->  
+                            <!-------========================================================================================================-------------->  
+                            <apex:outputPanel rendered="{!chronology_cm[dt].Closure.size>0}" >
+                                <apex:variable value="{!jsidcm+2503}" var="jsidcm"/>
+                                <p class="">
+                                    <button type="button" data-toggle="modal"  data-target="#jsidcm{!jsidcm}" class="btn btn-info btn-xs"> 
+                                        Closure
+                                    </button>
+                                    Updated {!chronology_cm[dt].Closure.size} Fields 
+                                </p>
+                                <div class="modal fade in" id="jsidcm{!jsidcm}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false" style="display: none; padding-right: 17px;">
+                                    <div class="modal-dialog modal-lg" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                                                <h4 class="modal-title" id="myModalLabel">Chronology Details</h4>
+                                            </div>
+                                            <div class="modal-body" style="height: 400px; overflow: auto;">
+                                                <table class="table table-responsive table-bordered table-striped">
+                                                    <tbody>
+                                                        <tr>
+                                                            <th>Modified Date</th>
+                                                            <th>Changed Record/Field</th>
+                                                            <th>Old Value</th>
+                                                            <th>New Value</th>
+                                                            <th>Action</th>
+                                                            <th>Modified By</th>                                                                            
+                                                        </tr>
+                                                        <apex:repeat value="{!chronology_cm[dt].Closure}" var="cmhis">                                                                        
+                                                            <tr>
+                                                                <td>
+                                                                    <apex:outputText value="{0,date,dd MMM yyyy hh:mm:ss}">
+                                                                        <apex:param value="{!cmhis.CreatedDate}" /> 
+                                                                    </apex:outputText></td>
+                                                                <td>{!cmhis.FieldName__c}</td>
+                                                                <td><apex:outputPanel layout="block" style="overflow: auto; height: 50px;" ><apex:outputField value="{!cmhis.OldValue__c}"/></apex:outputPanel></td>
+                                                                <td><apex:outputPanel layout="block" style="overflow: auto; height: 50px;" ><apex:outputField value="{!cmhis.NewValue__c}"/></apex:outputPanel></td>
+                                                                <td>{!if(cmhis.isCreated__c,'Created',if(cmhis.isDeleted__c,'Deleted','Updated'))}</td>
+                                                                <td>{!cmhis.CreatedBy.Name}</td>                                                                                
+                                                            </tr>    
+                                                        </apex:repeat>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>               
+                            </apex:outputPanel>                        
+                            <!-------========================================================================================================--------------> 
+                            <!-------========================================================================================================-------------->  
+                            
+                            
+                            
+                            
+                            
+                        </div>
+                    </div>
+                </apex:repeat>
+                
+            
+            </div>
+        </div>
+    </div>
+</apex:component>

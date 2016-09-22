@@ -1,0 +1,26 @@
+<apex:component >
+    <script type="text/javascript">
+      $(document).ready(function(){
+           $( "#{!IF(ISBLANK(fieldId),fieldname,fieldId)}").on('input', function() {
+            $('#{!IF(ISBLANK(fieldId),fieldname,fieldId)}_error').empty();
+            if($(this).val().length>="{!maxlength}") {
+                $('#{!IF(ISBLANK(fieldId),fieldname,fieldId)}_error').html('<p style="color: red;">Reached {!maxlength} character limit.</p>');       
+            }
+        });
+       
+          });
+    </script>
+<apex:attribute name="ObjectName" type="string" required="true" description="Object Name"/>
+<apex:attribute name="FieldName" type="string" required="true" description="Field Name"/>
+<apex:attribute name="onchangefunction" type="string" required="false" default="" description="refrence to on change js function"/>
+<apex:attribute name="initvalue" description="Initial value" type="string" required="true"/>
+<apex:attribute name="Required" description="Required Field" type="boolean" required="true"/>
+<apex:attribute name="FieldId" description="Required Field" type="string" />
+<apex:attribute name="disabled" description="disabling the field based on condition" type="boolean" default="false" />  
+<apex:attribute name="maxlength" type="Integer"  description="maxlength for the input" default="255"/>
+<!-- Save custom data about this field for processing/updating by Javascript -->
+<!--<textarea class="form-control changeMe-setTextArea" data-fieldname="{!fieldname}" data-objectname="{!objectname}" data-onchangefunction="{!onchangefunction}">{!initvalue}</textarea>-->
+    
+    <textarea id="{!IF(ISBLANK(FieldId), FieldName, FieldId)}" name='{!fieldname}' class="form-control changeMe-setTextArea {!IF(Required, 'required', '')}" data-fieldname="{!fieldname}" data-objectname="{!objectname}" data-onchangefunction="{!onchangefunction}" maxlength="{!maxlength}">{!SUBSTITUTE(JSENCODE(initvalue),'\\\n','')}</textarea>
+   <div class="help-block with-errors" id="{!IF(ISBLANK(FieldId), FieldName, FieldId)}_error"></div>
+</apex:component>

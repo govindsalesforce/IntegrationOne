@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Defect</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Defects</value>
+    </caseValues>
+    <fields>
+        <label><!-- Active --></label>
+        <name>Active__c</name>
+    </fields>
+    <fields>
+        <label><!-- Cost --></label>
+        <name>Cost__c</name>
+    </fields>
+    <fields>
+        <label><!-- Count Compare Date --></label>
+        <name>Count_Compare_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Count Compare Value --></label>
+        <name>Count_Compare_Value__c</name>
+    </fields>
+    <fields>
+        <label><!-- Count Total Time Unit --></label>
+        <name>Count_Total_Time_Unit__c</name>
+        <picklistValues>
+            <masterLabel>Day</masterLabel>
+            <translation><!-- Day --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Month</masterLabel>
+            <translation><!-- Month --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Week</masterLabel>
+            <translation><!-- Week --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Year</masterLabel>
+            <translation><!-- Year --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Count Total Time --></label>
+        <name>Count_Total_Time__c</name>
+    </fields>
+    <fields>
+        <label><!-- Count Total Time --></label>
+        <name>Count_Total_Time_as_Num__c</name>
+    </fields>
+    <fields>
+        <label><!-- Count Total --></label>
+        <name>Count_Total__c</name>
+    </fields>
+    <fields>
+        <label><!-- Count Total --></label>
+        <name>Count_Total_as_Num__c</name>
+    </fields>
+    <fields>
+        <label><!-- Defect Catagory --></label>
+        <name>Defect_Catagory__c</name>
+        <picklistValues>
+            <masterLabel>Val1</masterLabel>
+            <translation><!-- Val1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Val2</masterLabel>
+            <translation><!-- Val2 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Defect Category --></label>
+        <name>Defect_Category__c</name>
+        <picklistValues>
+            <masterLabel>Val1</masterLabel>
+            <translation><!-- Val1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Val2</masterLabel>
+            <translation><!-- Val2 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Defect Classification --></label>
+        <name>Defect_Classification__c</name>
+        <picklistValues>
+            <masterLabel>Va2</masterLabel>
+            <translation><!-- Va2 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Val1</masterLabel>
+            <translation><!-- Val1 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Defect Code --></label>
+        <name>Defect_Code__c</name>
+    </fields>
+    <fields>
+        <label><!-- Cost --></label>
+        <name>Defect_Cost__c</name>
+    </fields>
+    <fields>
+        <label><!-- Defect Description --></label>
+        <name>Defect_Description__c</name>
+    </fields>
+    <fields>
+        <label><!-- Defect Occurance --></label>
+        <name>Defect_Occurance__c</name>
+    </fields>
+    <fields>
+        <label><!-- Defect --></label>
+        <name>Defect__c</name>
+    </fields>
+    <fields>
+        <label><!-- NC Defect Total Count --></label>
+        <name>NC_Defect_Total_Count__c</name>
+    </fields>
+    <fields>
+        <label><!-- Type --></label>
+        <name>NC_Type__c</name>
+        <picklistValues>
+            <masterLabel>Process</masterLabel>
+            <translation><!-- Process --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Product</masterLabel>
+            <translation><!-- Product --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Organization --></label>
+        <name>Organization_del__c</name>
+        <relationshipLabel><!-- Defects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Process Count --></label>
+        <name>Process_Count__c</name>
+    </fields>
+    <fields>
+        <label><!-- Product Count --></label>
+        <name>Product_Count__c</name>
+    </fields>
+    <fields>
+        <label><!-- Risk Severity --></label>
+        <name>Risk_Severity__c</name>
+        <relationshipLabel><!-- Defects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Status --></label>
+        <name>Status__c</name>
+        <picklistValues>
+            <masterLabel>Active</masterLabel>
+            <translation><!-- Active --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Inactive</masterLabel>
+            <translation><!-- Inactive --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Suspect Enabled --></label>
+        <name>Suspect_Enabled__c</name>
+        <picklistValues>
+            <masterLabel>No</masterLabel>
+            <translation><!-- No --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Yes</masterLabel>
+            <translation><!-- Yes --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Type --></label>
+        <name>Type__c</name>
+        <picklistValues>
+            <masterLabel>Process</masterLabel>
+            <translation><!-- Process --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Product</masterLabel>
+            <translation><!-- Product --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Volume Compare Date --></label>
+        <name>Volume_Compare_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Volume Compare Value --></label>
+        <name>Volume_Compare_Value__c</name>
+    </fields>
+    <fields>
+        <label><!-- Volume Total  Time Unit --></label>
+        <name>Volume_Total_Time_Unit__c</name>
+        <picklistValues>
+            <masterLabel>Day</masterLabel>
+            <translation><!-- Day --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Month</masterLabel>
+            <translation><!-- Month --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Week</masterLabel>
+            <translation><!-- Week --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Year</masterLabel>
+            <translation><!-- Year --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Volume Total Time --></label>
+        <name>Volume_Total_Time__c</name>
+    </fields>
+    <fields>
+        <label><!-- Volume Total Time --></label>
+        <name>Volume_Total_Time_as_Num__c</name>
+    </fields>
+    <fields>
+        <label><!-- Volume Total --></label>
+        <name>Volume_Total__c</name>
+    </fields>
+    <fields>
+        <label><!-- Volume Total --></label>
+        <name>Volume_Total_as_Num__c</name>
+    </fields>
+    <layouts>
+        <layout>Defect Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <startsWith>Consonant</startsWith>
+</CustomObjectTranslation>

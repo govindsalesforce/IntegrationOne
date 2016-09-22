@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <encodingKey>ISO-8859-1</encodingKey>
+    <letterhead>Qualityze_Inc</letterhead>
+    <name>CAPA Task Creation</name>
+    <style>freeForm</style>
+    <subject>New CAPA Task Created - {!01I610000012EC9.Name}</subject>
+    <textOnly>Dear {!01I610000012EC9.00N6100000ACLf8} ,
+
+New CAPA Task - {!01I610000012EC9.Name} created and assigned to you.
+
+
+Regards,
+Qualityze Inc</textOnly>
+    <type>html</type>
+</EmailTemplate>

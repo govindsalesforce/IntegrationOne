@@ -1,0 +1,71 @@
+<apex:page sidebar="true" showHeader="true" standardStylesheets="false" docType="html-5.0">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>NC Landing page</title>
+
+    <!-- Bootstrap -->
+    <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/app.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/landing-page.css')}" />
+
+  </head>
+  <body>
+    <div class="container-fluid" id="landing-page-layout">
+      <div class="row">
+        <div class="landing-banner">
+            <div class="app-name">
+            <h1>Qualityze Suite</h1>
+          </div>
+                <div class="app-meta-bar">
+            <span></span>
+          </div>
+        </div>
+      </div>
+            
+      <div class="sf-page-content">
+            <h2>Modules</h2>
+        <p>
+                Qualityze Suite provides best in class quality, compliance and closed loop process management solutions. Built on cloud platform with industry best practices, which is easily configurable and scalable.
+            </p>
+
+        <div class="row link-list">
+          <div class="col-md-4 col-sm-4 col-xs-6">
+            <ul class="nav nav-pills nav-stacked">
+              <li ><a href="/{!$ObjectType.Non_Conformance__c}/o" target="_top">Non Conformance Management</a></li>
+              <li class="disabled"><a href="#">CAPA Management</a></li>
+              <li class="disabled"><a href="#">Audit Management</a></li>
+              
+            </ul>
+          </div>
+
+
+          <div class="col-md-4 col-sm-4 col-xs-6">
+            <ul class="nav nav-pills nav-stacked">
+              <li class="disabled"><a href="#">Complaint Management</a></li>
+              <li class="disabled"><a href="#">Document Management</a></li>
+              <li class="disabled"><a href="#">Training Management</a></li>
+            </ul>
+          </div>
+
+          
+          <div class="col-md-4 col-sm-4 col-xs-6">
+            <ul class="nav nav-pills nav-stacked">
+              <li class="disabled"><a href="#">Change Management</a></li>
+              <li class="disabled"><a href="#">Supplier Management</a></li>
+            </ul>
+          </div>
+
+        </div>
+
+
+      </div>
+            
+            
+    </div>
+
+    </body>
+
+ 
+</apex:page>

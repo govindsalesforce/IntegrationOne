@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Business Entity</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Business Entities</value>
+    </caseValues>
+    <fields>
+        <label><!-- Active --></label>
+        <name>Active__c</name>
+    </fields>
+    <fields>
+        <label><!-- Code --></label>
+        <name>Code__c</name>
+    </fields>
+    <fields>
+        <label><!-- Business Entity Head --></label>
+        <name>Department_Head__c</name>
+        <relationshipLabel><!-- Business Entities --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Head Name --></label>
+        <name>Head_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- UDF --></label>
+        <name>UDF__c</name>
+    </fields>
+    <layouts>
+        <layout>Business Entity Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <recordTypes>
+        <label><!-- Department --></label>
+        <name>Department</name>
+    </recordTypes>
+    <startsWith>Consonant</startsWith>
+</CustomObjectTranslation>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>CAPAJunction</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>CAPAJunctions</value>
+    </caseValues>
+    <fields>
+        <label><!-- CAPAChild --></label>
+        <name>CAPAChild__c</name>
+        <relationshipLabel><!-- CAPAJunctions (CAPAChild) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- CAPAParent --></label>
+        <name>CAPAParent__c</name>
+        <relationshipLabel><!-- CAPAJunctions --></relationshipLabel>
+    </fields>
+    <layouts>
+        <layout>CAPAJunction Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <startsWith>Consonant</startsWith>
+</CustomObjectTranslation>

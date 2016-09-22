@@ -1,0 +1,594 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>General Task</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>General Tasks</value>
+    </caseValues>
+    <fields>
+        <label><!-- Add Effectiveness verificiation --></label>
+        <name>Add_Effectiveness_verificiation__c</name>
+    </fields>
+    <fields>
+        <label><!-- AdhocTask Title --></label>
+        <name>AdhocTask_Title__c</name>
+    </fields>
+    <fields>
+        <label><!-- Adhoc Sequence --></label>
+        <name>Adhoc_Sequence__c</name>
+        <picklistValues>
+            <masterLabel>15</masterLabel>
+            <translation><!-- 15 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>25</masterLabel>
+            <translation><!-- 25 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>35</masterLabel>
+            <translation><!-- 35 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>45</masterLabel>
+            <translation><!-- 45 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>5</masterLabel>
+            <translation><!-- 5 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>55</masterLabel>
+            <translation><!-- 55 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>65</masterLabel>
+            <translation><!-- 65 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>75</masterLabel>
+            <translation><!-- 75 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>85</masterLabel>
+            <translation><!-- 85 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>95</masterLabel>
+            <translation><!-- 95 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Age --></label>
+        <name>Age__c</name>
+    </fields>
+    <fields>
+        <label><!-- Allowed Days --></label>
+        <name>Allowed_Days__c</name>
+    </fields>
+    <fields>
+        <label><!-- ApprovalProcess --></label>
+        <name>ApprovalProcess__c</name>
+        <picklistValues>
+            <masterLabel>Change DueDate</masterLabel>
+            <translation><!-- Change DueDate --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Change Owner</masterLabel>
+            <translation><!-- Change Owner --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Containment Close</masterLabel>
+            <translation><!-- Containment Close --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Approval Process Complete --></label>
+        <name>Approval_Process_Complete__c</name>
+    </fields>
+    <fields>
+        <label><!-- Approval Required --></label>
+        <name>Approval_Required__c</name>
+        <picklistValues>
+            <masterLabel>No</masterLabel>
+            <translation><!-- No --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Yes</masterLabel>
+            <translation><!-- Yes --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Approver 1 --></label>
+        <name>Approver_1__c</name>
+        <relationshipLabel><!-- General Tasks (Approver 1) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 2 --></label>
+        <name>Approver_2__c</name>
+        <relationshipLabel><!-- General Tasks (Approver 2) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 3 --></label>
+        <name>Approver_3__c</name>
+        <relationshipLabel><!-- General Tasks (Approver 3) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 4 --></label>
+        <name>Approver_4__c</name>
+        <relationshipLabel><!-- General Tasks (Approver 4) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 5 --></label>
+        <name>Approver_5__c</name>
+        <relationshipLabel><!-- General Tasks (Approver 5) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 6 --></label>
+        <name>Approver_6__c</name>
+        <relationshipLabel><!-- General Tasks (Approver 6) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 7 --></label>
+        <name>Approver_7__c</name>
+        <relationshipLabel><!-- General Tasks (Approver 7) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 8 --></label>
+        <name>Approver_8__c</name>
+        <relationshipLabel><!-- General Tasks (Approver 8) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 9 --></label>
+        <name>Approver_9__c</name>
+        <relationshipLabel><!-- General Tasks (Approver 9) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver Comments --></label>
+        <name>Approver_Comments__c</name>
+    </fields>
+    <fields>
+        <label><!-- Approver Counter --></label>
+        <name>Approver_Counter__c</name>
+    </fields>
+    <fields>
+        <label><!-- Approver --></label>
+        <name>Approver__c</name>
+        <relationshipLabel><!-- General Tasks (Approver) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- CAPA Effectiveness --></label>
+        <name>CAPA_Effectiveness__c</name>
+        <picklistValues>
+            <masterLabel>Effective</masterLabel>
+            <translation><!-- Effective --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Not Effective</masterLabel>
+            <translation><!-- Not Effective --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- CAPA_ID --></label>
+        <name>CAPA_ID__c</name>
+    </fields>
+    <fields>
+        <label><!-- CAPA --></label>
+        <name>CAPA__c</name>
+        <relationshipLabel><!-- General Tasks --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- CR_ID --></label>
+        <name>CR_ID__c</name>
+    </fields>
+    <fields>
+        <label><!-- ChangeFieldApprovalStatus --></label>
+        <name>ChangeFieldApprovalStatus__c</name>
+        <picklistValues>
+            <masterLabel>Approve</masterLabel>
+            <translation><!-- Approve --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pending</masterLabel>
+            <translation><!-- Pending --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Recall</masterLabel>
+            <translation><!-- Recall --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Reject</masterLabel>
+            <translation><!-- Reject --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Change Management Owner Name --></label>
+        <name>Change_Management_Owner_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Change Management --></label>
+        <name>Change_Management__c</name>
+        <relationshipLabel><!-- General Tasks --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Change Owner Approver --></label>
+        <name>Change_Owner_Approver__c</name>
+        <relationshipLabel><!-- General Tasks (Change Owner Approver) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Change Owner --></label>
+        <name>Change_Owner__c</name>
+    </fields>
+    <fields>
+        <label><!-- Closure Comment --></label>
+        <name>Closure_Comment__c</name>
+    </fields>
+    <fields>
+        <label><!-- Collaboration Title --></label>
+        <name>Collaboration_Title__c</name>
+    </fields>
+    <fields>
+        <label><!-- Comment --></label>
+        <name>Comment__c</name>
+    </fields>
+    <fields>
+        <label><!-- Completed By --></label>
+        <name>Completed_By_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Completed By --></label>
+        <name>Completed_By__c</name>
+        <relationshipLabel><!-- General Tasks (Completed By) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Completed Date --></label>
+        <name>Completed_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Create New CAPA --></label>
+        <name>Create_New_CAPA__c</name>
+        <picklistValues>
+            <masterLabel>No</masterLabel>
+            <translation><!-- No --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Yes</masterLabel>
+            <translation><!-- Yes --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- CurrentApprovalSequenceNumber --></label>
+        <name>CurrentApprovalSequenceNumber__c</name>
+    </fields>
+    <fields>
+        <label><!-- Document Profile --></label>
+        <name>Document_Profile__c</name>
+        <relationshipLabel><!-- General Tasks --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Document Status --></label>
+        <name>Document_Status__c</name>
+        <picklistValues>
+            <masterLabel>Expire</masterLabel>
+            <translation><!-- Expire --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Keep Status Current</masterLabel>
+            <translation><!-- Keep Status Current --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Revise</masterLabel>
+            <translation><!-- Revise --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Due Date --></label>
+        <name>Due_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Initial Submitter --></label>
+        <name>Initial_Submitter__c</name>
+        <relationshipLabel><!-- General Tasks (Initial Submitter) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Investigation Summary --></label>
+        <name>Investigation_Summary__c</name>
+    </fields>
+    <fields>
+        <label><!-- Investigation Tools --></label>
+        <name>Investigation_Tools__c</name>
+        <picklistValues>
+            <masterLabel>5 Whys</masterLabel>
+            <translation><!-- 5 Whys --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Cause &amp; Effect</masterLabel>
+            <translation><!-- Cause &amp; Effect --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Fish bone</masterLabel>
+            <translation><!-- Fish bone --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Six Sigma</masterLabel>
+            <translation><!-- Six Sigma --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- IsRejected --></label>
+        <name>IsRejected__c</name>
+    </fields>
+    <fields>
+        <label><!-- NC_ID --></label>
+        <name>NC_ID__c</name>
+    </fields>
+    <fields>
+        <label><!-- New Due Date --></label>
+        <name>New_Due_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- New Expiration Date --></label>
+        <name>New_Expiration_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- New Owner --></label>
+        <name>New_Owner__c</name>
+        <relationshipLabel><!-- General Tasks (New Owner) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- NonConformanceName --></label>
+        <name>NonConformanceName__c</name>
+    </fields>
+    <fields>
+        <label><!-- Non-Conformance --></label>
+        <name>Non_Conformance__c</name>
+        <relationshipLabel><!-- General Tasks --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Note To Approver Owner/DueDate --></label>
+        <name>Note_To_Approver_Owner_DueDate__c</name>
+    </fields>
+    <fields>
+        <label><!-- Note To Approver --></label>
+        <name>Note_To_Approver__c</name>
+    </fields>
+    <fields>
+        <label><!-- Objective Evidence --></label>
+        <name>Objective_Evidence__c</name>
+    </fields>
+    <fields>
+        <label><!-- Owner --></label>
+        <name>OwnerName__c</name>
+    </fields>
+    <fields>
+        <label><!-- Owner --></label>
+        <name>Owner__c</name>
+        <relationshipLabel><!-- General Tasks (Owner) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- ParentOwner --></label>
+        <name>ParentOwner__c</name>
+        <relationshipLabel><!-- General Tasks (ParentOwner) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Primary File Location --></label>
+        <name>Primary_File_Location__c</name>
+    </fields>
+    <fields>
+        <label><!-- ProposedTaskOwnerName --></label>
+        <name>ProposedTaskOwnerName__c</name>
+    </fields>
+    <fields>
+        <label><!-- Record Type Name --></label>
+        <name>Record_Type_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Rejection Comments --></label>
+        <name>Rejection_Comments__c</name>
+    </fields>
+    <fields>
+        <label><!-- Review Description --></label>
+        <name>Review_Description__c</name>
+    </fields>
+    <fields>
+        <label><!-- Select --></label>
+        <name>Select__c</name>
+    </fields>
+    <fields>
+        <help><!-- Sequence in which task should be performed. For example, if value is &apos;3&apos; then tasks with sequence numbers &apos;1&apos; and &apos;2&apos; should be performed first. --></help>
+        <label><!-- Sequence Position --></label>
+        <name>Sequence_Position__c</name>
+    </fields>
+    <fields>
+        <label><!-- Sequence --></label>
+        <name>Sequence__c</name>
+        <picklistValues>
+            <masterLabel>10</masterLabel>
+            <translation><!-- 10 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>100</masterLabel>
+            <translation><!-- 100 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>20</masterLabel>
+            <translation><!-- 20 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>30</masterLabel>
+            <translation><!-- 30 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>40</masterLabel>
+            <translation><!-- 40 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>50</masterLabel>
+            <translation><!-- 50 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>60</masterLabel>
+            <translation><!-- 60 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>70</masterLabel>
+            <translation><!-- 70 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>80</masterLabel>
+            <translation><!-- 80 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>90</masterLabel>
+            <translation><!-- 90 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Sign Off By --></label>
+        <name>Sign_Off_By__c</name>
+        <relationshipLabel><!-- General Tasks (Sign Off By) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Sign Off date --></label>
+        <name>Sign_Off_date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Status --></label>
+        <name>Status__c</name>
+        <picklistValues>
+            <masterLabel>Closed</masterLabel>
+            <translation><!-- Closed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Created</masterLabel>
+            <translation><!-- Created --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Disposition Pending Completion</masterLabel>
+            <translation><!-- Disposition Pending Completion --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>InProgress</masterLabel>
+            <translation><!-- InProgress --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Open</masterLabel>
+            <translation><!-- Open --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pending ActionPlan</masterLabel>
+            <translation><!-- Pending ActionPlan --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pending Approval</masterLabel>
+            <translation><!-- Pending Approval --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Void</masterLabel>
+            <translation><!-- Void --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Task Closed Date --></label>
+        <name>Task_Closed_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Task ID --></label>
+        <name>Task_ID__c</name>
+    </fields>
+    <fields>
+        <label><!-- Task Reopen By --></label>
+        <name>Task_Reopen_By__c</name>
+        <relationshipLabel><!-- General Tasks (Task Reopen By) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Task Reopen Date --></label>
+        <name>Task_Reopen_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Temp Approval Required --></label>
+        <name>Temp_Approval_Required__c</name>
+    </fields>
+    <fields>
+        <label><!-- Temp Change Owner value --></label>
+        <name>Temp_Change_Owner_value__c</name>
+    </fields>
+    <fields>
+        <label><!-- delete --></label>
+        <name>delete__c</name>
+    </fields>
+    <fields>
+        <label><!-- isLocked --></label>
+        <name>isLocked__c</name>
+    </fields>
+    <fields>
+        <label><!-- isSubmitted --></label>
+        <name>isSubmitted__c</name>
+        <picklistValues>
+            <masterLabel>False</masterLabel>
+            <translation><!-- False --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>True</masterLabel>
+            <translation><!-- True --></translation>
+        </picklistValues>
+    </fields>
+    <layouts>
+        <layout>General Task Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <recordTypes>
+        <label><!-- AdhocTask --></label>
+        <name>AdhocTask</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- Closure --></label>
+        <name>Closure</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- CollaborationReview --></label>
+        <name>CollaborationReview</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- Containment --></label>
+        <name>Containment</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- Disposition --></label>
+        <name>Disposition</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- DocumentChange --></label>
+        <name>DocumentChange</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- EffectivenessReview --></label>
+        <name>EffectivenessReview</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- Implementation --></label>
+        <name>Implementation</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- Investigation --></label>
+        <name>Investigation</name>
+    </recordTypes>
+    <startsWith>Consonant</startsWith>
+    <validationRules>
+        <errorMessage><!-- Allowed days is required --></errorMessage>
+        <name>Allowed_days_is_required</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- NC Approver is required. --></errorMessage>
+        <name>NC_Approver_is_required</name>
+    </validationRules>
+</CustomObjectTranslation>

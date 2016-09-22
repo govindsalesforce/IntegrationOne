@@ -1,0 +1,650 @@
+<apex:page sidebar="false" standardcontroller="Non_Conformance__c" readOnly="true" extensions="NonConformance,QC_custom_settings" showHeader="false" standardStylesheets="false" docType="html-5.0" >
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/app.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/bootstrap-datepicker.min.css')}" />
+    <title>Report</title>
+
+  </head>
+  <body style="background-color: #FFF;">
+    <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/app.css')}" />
+    <script>
+    window.onload =function() { window.print(); };
+    </script>
+      <div class="" id="app_warpper">
+        <div class="report-holder">
+          <div class="wiz-form-holder" style="padding: 20px;">
+          <div class="row">
+                <div class="col-md-12">
+                     <img src ="{! URLFOR($Resource.bt_static,'/static/images/report-logo.png') }" class="report-logo"/>
+                 </div>
+                        
+                <div class="col-md-12">
+                   <h1><apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Header_Section'),customLabels['NC_Header_Section'].Section_Label__c, 'Header'))}"/></h1>
+                  <table class="table table-responsive table-bordered">
+                    <tbody>
+                      <tr>
+                        <th>NC No.</th>
+                        <th>NC Status</th>
+                        <th>NC Owner</th>
+                        <th>NC Life</th>
+                        <th>NC Type</th>
+                        <th>Initiating Site</th>
+                      </tr>
+                      
+                      <tr>
+                        <td>{!NonConformance.Name}</td>
+                        <td>{!NonConformance.NC_Status__c}</td>
+                        <td>{!NonConformance.Owner.Name}</td>
+                        <td>{!NonConformance.Age__c} Day{!if(VALUE(NonConformance.Age__c)!=1,'s','')}</td>
+                        <td>{!NonConformance.NC_Type__c}</td>
+                        <td>{!NonConformance.Initiating_Site_name__c}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>  
+            </div>
+
+            
+              
+              
+              <apex:outputPanel layout="none" rendered="{!OR($ObjectType.Non_Conformance__c.Fields.NC_Type__c.Accessible,$ObjectType.Non_Conformance__c.Fields.Product__c.Accessible,$ObjectType.Non_Conformance__c.Fields.Process__c.Accessible,$ObjectType.Non_Conformance__c.Fields.Defect__c.Accessible,$ObjectType.Non_Conformance__c.Fields.Full_Description__c.accessible,$ObjectType.Non_Conformance__c.Fields.Occurance_Date__c.accessible,$ObjectType.Non_Conformance__c.Fields.Reported_Date__c.accessible,$ObjectType.Non_Conformance__c.Fields.Reporter__c.accessible,$ObjectType.Non_Conformance__c.FIelds.Department__c.Accessible,$ObjectType.Non_Conformance__c.FIelds.OwnerId.Accessible)}">
+                
+                <h1><apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Init_Section'),customLabels['NC_Init_Section'].Section_Label__c, 'Initiation'))}"/></h1>
+                
+                <table class="table table-responsive table-bordered">
+                    <tbody>
+                       <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.NC_Type__c.Accessible}"> 
+                        <tr>
+                          
+                            <td class="title-col">
+                                <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Type'),customLabels['NC_Type'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.NC_Type__c.Label))}"/>
+                            </td>
+                            <td>
+                                {!NonConformance.NC_Type__c}
+                            </td>
+                          
+                        </tr>
+                        </apex:outputPanel>
+                        <tr>
+                            <td class="title-col">
+                                <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Product'),customLabels['NC_Product'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.Product__c.Label))}" rendered="{!AND($ObjectType.Non_Conformance__c.Fields.Product__c.Accessible,NonConformance.NC_Type__c == 'Product')}"/>
+                                <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Process'),customLabels['NC_Process'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.Process__c.Label))}" rendered="{!AND($ObjectType.Non_Conformance__c.Fields.Process__c.Accessible,NonConformance.NC_Type__c == 'Process')}"/>
+                            </td>
+                            <td>
+                                <apex:outputField value="{!NonConformance.Product__r.Name}" rendered="{!AND($ObjectType.Non_Conformance__c.Fields.Product__c.Accessible,NonConformance.NC_Type__c == 'Product')}"/>
+                                <apex:outputField value="{!NonConformance.Process__r.Name}" rendered="{!AND($ObjectType.Non_Conformance__c.Fields.Process__c.Accessible,NonConformance.NC_Type__c == 'Process')}"/>
+                            </td>
+                        </tr>
+                         <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.Defect__c.Accessible}">
+                        <tr>
+                         
+                            <td class="title-col">
+                                <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Defect'),customLabels['NC_Defect'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.Defect__c.Label))}"/> 
+                            </td>
+                            <td>
+                                {!NonConformance.Defect__r.Name}
+                            </td>
+                        </tr>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.Full_Description__c.Accessible}">
+                        <tr>
+                            <td class="title-col">
+                                <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Full_Description'),customLabels['NC_Full_Description'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.Full_Description__c.Label))}"/>
+                            </td>
+                            <td>
+                                <div class="alert alert-info"> <apex:outputField value="{!NonConformance.Full_Description__c}" /> </div>
+                            </td>
+                        </tr>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.Occurance_Date__c.Accessible}">
+                        <tr>
+                            <td class="title-col">
+                                <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Occurance_Date'),customLabels['NC_Occurance_Date'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.Occurance_Date__c.Label))}"/> 
+                            </td>
+                            <td>
+                                <apex:outputText value="{0,date, dd MMMM yyyy}"> <!-- TODO: Make this dependent on Org settings so that date format can be updated from a central location -->
+                                    <apex:param value="{!NonConformance.Occurance_Date__c}"/>
+                                </apex:outputText>
+                            </td>
+                        </tr>
+                       </apex:outputPanel>
+                       <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.Reported_Date__c.Accessible}">
+                        <tr>
+                            <td class="title-col">
+                                <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Reported_Date'),customLabels['NC_Reported_Date'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.Reported_Date__c.Label))}"/>
+                            </td>
+                            <td>
+                                <apex:outputText value="{0,date, dd MMMM yyyy}"> <!-- TODO: Make this dependent on Org settings so that date format can be updated from a central location -->
+                                    <apex:param value="{!NonConformance.Reported_Date__c}"/>
+                                </apex:outputText>
+                            </td>
+                        </tr>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.Reporter__c.Accessible}">
+                        <tr>
+                            <td class="title-col">
+                                <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Reporter'),customLabels['NC_Reporter'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.Reporter__c.Label))}"/>
+                            </td>
+                            <td>
+                                {!NonConformance.Reporter__r.Name}
+                            </td>
+                        </tr>
+                       </apex:outputPanel>
+                       <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.OwnerId.Accessible}">
+                        <tr>
+                            <td class="title-col">
+                                <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Owner'),customLabels['NC_Owner'].Field_Label__c,'Owner'))}"/>
+                            </td>
+                            <td> <!-- TODO: Need to decided which field represents the NC Owner. -->
+                                {!IF(ISBLANK(NonConformance.OwnerId), $User.FirstName + ' ' + $User.LastName, NonConformance.Owner.Name)}
+                            </td>
+                        </tr>
+                      </apex:outputPanel>
+                    </tbody>
+                </table> 
+                </apex:outputPanel>              
+              
+              
+              <apex:outputPanel layout="none" rendered="{!OR($ObjectType.Non_Conformance__c.Fields.Department__c.Accessible,$ObjectType.Non_Conformance__c.Fields.Customer__c.Accessible,$ObjectType.Non_Conformance__c.Fields.BusinessUnit__c.Accessible,$ObjectType.Non_Conformance__c.Fields.Manufacturer_Supplier__c.Accessible,$ObjectType.Non_Conformance__c.Fields.NC_Source__c.accessible,$ObjectType.Non_Conformance__c.Fields.Supplier_Manufacturer_Part__c.accessible,$ObjectType.Non_Conformance__c.Fields.Audit__c.accessible,$ObjectType.Non_Conformance__c.Fields.PO_Number__c.accessible,$ObjectType.Non_Conformance__c.FIelds.Priority__c.Accessible,$ObjectType.Non_Conformance__c.FIelds.Other_Source__c.Accessible)}">
+                <h1><apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Cust_Field_Sec'),customLabels['NC_Add_Info_Section'].Section_Label__c, 'Additional Information'))}"/></h1>
+                
+                <table class="table table-responsive table-bordered">
+                    <tbody>
+                        
+                        <tr>
+                        <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.Department__c.Accessible}">
+                            <td class="title-col">
+                                <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Department'),customLabels['NC_Department'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.Department__c.Label))}"/> 
+                            </td>
+                            <td style="width: 30%">
+                                {!NonConformance.Department__r.Name}
+                            </td>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.Customer__c.Accessible}">
+                            <td class="title-col">
+                                <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Customer'),customLabels['NC_Customer'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.Customer__c.Label))}"/>
+                            </td>
+                            <td style="width: 30%">
+                                {!NonConformance.Customer__r.Name}
+                            </td>
+                         </apex:outputPanel>
+                        </tr>
+                        
+                        <tr>
+                           <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.BusinessUnit__c.Accessible}">
+                            <td class="title-col">
+                                <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Business_Unit'),customLabels['NC_Business_Unit'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.BusinessUnit__c.Label))}"/>
+                            </td>
+                            <td>
+                                {!NonConformance.BusinessUnit__c} 
+                            </td>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.Manufacturer_Supplier__c.Accessible}">
+                            <td class="title-col">
+                                <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Manufacturer_Supplier'),customLabels['NC_Manufacturer_Supplier'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.Manufacturer_Supplier__c.Label))}"/> 
+                            </td>
+                            <td>
+                                {!NonConformance.Manufacturer_Supplier__r.Name}
+                            </td>
+                           </apex:outputPanel>
+                        </tr>
+                        
+                        <tr>
+                          <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.NC_Source__c.Accessible}">
+                            <td class="title-col">
+                                <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Source'),customLabels['NC_Source'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.NC_Source__c.Label))}"/> 
+                            </td>
+                            <td>
+                                {!NonConformance.NC_Source__c}
+                            </td>
+                           </apex:outputPanel>
+                           <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.Supplier_Manufacturer_Part__c.Accessible}">
+                            <td class="title-col">
+                                <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Supplier_Manufacturer_Part'),customLabels['NC_Supplier_Manufacturer_Part'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.Supplier_Manufacturer_Part__c.Label))}"/> 
+                            </td>
+                            <td>
+                                {!NonConformance.Supplier_Manufacturer_Part__c}
+                            </td>
+                            </apex:outputPanel>
+                        </tr>
+                        
+                        <tr>
+                          <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.Audit__c.Accessible}">
+                            <td class="title-col">
+                                <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Audit'),customLabels['NC_Audit'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.Audit__c.Label))}"/> 
+                            </td>
+                            <td>
+                                {!NonConformance.Audit__c}
+                            </td>
+                           </apex:outputPanel>
+                           <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.PO_Number__c.Accessible}">
+                            <td class="title-col">
+                                <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_PO_Number'),customLabels['NC_PO_Number'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.PO_Number__c.Label))}"/>
+                            </td>
+                            <td>
+                                {!NonConformance.PO_Number__c}
+                            </td>
+                            </apex:outputPanel>
+                        </tr>
+                        <tr>
+                         <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.Priority__c.Accessible}">
+                            <td class="title-col">
+                                <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Priority'),customLabels['NC_Priority'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.Priority__c.Label))}"/>
+                            </td>
+                            <td>
+                                {!NonConformance.Priority__c}
+                            </td>
+                          </apex:outputPanel>
+                          <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.Other_Source__c.Accessible}">
+                            <td class="title-col">
+                                <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Other_Source'),customLabels['NC_Other_Source'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.Other_Source__c.Label))}"/>
+                            </td>
+                            <td>
+                                {!JSENCODE(NonConformance.Other_Source__c)}
+                            </td>
+                           </apex:outputPanel>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+                </apex:outputPanel>
+                <div class="page-break"></div>
+                                            <!-------------custom fields using custom setting----------->
+                 <div class="clearfix"></div>
+
+                <apex:outputPanel layout="none" rendered="{!OR($ObjectType.Non_Conformance__c.Fields.UD_Text1__c.Accessible,$ObjectType.Non_Conformance__c.Fields.UD_Text2__c.Accessible,$ObjectType.Non_Conformance__c.Fields.UD_Picklist3__c.Accessible,$ObjectType.Non_Conformance__c.Fields.UD_Picklist4__c.Accessible,$ObjectType.Non_Conformance__c.Fields.UD_Text_Area5__c.accessible,$ObjectType.Non_Conformance__c.Fields.UD_Text_Area6__c.accessible,$ObjectType.Non_Conformance__c.Fields.UD_Long_Text_Area7__c.accessible,$ObjectType.Non_Conformance__c.Fields.UD_Long_Text_Area8__c.accessible,$ObjectType.Non_Conformance__c.FIelds.UD_Date9__c.Accessible,$ObjectType.Non_Conformance__c.FIelds.UD_Date10__c.Accessible)}">
+                    <h1><apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Cust_Field_Sec'),customLabels['NC_Cust_Field_Sec'].Section_Label__c, 'Custom Field Details'))}"/></h1>
+                    
+                    <table class="table table-responsive table-bordered">
+                        <tbody>
+                            
+                            <tr>
+                                <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.UD_Text1__c.Accessible}">
+                                    <td class="title-col">
+                                        <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_UD_Text1'),customLabels['NC_UD_Text1'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.UD_Text1__c.Label))}"/>
+                                    </td>
+                                    <td style="width: 30%">
+                                        {!JSENCODE(NonConformance.UD_Text1__c)}
+                                    </td>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.UD_Text2__c.Accessible}">
+                                    <td class="title-col">
+                                        <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_UD_Text2'),customLabels['NC_UD_Text2'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.UD_Text2__c.Label))}"/>
+                                    </td>
+                                    <td style="width: 30%">
+                                        {!JSENCODE(NonConformance.UD_Text2__c)}
+                                    </td>
+                                </apex:outputPanel>
+                                                                
+
+                            </tr>
+                            
+                            <tr>
+                                <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.UD_Picklist3__c.Accessible}">
+                                    <td class="title-col">
+                                        <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_UD_Picklist3'),customLabels['NC_UD_Picklist3'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.UD_Picklist3__c.Label))}"/>
+                                    </td>
+                                    <td>
+                                        {!NonConformance.UD_Picklist3__c} 
+                                    </td>
+                                </apex:outputPanel>                                
+
+                                <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.UD_Picklist4__c.Accessible}">
+                                    <td class="title-col">
+                                        <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_UD_Picklist4'),customLabels['NC_UD_Picklist4'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.UD_Picklist4__c.Label))}"/> 
+                                    </td>
+                                    <td>
+                                        {!NonConformance.UD_Picklist4__c}
+                                    </td>
+                                </apex:outputPanel>
+                            </tr>
+                            
+                            <tr>
+                                <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.UD_Text_Area5__c.Accessible}">
+                                    <td class="title-col">
+                                        <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_UD_Text_Area5'),customLabels['NC_UD_Text_Area5'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.UD_Text_Area5__c.Label))}"/>
+                                    </td>
+                                    <td>
+                                        {!NonConformance.UD_Text_Area5__c}
+                                    </td>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.UD_Text_Area6__c.Accessible}">
+                                    <td class="title-col">
+                                        <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_UD_Text_Area6'),customLabels['NC_UD_Text_Area6'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.UD_Text_Area6__c.Label))}"/> 
+                                    </td>
+                                    <td>
+                                        {!NonConformance.UD_Text_Area6__c}
+                                    </td>
+                                </apex:outputPanel>
+                            </tr>
+                            
+                            <tr>
+                                <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.UD_Long_Text_Area7__c.Accessible}">
+                                    <td class="title-col">
+                                        <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_UD_Long_Text_Area7'),customLabels['NC_UD_Long_Text_Area7'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.UD_Long_Text_Area7__c.Label))}"/> 
+                                    </td>
+                                    <td>
+                                        {!NonConformance.UD_Long_Text_Area7__c}
+                                    </td>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.UD_Long_Text_Area8__c.Accessible}">
+                                    <td class="title-col">
+                                        <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_UD_Long_Text_Area8'),customLabels['NC_UD_Long_Text_Area8'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.UD_Long_Text_Area8__c.Label))}"/>
+                                    </td>
+                                    <td>
+                                        {!NonConformance.UD_Long_Text_Area8__c}
+                                    </td>
+                                </apex:outputPanel>
+                            </tr>
+                            <tr>
+                                <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.UD_Date9__c.Accessible}">
+                                    <td class="title-col">
+                                        <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_UD_Date9'),customLabels['NC_UD_Date9'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.UD_Date9__c.Label))}"/>
+                                    </td>
+                                    <td>
+                                        <apex:outputText value="{0,date, dd MMMM yyyy}"> <!-- TODO: Make this dependent on Org settings so that date format can be updated from a central location -->
+                                            <apex:param value="{!NonConformance.UD_Date9__c}"/>
+                                        </apex:outputText>
+                                    </td>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.UD_Date10__c.Accessible}">
+                                    <td class="title-col">
+                                       <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_UD_Date10'),customLabels['NC_UD_Date10'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.UD_Date10__c.Label))}"/>
+                                    </td>
+                                    <td>
+                                        <apex:outputText value="{0,date, dd MMMM yyyy}"> <!-- TODO: Make this dependent on Org settings so that date format can be updated from a central location -->
+                                            <apex:param value="{!NonConformance.UD_Date10__c}"/>
+                                        </apex:outputText>
+                                    </td>
+                                </apex:outputPanel>
+                            </tr>
+                        </tbody>
+                    </table>
+                </apex:outputPanel>
+ 
+                 <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.FieldSets.NC_CustomFields.size!=0}">
+                    <table class="table table-responsive table-bordered">
+                        <tbody>
+                            <apex:repeat value="{!$ObjectType.Non_Conformance__c.FieldSets.NC_CustomFields}" var="f">
+                              <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields[f].Accessible}">
+                                <tr>
+                                    <td class="title-col">
+                                      {!$ObjectType.Non_Conformance__c.Fields[f].label}
+                                    </td>
+                                    <td>
+                                        <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields[f].type=='textarea'}">
+                                            <div class="alert alert-info"> <apex:outputField value="{!NonConformance[f]}" /> </div>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields[f].type=='date'}">
+                                            <apex:outputText value="{0,date, dd MMMM yyyy}"> 
+                                                <apex:param value="{!NonConformance[f]}"/>
+                                            </apex:outputText>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel rendered="{!NOT(OR($ObjectType.Non_Conformance__c.Fields[f].type=='date',$ObjectType.Non_Conformance__c.Fields[f].type=='reference',$ObjectType.Non_Conformance__c.Fields[f].type=='textarea'))}">
+                                            {!JSENCODE(NonConformance[f])}
+                                        </apex:outputPanel>
+                                        <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields[f].type=='reference'}">
+                                        	!JSENCODE(NonConformance[$ObjectType.Non_Conformance__c.Fields[f].relationshipName])}
+                                        </apex:outputPanel>
+                                    </td>
+                                </tr>                                
+                              </apex:outputPanel>  
+                            </apex:repeat>
+                        </tbody>
+                    </table>
+                </apex:outputPanel>  
+                <!------------------custom fields using custom setting--END--------->
+              
+              <h1><apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Prod_Section'),customLabels['NC_Prod_Section'].Section_Label__c, 'Products'))}"/></h1>
+                <!-- TODO: Expand/Collapse behavior is inconsistent.  Expanding second collapses top but not vice versa. -->
+                <apex:repeat value="{!Non_Conformance__c.NC_Products__r}" var="p">
+                <c:wiz_added_Product recordid="{!p.id}" editable="false"/>
+               </apex:repeat>
+               <apex:outputPanel layout="none" rendered="{!OR($ObjectType.Non_Conformance__c.Fields.Risk_Severity__c.Accessible,$ObjectType.Non_Conformance__c.Fields.Risk_Occurrence__c.Accessible,$ObjectType.Non_Conformance__c.Fields.CAPA_Required__c.Accessible,$ObjectType.Non_Conformance__c.Fields.Risk_Description__c.accessible,$ObjectType.Non_Conformance__c.Fields.Justification_for_CAPA_no_CAPA__c.accessible)}">
+                <apex:outputpanel layout="none" rendered="{!AND($ObjectType.Non_Conformance__c.Fields.Risk_Assessment_Required__c.Accessible,NonConformance.Risk_Assessment_Required__c == 'No')}">
+                                        Risk Assessment Not Required
+                </apex:outputpanel>
+                <apex:outputpanel layout="none" rendered="{!AND($ObjectType.Non_Conformance__c.Fields.Risk_Assessment_Required__c.Accessible,NonConformance.Risk_Assessment_Required__c == 'Yes')}">
+                <h1>Risk Assessment Required</h1>
+
+                <table class="table table-responsive table-bordered">
+                                            <tbody>
+                                                <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.Risk_Severity__c.Accessible}">
+                                                <tr>
+                                                    <td class="title-col" style="width: 20%">
+                                                        <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Risk_Severity'),customLabels['NC_Risk_Severity'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.Risk_Severity__c.Label))}"/>
+                                                    </td>
+                                                    <td>
+                                                        {!NonConformance.Risk_Severity__r.Name}
+                                                    </td>
+                                                </tr>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.Risk_Occurrence__c.Accessible}">
+                                                <tr>
+                                                    <td class="title-col">
+                                                        <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Risk_Occurrence'),customLabels['NC_Risk_Occurrence'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.Risk_Occurrence__c.Label))}"/> 
+                                                    </td>
+                                                    <td>
+                                                        {!NonConformance.Risk_Occurrence__r.Name} 
+                                                    </td>
+                                                </tr>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.Risk_Priority__c.Accessible}">
+                                                <tr>
+                                                    <td class="title-col">
+                                                       <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Risk_Priority'),customLabels['NC_Risk_Priority'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.Risk_Priority__c.Label))}"/>
+                                                    </td>
+                                                    <td>
+                                                        {!NonConformance.Risk_Priority__r.Name}
+                                                    </td>
+                                                </tr>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.CAPA_Required__c.Accessible}">
+                                                <tr>
+                                                    <td class="title-col">
+                                                        <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_CAPA_Required'),customLabels['NC_CAPA_Required'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.CAPA_Required__c.Label))}"/>
+                                                    </td>
+                                                    <td>
+                                                        {!NonConformance.CAPA_Required__c}
+                                                    </td>
+                                                </tr>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.Risk_Description__c.Accessible}">
+                                                <tr>
+                                                
+                                                    <td class="title-col">
+                                                        <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Risk_Description'),customLabels['NC_Risk_Description'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.Risk_Description__c.Label))}"/> 
+                                                    </td>
+                                                    <td>
+                                                        <div class="alert alert-info"> <apex:outputField value="{!NonConformance.Risk_Description__c}" /> </div>
+                                                        
+                                                    </td>
+                                                </tr>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.Justification_for_CAPA_no_CAPA__c.Accessible}">
+                                                <tr>
+                                                    <td class="title-col">
+                                                        <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Just_No_CAPA'),customLabels['NC_Just_No_CAPA'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.Justification_for_CAPA_no_CAPA__c.Label))}"/> 
+                                                    </td>
+                                                    <td>
+                                                        <div class="alert alert-info"> <apex:outputField value="{!NonConformance.Justification_for_CAPA_no_CAPA__c}" /> </div>
+                                                    </td>
+                                                </tr>
+                                                </apex:outputPanel>
+                                            </tbody>
+                                        </table>
+                        </apex:outputpanel>
+               </apex:outputPanel> 
+                
+                
+                <h1>Resolution</h1>
+
+                <table class="table table-responsive table-bordered">
+                  <tbody>
+                    <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.NC_Resolution_Code__c.Accessible}">
+                    <tr>
+                      <td class="title-col" style="width: 20%">
+                        <apex:outputText value="{!$ObjectType.Non_Conformance__c.Fields.NC_Resolution_Code__c.Label}"/>
+                      </td>
+                      <td>
+                        {!NonConformance.NC_Resolution_Code__c}
+                      </td>
+                    </tr>
+                    </apex:outputPanel>
+                      <apex:outputPanel rendered="{!AND($ObjectType.Non_Conformance__c.Fields.Resolution_Closed_Comment__c.Accessible,OR(NonConformance.NC_Resolution_Code__c=='No Action Required',NonConformance.NC_Resolution_Code__c=='Discarded'))}">
+                    <tr>
+                      <td class="title-col">
+                        <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Resolution_Closed_Comment'),customLabels['NC_Resolution_Closed_Comment'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.Resolution_Closed_Comment__c.Label))}"/> 
+                      </td>
+                      <td>
+                       <div class="alert alert-info"> <apex:outputField value="{!NonConformance.Resolution_Closed_Comment__c}" /> </div>
+                      </td>
+                    </tr>
+                    </apex:outputPanel>
+                   <apex:outputPanel rendered="{!JSENCODE(NonConformance.NC_Resolution_Code__c)=='Addressed through CAPA'}">
+                    <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.CAPA_Number__c.Accessible}">
+                    <tr>
+                      <td class="title-col">
+                        <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_CAPA_Number'),customLabels['NC_CAPA_Number'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.CAPA_Number__c.Label))}"/> 
+                      </td>
+                      <td>
+                       <div class="alert alert-info"> <apex:outputField value="{!NonConformance.CAPA_Number__c}" /> </div>
+                      </td>
+                    </tr>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!$ObjectType.Non_Conformance__c.Fields.Resolution_CAPA_Comment__c.Accessible}">
+                    <tr>
+                      <td class="title-col">
+                        <apex:outputText value="{!JSENCODE(IF(contains(customLabelKeys,'NC_Resolution_CAPA_Comment'),customLabels['NC_Resolution_CAPA_Comment'].Field_Label__c, $ObjectType.Non_Conformance__c.Fields.Resolution_CAPA_Comment__c.Label))}"/> 
+                      </td>
+                      <td>
+                       <div class="alert alert-info"> <apex:outputField value="{!NonConformance.Resolution_CAPA_Comment__c}" /> </div>
+                      </td>
+                    </tr>
+                    </apex:outputPanel>
+                   </apex:outputPanel>
+                    
+                    
+                  </tbody>
+                </table> 
+              <!--------------------------------------->          
+                             <apex:outputPanel rendered="{!NonConformance.NC_Resolution_Code__c=='NC Workflow'}">        
+                                    <table class="table table-responsive table-bordered">
+                                        <tbody>
+                                            <tr>
+                                                <th>Task Name</th>
+                                                <th>Sequence</th>
+                                                <th>Owner</th>
+                                                <th>Allowed Days</th>
+                                                <th>Due Date</th>
+                                            </tr>
+                                            <apex:outputPanel rendered="{!if(NonConformance.NC_Resolution_Code__c=='NC Workflow',true,false)}">
+                                                <apex:repeat value="{!tasksWithSequences}"  var="General_Tasks"> 
+                                                    <apex:outputPanel rendered="{!BEGINS(General_Tasks,'Containment')}">
+                                                        <apex:repeat value="{!contTask}" var="General_Task">
+                                                            <tr>
+                                                                <td>{!General_Task.RecordType.Name}</td>
+                                                                <td>{!if(General_Task.RecordType.Name=='Closure','',General_Task.Sequence_Position__c)}</td>
+                                                                <td>{!General_Task.Owner.Name}</td>
+                                                                <td>{!General_Task.Allowed_Days__c}</td>
+                                                                <td>  
+                                                                    <apex:outputText value="{0,date,dd MMM yyyy}">
+                                                                        <apex:param value="{!General_Task.Due_Date__c}" /> 
+                                                                    </apex:outputText>
+                                                                </td>
+                                                            </tr>
+                                                        </apex:repeat>
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!BEGINS(General_Tasks,'Implementation')}">
+                                                        <apex:repeat value="{!implTask}" var="General_Task">
+                                                            <tr>
+                                                                <td>{!General_Task.RecordType.Name}</td>
+                                                                <td>{!if(General_Task.RecordType.Name=='Closure','',General_Task.Sequence_Position__c)}</td>
+                                                                <td>{!General_Task.Owner.Name}</td>
+                                                                <td>{!General_Task.Allowed_Days__c}</td>
+                                                                <td>  
+                                                                    <apex:outputText value="{0,date,dd MMM yyyy}">
+                                                                        <apex:param value="{!General_Task.Due_Date__c}" /> 
+                                                                    </apex:outputText>
+                                                                </td>
+                                                            </tr>
+                                                        </apex:repeat>
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!BEGINS(General_Tasks,'Investigation')}">
+                                                        <apex:repeat value="{!invTask}" var="General_Task">
+                                                            <tr>
+                                                                <td>{!General_Task.RecordType.Name}</td>
+                                                                <td>{!if(General_Task.RecordType.Name=='Closure','',General_Task.Sequence_Position__c)}</td>
+                                                                <td>{!General_Task.Owner.Name}</td>
+                                                                <td>{!General_Task.Allowed_Days__c}</td>
+                                                                <td>  
+                                                                    <apex:outputText value="{0,date,dd MMM yyyy}">
+                                                                        <apex:param value="{!General_Task.Due_Date__c}" /> 
+                                                                    </apex:outputText>
+                                                                </td>
+                                                            </tr>
+                                                        </apex:repeat>                                                        
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!BEGINS(General_Tasks,'Disposition')}">
+                                                        <apex:repeat value="{!dispTask}" var="General_Task">
+                                                            <tr>
+                                                                <td>{!General_Task.RecordType.Name}</td>
+                                                                <td>{!if(General_Task.RecordType.Name=='Closure','',General_Task.Sequence_Position__c)}</td>
+                                                                <td>{!General_Task.Owner.Name}</td>
+                                                                <td>{!General_Task.Allowed_Days__c}</td>
+                                                                <td>  
+                                                                    <apex:outputText value="{0,date,dd MMM yyyy}">
+                                                                        <apex:param value="{!General_Task.Due_Date__c}" /> 
+                                                                    </apex:outputText>
+                                                                </td>
+                                                            </tr>
+                                                        </apex:repeat>                                                        
+                                                    </apex:outputPanel>
+                                                </apex:repeat>
+                                                <apex:repeat value="{!adhocTasks}"  var="General_Task">   
+                                                            <tr>
+                                                                <td>{!General_Task.RecordType.Name}</td>
+                                                                <td>{!if(General_Task.RecordType.Name=='Closure','',General_Task.Sequence_Position__c)}</td>
+                                                                <td>{!General_Task.Owner.Name}</td>
+                                                                <td>{!General_Task.Allowed_Days__c}</td>
+                                                                <td>  
+                                                                    <apex:outputText value="{0,date,dd MMM yyyy}">
+                                                                        <apex:param value="{!General_Task.Due_Date__c}" /> 
+                                                                    </apex:outputText>
+                                                                </td>
+                                                            </tr>                                                 
+                                                </apex:repeat>
+                                                             <tr>
+                                                                <td>{!closTask.RecordType.Name}</td>
+                                                                <td>{!if(closTask.RecordType.Name=='Closure','',closTask.Sequence_Position__c)}</td>
+                                                                <td>{!closTask.Owner.Name}</td>
+                                                                <td>{!closTask.Allowed_Days__c}</td>
+                                                                <td>  
+                                                                    <apex:outputText value="{0,date,dd MMM yyyy}">
+                                                                        <apex:param value="{!closTask.Due_Date__c}" /> 
+                                                                    </apex:outputText>
+                                                                </td>
+                                                            </tr>   
+                                            </apex:outputPanel>
+                                        </tbody>
+                                    </table>
+              </apex:outputPanel>
+              <!----------------------------------------->
+               <!-- <div class="page-break"></div>-->
+              <c:wiz_task_details containmentTask="{!contTask}" dispositionTask="{!dispTask}"  investigationTask="{!invTask}" implementationTask="{!implTask}" adhocTasks="{!adhocTasks}" closureTask="{!closTask}"></c:wiz_task_details>
+    </div>
+    </div>
+    </div>  
+    <!--  Footer  -->
+    <div class="col-md-12">
+      &copy; Copyright 2015 | Qualityze | All rights reserved
+    </div>      
+  </body>
+</html>
+</apex:page>

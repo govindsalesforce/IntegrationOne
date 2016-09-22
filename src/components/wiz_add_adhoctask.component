@@ -1,0 +1,277 @@
+<apex:component >
+    <apex:attribute name="divId"  description="Holds the id value for div" type="String" required="true"/>
+    <apex:attribute name="compDate" description="Holds completed date" type="String" required="true"/>
+    <apex:attribute name="compBy" description="Holds completedBy" type="String" required="true"/>
+    <apex:attribute name="detail" description="Holds Detail" type="String" required="true"/>
+    <apex:attribute name="adhocTask" description="Holds General Task record of record type AdhocTask" type="General_Task__c" required="true"/>
+    <apex:attribute name="Capa" description="holds record details of CAPA object" type="CAPA__c" required="false"/>
+    <apex:attribute name="ChangeMgmt" description="holds record details of Changemanagement object" type="Change_Management__c" required="false"/>
+    <apex:attribute name="adhocTaskActions" description="holds records of general sub task of record type AdhocTask Actions" type="General_Sub_Task__c[]" required="true"/>
+    <script>
+    	
+    	function cancelPopup()
+        {
+           var YESButtonInRedirectModalOnClick = function () {
+           		if(window.location.pathname.indexOf("changemanagementtask") > -1){
+                	window.location.href = '/apex/changemanagementtask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&type=AdhocTask';
+            	}else if(window.location.pathname.indexOf("capa_task") > -1){
+                	window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&type=AdhocTask';
+            	}
+           };
+           var NOButtonInRedirectModalOnClick = function () {
+               
+           };
+           $('#redirectDialog .btn-primary').bind( "click", YESButtonInRedirectModalOnClick);
+           $('#redirectDialog .btn-default').bind( "click", NOButtonInRedirectModalOnClick);
+           
+           // Show the redirect dialog
+           $('#redirectDialog').modal('show');
+           
+           // Remove the onClick event
+           $('#redirectDialog').on('hidden.bs.modal', function () {
+               $('#redirectDialog .btn-primary').unbind( "click", YESButtonInRedirectModalOnClick);
+               $('#redirectDialog .btn-default').unbind( "click", NOButtonInRedirectModalOnClick);
+           })
+        }
+    	
+    	function holdSelectedOption(loc){
+            var optionChoosen = $(loc).find('option:selected').val();
+            $(loc).next().val(optionChoosen);
+        }
+    
+    	function removeAdhocTask(loc){
+            var divId = $(loc).attr('id').split('_');
+            $("#"+divId[0]).remove();
+            //console.log('path until question mark '+window.location.pathname);
+            if($('#AdhocTaskSection').children().length == 0 && window.location.pathname.indexOf("changemanagementtask") > -1){
+                window.location.href = '/apex/changemanagementtask?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&type=AdhocTask';
+            }else if($('#AdhocTaskSection').children().length == 0 && window.location.pathname.indexOf("capa_task") > -1){
+                window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!JSENCODE($CurrentPage.parameters.gtid)}&type=AdhocTask';
+            }else{    
+            	assignDynamicIdsToAdhocTask();
+            }    
+        }
+    
+    	function adhocTaskValidation(){
+            $("div[id$='_error']").empty();
+            isApproversValid=false;
+            var id_start = 0;
+            var isValid = true,divId,detail,completedDate,completedBy;
+            if($("#AdhocTaskSection>div").length>0){
+                $("#AdhocTaskSection>div").each(function() {
+                    divId = '{!divId}' + (id_start++);
+                    detail = $("#"+divId+"_{!detail}").val();
+                    console.log('detail '+detail);
+                    completedDate = $("#"+divId+"_{!compDate}_GRDATE").val();
+                    completedBy = $("#"+divId+"_{!compBy}").val();
+                    if(detail == '' || detail == undefined){
+                        console.log('inside error zone');
+                        $("#"+divId+"_{!detail}_error").append('This Field is Required').css('color','red');
+                        isValid = false;
+                    }
+                    if(completedDate == '' || completedDate == undefined){
+                        $("#"+divId+"_{!compDate}_error").append('This Field is Required').css('color','red');
+                    	isValid = false;
+                    }
+                    if(completedBy == '' || completedBy == undefined){
+                        $("#"+divId).find("#"+divId+"_{!compBy}_error").append('This Field is Required').css('color','red');
+                    	isValid = false;
+                    }
+                    return isValid;
+                });
+            }
+            validate(null,afterValidate,'Taskapproval');
+            if(!isApproversValid){                        
+                return false;
+            }
+            return isValid;
+        }    
+                            
+    	function addAdhocTask(){
+            if(adhocTaskValidation()){
+                $("#{!divId}").clone().prependTo("#AdhocTaskSection").show();
+                assignDynamicIdsToAdhocTask();
+            }    
+        }
+    	
+    	function formatDate(date){
+            return parseInt(date.getMonth()+1)+'/'+date.getDate()+'/'+date.getFullYear();
+        }  
+    	
+    	function dateFormat(date){
+            var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun","Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            var day = date.getDate();
+            if(day<10){
+                day = '0'+day;
+            }
+            var month = monthNames[date.getMonth()];
+            var year = date.getFullYear().toString();
+            return day + ' ' + month + ' ' + year;
+    	}
+    
+    	function autoPopulateDate(divId){
+            var minimumDate = dateFormat(new Date("{!adhocTask.CreatedDate}"));//for completed date
+            console.log('minimumDate '+minimumDate);
+            var initCompDate;
+            $("#"+divId+"_{!compDate}_GRDATE").datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY", maxDate: new Date(),minDate: new Date(minimumDate)});
+            $("#"+divId).find('.datepicker').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY", maxDate: new Date(), minDate: new Date(minimumDate)}).on('dp.change', function(e){
+                $('input[name=' + $(this).attr('name') + ']').val(e.date.format());
+            });
+        }
+    	
+    	function dateHandler(date,dateInput,divId){
+            var tempId='';
+        	$(date).each(function(){
+                if($(this).hasClass('datepicker')){
+                    $(this).attr('id',divId+'_{!compDate}');
+                    tempId=$(this).attr('id');
+            	}else if(this.id.indexOf('hidden_error')>0){
+                    $(this).attr('id',tempId+'_hidden_error');
+            	}else if(this.id.indexOf('error')>0){
+                    $(this).attr('id',tempId+'_error');
+                }
+        	})
+            $(dateInput).each(function(){
+            	if(this.type=='hidden'){
+                	$(this).attr('name',tempId);
+                	$(this).attr('id',tempId+'_hidden');
+            	}
+            	else if(this.type=='text'){
+                	$(this).attr('data-api',tempId) 
+                	$(this).attr('data-hiddenId',tempId+'_hidden'); 
+                	$(this).attr('id',tempId+'_GRDATE');
+                	$(this).attr('name',tempId+'discard');
+                    $(this).attr("onClick","$('#"+tempId+" .glyphicon').click()");
+           		} 
+        	});
+        	autoPopulateDate(divId);
+    	}
+    	
+    	function assignDynamicIdsToAdhocTask(){
+            console.log('inside dynamic ids');
+            $('.usetwentyfour').remove();
+            var id_start = 0,divId,compBy,compDate,compDateinput,options,optionChoosen;
+            $("#AdhocTaskSection>div").each(function(){
+                divId = '{!divId}' + (id_start++);
+                $(this).attr('id',divId);
+                $('#'+divId+'_{!compBy}').empty();
+                $("#"+divId).find('a').eq(0).attr('href','#'+divId+'_href');
+                $("#"+divId).find('a').eq(1).attr('id',divId+'_Cancel');
+                $("#"+divId).find('a').eq(2).attr('href','#'+divId+'_href');
+                $("#"+divId+">div").find('div').eq(1).attr('id',divId+'_href');
+                $("#"+divId).find('textarea').attr('id',divId+'_{!detail}');
+                $("#"+divId).find('textarea').next().attr('id',divId+'_{!detail}_error');
+                $("#"+divId).find('div').eq(5).attr('id',divId+'_completedDate');
+                compDate = $("#"+divId).find('div').eq(5).find('div');
+                compDateinput = $("#"+divId).find('div').eq(5).find('input');
+                dateHandler(compDate,compDateinput,divId);
+                $("#"+divId).find('select').attr('id',divId+'_{!compBy}');
+                $("#"+divId).find('select').next().attr('id',divId+'_{!compBy}_Hidden');
+                $("#"+divId).find('select').next().attr('name',divId+'_{!compBy}_Hidden');
+                options = $("#{!compBy}").html();
+                $('#'+divId+'_{!compBy}').html(options);
+                optionChoosen = $('#'+divId+'_{!compBy}').next().val();
+                if(optionChoosen != ''){
+                    $("#"+divId+"_{!compBy} option[value="+optionChoosen+"]").attr('selected','true');
+                }    
+                $("#"+divId).find('select').next().next().attr('id',divId+'_{!compBy}_error');
+            });    
+        }
+    
+    
+    </script>
+    <div class="button-bar text-right">
+        <h4 class="pull-left task-title"></h4>
+        <button id="addAdhocTask" type="button" class="btn btn-primary" onclick="addAdhocTask();"><span class="fa fa-plus-square-o"></span> Add Adhoc Action</button>
+    </div>
+    
+    <p class="clearfix"></p>   
+    
+    <div class="" id="{!divId}" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingOne">
+                <h4 class="panel-title">
+                    <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" data-parent="#ver_plan_accordion" href="#{!divId}verplan_1" aria-expanded="true" aria-controls="collapseOne"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                    </a>
+                    <a href="#{!divId}verplan_1" id="cancel" class="btn-link pull-right" onclick = "removeAdhocTask(this)">Cancel </a>&nbsp;
+                    <a data-toggle="collapse" data-parent="#accordion" href="#{!divId}verplan_1" aria-expanded="true" aria-controls="collapseOne" class="">
+                        AdhocTask Action
+                    </a>
+                </h4>
+            </div>
+            <div id="{!divId}verplan_1" class="panel-collapse out collapse in" role="tabpanel" aria-labelledby="headingOne" aria-expanded="true">
+                <p class="clearfix"/>
+                <div class="col-md-6 col-sm-6 col-xs-12">
+                    <label><span class="mandatory">*</span> Completed By:</label>
+                    <select id="{!compBy}" class="form-control" onchange="holdSelectedOption(this);">
+                        
+                    </select>
+					<input type="hidden" id="{!compBy}_hidden"/>
+                    <div id="{!compBy}_error" class="with-errors"></div>
+                </div>
+               
+                <c:wiz_field FieldLabel="Completed Date" JSId="completed_date" Required="true" Wide="false">
+                    <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"  FieldId="completed_Date"  initdate="{!today()}" updateable="{!NOT(OR(adhocTask.Status__c == 'Pending Approval',adhocTask.Status__c == 'Closed',adhocTask.Status__c == 'Void',adhocTask.ChangeFieldApprovalStatus__c=='Pending',AND($User.Id != adhocTask.ownerid,$Profile.Name != 'System Administrator',$User.Id != Capa.Ownerid)))}"/>
+                </c:wiz_field>
+                
+                <div class="panel-body wiz_fields">
+                    <label for="exampleInputEmail1"><span class="mandatory">*</span> Detail:</label>
+                    <textarea type="text" class="form-control" id="{!divId}Detail"></textarea>
+                    <div id="{!divId}Detail_error"></div>
+                </div>
+                <p class="clearfix"/>
+            </div>
+        </div>
+    </div> <!-- pannel end -->
+    
+    <div id="AdhocTaskSection" class="col-md-12">
+        <apex:repeat value="{!adhocTaskActions}" var="ata">
+        
+            <div class="{!ata}" id="" role="tablist" aria-multiselectable="true">
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="headingOne">
+                        <h4 class="panel-title">
+                            <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" data-parent="#ver_plan_accordion" href="#{!ata}verplan_1" aria-expanded="true" aria-controls="collapseOne"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                            </a>
+                            <a href="#{!ata}verplan_1" id="cancel" class="btn-link pull-right" onclick = "deleteAdhocTask(this)">Delete </a>&nbsp;
+                            <a data-toggle="collapse" data-parent="#accordion" href="#{!ata}verplan_1" aria-expanded="true" aria-controls="collapseOne" class="" id="{!ata.Id}_href">
+                            </a>
+                            <script type="text/javascript">
+                               	var str = '{!JSENCODE(ata.Sub_Task_Detail__c)}'
+                            	$('#{!ata.Id}_href').text('AdhocTask Action: '+str.substring(0,20)+'...');
+                            </script>
+                        </h4>
+                    </div>
+                     
+                    <div id="{!ata}verplan_1" class="panel-collapse out collapse in" role="tabpanel" aria-labelledby="headingOne" aria-expanded="true">
+                        <p class="clearfix"></p>
+                        <div class="wiz-fields">
+                            <label><span class="mandatory">*</span> Completed By:</label>
+                            <select id="{!compBy}" class="form-control" onchange="holdSelectedOption(this);">
+                            	<!--<option value='{!ata.Completed_By__c}' selected='{!ata.Completed_By__r.Name}'>{!ata.Completed_By__r.Name}</option>    -->
+                            </select>
+                            <input type="hidden" id="{!compBy}_hidden" value="{!ata.Completed_By__c}"/>
+                            <div id="{!compBy}_error" class="with-errors"></div>
+                        </div>
+                        
+                        <c:wiz_field FieldLabel="Completed Date" JSId="completed_date" Required="true" Wide="false">
+                            <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"  FieldId="completed_Date"  initdate="{!ata.Completed_Date__c}" updateable="{!NOT(OR(adhocTask.Status__c == 'Pending Approval',adhocTask.Status__c == 'Closed',adhocTask.Status__c == 'Void',adhocTask.ChangeFieldApprovalStatus__c=='Pending',AND($User.Id != adhocTask.ownerid,$Profile.Name != 'System Administrator',$User.Id != Capa.Ownerid)))}"/>
+                        </c:wiz_field>
+                        
+                        <div class="panel-body wiz-fields-wide">
+                            <label for="exampleInputEmail1"><span class="mandatory">*</span> Detail:</label>
+                            <textarea type="text" class="form-control" id="{!ata}_detail"></textarea>
+                            <div id="{!divId}Detail_error"></div>
+                            <script type="text/javascript"> 
+                            	$('#{!ata}_detail').html('{!JSENCODE(ata.Sub_Task_Detail__c)}');
+                            </script>
+                        </div>
+                        <p class="clearfix"/>
+                          
+                    </div>
+                </div>
+            </div>
+              
+        </apex:repeat>
+    </div>
+</apex:component>

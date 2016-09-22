@@ -1,0 +1,822 @@
+<apex:component controller="Component_Handler" extensions="QC_custom_settings">
+<apex:attribute name="recordid" type="string" required="true" description="Non-Conformance Record" assignto="{!ncid}"/>
+<apex:attribute name="taskseqence" type="string" description="generic task sequence"/>
+       <script type="text/javascript">
+     $( document ).ready(function() {                    
+            var followers ='{!JSENCODE(NC.Followers__c)}';
+            console.log('followers  '+followers);
+            if(followers.indexOf('{!$User.Id}') == -1){
+               console.log('Not a follower');
+               $('#followBtn').attr('title','Follow');
+               $('#followBtn').html('<span class="fa fa-plus-circle"></span>');
+               $("#followBtn" ).click(function() {
+                     followNC();
+               });
+              
+            }
+            else{
+              console.log('Follower');
+              $('#followBtn').attr('title','Un Follow');
+              $('#followBtn').html('<span class="fa fa-minus-circle"></span>');
+              $("#followBtn" ).click(function() {
+                    unFollowNC();
+              });
+            } 
+     });
+    function reopenncfunc()
+    {
+       alert("test close nc");
+      if({!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}){
+           $('#pw').val(''); 
+           $('.dont-allow-multiple-clicks').removeAttr('disabled');
+           $('#signature').modal('show');
+      }else{
+         navigateAfterDigitalSignature();
+      }
+    }
+
+     function reopennc(){
+       Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.Component_Handler.reopenNC}','{!RecordId}',function(result, event){ window.location.reload();});
+    }
+   
+    
+     function followNC(){
+           console.log('followNC function ');
+           Visualforce.remoting.Manager.invokeAction(
+                                    // @RemoteAction
+                                    '{!$RemoteAction.Component_Handler.followNC}',                                 
+                                     '{!NC.Id}','{!$User.Id}',
+                                    
+                                    // Callback
+                                    function(result, event){
+                                        console.log('followNC   result  '+result);
+                                        if(result=='0'){
+                                           location.reload();
+                                        }
+                                        
+                                    },
+                                    // Don't know, couldn't find docs
+                                    {escape: true}
+                                );
+       }
+       
+       function unFollowNC(){
+         console.log('unFollowNC function ');
+         Visualforce.remoting.Manager.invokeAction(
+                                    // @RemoteAction
+                                    '{!$RemoteAction.Component_Handler.unFollowNC}',
+                                    
+                                    '{!NC.Id}','{!$User.Id}',
+                                    
+                                    // Callback
+                                    function(result, event){
+                                        console.log('unFollowNC   result  '+result);
+                                        if(result=='0'){
+                                          location.reload();
+                                        }
+                                        
+                                    },
+                                    // Don't know, couldn't find docs
+                                    {escape: true}
+                                );
+          
+      }
+      
+      //Re-open
+      function selectOnlyParent(parent_checkbox,act_container){
+       console.log("Hello");
+      if(!$(parent_checkbox).is(':checked')){
+           $("#"+act_container).find('.checkbox-child').each(function(){
+                 $(this).prop('checked',false);
+           });
+      }
+      
+    }
+    
+    function selectAll(parent_checkbox, container){
+        //alert(container);
+        var checkbox_list = $(container + ' > .panel-body');
+        var parent_checkbox = parent_checkbox;
+        console.log(checkbox_list);
+        $(checkbox_list).find('.checkbox-child').prop('checked', true);
+        $(parent_checkbox).prop('checked', true);
+        
+    };
+    function selectFunction(parent_checkbox_id, act_container){
+        new selectParent(parent_checkbox_id, act_container);
+        
+    };
+    function selectParent(parent_checkbox_id, act_container){
+        var parent_checkbox = parent_checkbox_id;
+        var active_container = parseInt($(act_container).find('.checkbox-child:checked').length);
+        var selected = active_container;
+        console.log(selected);
+        
+        if(selected >= 1)
+        {
+            $(parent_checkbox).prop('checked', true);
+        }
+        if(selected < 1 || selected == ''){
+            $(parent_checkbox).prop('checked', false);
+        };
+        
+        console.log(selected + ' - function end');
+    };
+    
+    function reOpenTasks(){
+        //alert("Hello");
+        var tasks={};
+        // var ncid = '{!NC.Id}';
+        console.log('$("#Containment_parent").checked   '+$("#Containment_parent").is(':checked'));
+        if($("#Containment_parent").is(':checked')){
+             var subTasks=[],taskId='Containment@'+$('#Containment_parent_task').val();
+             tasks[taskId]=subTasks;
+           
+        }
+        if($("#Implementation_parent").is(':checked')){
+           
+            //console.log('implementaion child task length  '+$('#reopen_Implementation').find('.checkbox :checked').length);
+            var subTasks=[],taskId='Implementation@'+$('#Implementation_parent_task').val();
+            $('#reopen_Implementation').find('.checkbox :checked').each(function(){
+                 var chkID=$(this).attr('id');
+                //alert(chkID+"  subtaskID "+$("#"+chkID+"_subTask").val()+" task id  "+$("#"+chkID+"_task").val());
+                 subTasks.push($("#"+chkID+"_subTask").val());
+           });
+           tasks[taskId]=subTasks;
+           
+           
+            //console.log('rcs  ='+ $(this).find('.childid').val());
+            //console.log(tasks);
+        }
+        if($("#Investigation_parent").is(':checked')){
+         var subTasks=[],taskId='Investigation@'+$('#Investigation_parent_task').val();
+             tasks[taskId]=subTasks;  
+            
+        }
+        if($("#Disposition_parent").is(':checked')){
+            var subTasks=[],taskId='Disposition@'+$('#Disposition_parent_task').val();
+            $('#reopen_Disposition').find('.checkbox :checked').each(function(){
+                 var chkID=$(this).attr('id');
+                //alert(chkID+"  subtaskID "+$("#"+chkID+"_subTask").val()+" task id  "+$("#"+chkID+"_task").val());
+                 subTasks.push($("#"+chkID+"_subTask").val());
+           });
+           tasks[taskId]=subTasks;
+                    
+        }
+        //code for adhocTasks
+       <apex:repeat value="{!adhocTskIds}" var="ad">
+           console.log("adhoc id creation");
+           console.log("{!JSENCODE(ad)}");
+        if($('#{!ad}_parent').is(':checked')){
+            var subTasks=[],taskId='AdhocTask@'+$('#{!ad}_parent_task').val();
+            console.log(taskId);
+             tasks[taskId]=subTasks;
+            }
+       </apex:repeat>
+       
+        
+        console.log(tasks);
+        // var reopenDate=new Date("{!NC.Reopen_Date__c}");
+        //console.log('reopenDate   '+(reopenDate.getMonth()+1)+"/"+reopenDate.getDate()+"/"+reopenDate.getFullYear());
+        var ncDetails={ncid:"{!JSENCODE(NC.Id)}", Reopen_By__c:"{!JSENCODE(NC.Reopen_By__c)}", NC_Workflow_Status__c:"{!JSENCODE(NC.NC_Workflow_Status__c)}", NC_Resolution_Code__c:"{!JSENCODE(NC.NC_Resolution_Code__c)}", NC_Status__c:"{!JSENCODE(NC.NC_Status__c)}"};
+                       
+         Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.Component_Handler.reopenNCTasks}',tasks,ncDetails,$('#resonforreopen').val(),function(result, event){
+             console.log('Inside reopenNCTasks remote function');
+                if(event.status){
+                    if(result){
+                      location.reload();  
+                    }else{ 
+                       console.log('!Error');
+                    }
+                }   
+            });
+        
+    }
+  
+   
+    function verifyTaskData(opentasks,actionType,reasondesc){
+        // alert(reasondesc);
+        var erroractionid = '#'+reasondesc+'_error'
+        var actionid ='#'+reasondesc
+         $(erroractionid).empty();
+         var tskdescription = $(actionid).val();
+        // alert(tskdescription);
+         console.log("after errorempty = " +tskdescription);
+         console.log("Before validation ="+tskdescription);
+         if(tskdescription ==''){
+             //  alert("description is empty");
+          console.log("tskdescription is empty");
+              $(erroractionid).html( "<p>This Field is Required</p>");
+           		return false;
+         }
+        // alert("after validation");      
+        $(opentasks).attr('disabled', true);
+        $("#resettskBtn_"+actionType).attr('disabled',true);
+        //alert($("#unameFrtask_"+actionType).val());
+        if({!DigitalSignatureNeeded}){
+        console.log('digital signature needed');
+            var uname=$("#unameFrtask_"+actionType).val();
+            console.log(uname);
+               if(!uname){
+                 alert('Please enter username');
+                 $(opentasks).attr('disabled', false);
+                 $("#resettskBtn_"+actionType).attr('disabled',false);
+                 return false;
+               }
+               if(uname!= '{!$User.Username}'){
+                  alert('Invalid Username')
+                  $(opentasks).attr('disabled', false);
+                  $("#resettskBtn_"+actionType).attr('disabled',false);
+                  return false;
+               }
+               var pwd=$("#pwdFrtask_"+actionType).val();
+               if(!pwd){
+                   alert('Please enter password..')
+                    $(opentasks).attr('disabled', false);
+                    $("#resettskBtn_"+actionType).attr('disabled',false);
+                   return false;
+               }
+             
+             Visualforce.remoting.Manager.invokeAction(
+                   // @RemoteAction
+                   '{!$RemoteAction.Component_Handler.doVerify}',pwd,function(result, event){
+                       //console.log('Inside Component_Handler remote function');
+                       if(event.status){
+                           if(result){
+                               //alert(actionType);
+                               if(actionType  == "Reopen")
+                               {
+                                reOpenTasks();
+                               }
+                               else if(actionType == "Void")
+                               {
+                                 VoidNC();
+                               }
+                               else if(actionType == "VoidT")
+                               {
+                                   //alert("from void if condition");
+                                 VoidTask();
+                               }
+                               else if(actionType == "CloseNc")
+                               {
+                                 closenc();  
+                               }
+                           }
+                           else{
+                               $(opentasks).attr('disabled',false);
+                               alert('Unable to verify password!');
+                           }
+                       }
+                       else{
+                           $(opentasks).attr('disabled',false);
+                           alert('Unable to verify password!');
+                       }
+                       
+                   });
+            
+            
+        } else{
+           if(actionType  == "Reopen")
+                {
+                    reOpenTasks();
+                }
+                else if(actionType == "Void")
+               {
+                 VoidNC();
+               }
+               else if(actionType == "VoidT")
+               {
+                   // alert("from void else condition");
+                 VoidTask();
+               }
+               else if(actionType == "CloseNc")
+               {
+                 closenc();  
+               }
+        }
+    }
+    
+    //Close NC
+    function closenc(){
+         //alert('From Close NC');
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.Component_Handler.closeNC}','{!NC.Id}',$('#closeNcReason').val(),function(result, event){ window.location = '/apex/nc_details?id={!NC.Id}';});
+    }
+    //Void NC
+   function VoidNC()
+    {
+        // alert('In VoidNC function');
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.Component_Handler.voidNC}',"{!NC.Id}",$('#voidncreason').val(),function(result, event){
+             console.log('Inside VoidNC remote function');
+                if(event.status){
+                    console.log(result);
+                    if(result){
+                      location.reload();  
+                    }else{ 
+                        alert('!Error');
+                    }
+                }   
+            });
+    } 
+    //Void Task
+    function VoidTask()
+    {
+        //alert('In Void Task function');
+        var tasks={};
+        // var ncid = '{!NC.Id}';
+        console.log('$("#Containment_parent_void").checked '+$("#Containment_parent_void").is(':checked'));
+        if($("#Containment_parent_void").is(':checked')){
+             var subTasks=[],taskId='Containment@'+$('#Containment_parent_task_void').val();
+             tasks[taskId]=subTasks;
+           
+        }
+        console.log('$("#Implementaion_parent_void").checked '+$("#Implementaion_parent_void").is(':checked'));
+        if($("#Implementation_parent_void").is(':checked')){
+           
+            //console.log('implementaion child task length  '+$('#reopen_Implementation').find('.checkbox :checked').length);
+            var subTasks=[],taskId='Implementation@'+$('#Implementation_parent_task_void').val();
+           tasks[taskId]=subTasks;
+        }
+        console.log('$("#Investigation_parent_void").checked '+$("#Investigation_parent_void").is(':checked'));
+        if($("#Investigation_parent_void").is(':checked')){
+         var subTasks=[],taskId='Investigation@'+$('#Investigation_parent_task_void').val();
+             tasks[taskId]=subTasks;  
+            
+        }
+        console.log('$("#Disposition_parent_void").checked '+$("#Disposition_parent_void").is(':checked'));
+        if($("#Disposition_parent_void").is(':checked')){
+            var subTasks=[],taskId='Disposition@'+$('#Disposition_parent_task_void').val();
+            tasks[taskId]=subTasks;
+                    
+        }
+         <apex:repeat value="{!adhocTskIds_void}" var="ad">
+           console.log("adhoc void id creation");
+           console.log("void_{!JSENCODE(adhocTskIds_void[ad])}_parent");
+        if($('#void_{!ad}_parent').is(':checked')){
+            var subTasks=[],taskId='AdhocTask@'+$('#void_{!ad}_parent_task').val();
+            console.log(taskId);
+             tasks[taskId]=subTasks;
+            }
+       </apex:repeat>
+        console.log(tasks);
+        // alert(tasks);
+    
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.Component_Handler.voidNCTasks}',tasks,"{!NC.Id}",$('#voidtaskreason').val(),function(result, event){
+             console.log('Inside VoidTask remote function');
+                if(event.status){
+                    console.log(result);
+                    if(result){
+                      location.reload();  
+                    }else{ 
+                        alert('!Error');
+                    }
+                }   
+            });
+    }
+    function clearDesErrors(reasondesc){
+         var erroractionid = '#'+reasondesc+'_error'
+          $(erroractionid).empty();
+    }
+  </script>
+
+  <!--  NC Header -->  
+    <div class="row nc-header">
+            <div class="col-md-1 cell">
+                <label>NC No.</label>
+                <div>{!NC.Name}</div>
+            </div>
+            <div class="col-md-2 cell">
+                <label>NC Status:</label>
+                <div>{!IF(ISBLANK(NC.Id), 'New', NC.NC_Status__c)}</div>
+            </div>
+            <div class="col-md-3 cell">
+                <label>NC Owner:</label>
+                <div>{!IF(ISBLANK(NC.OwnerId), $User.FirstName + ' ' + $User.LastName, NC.Owner.Name)}</div>
+            </div>
+            <div class="col-md-1 cell">
+                <label>NC Age:</label>
+                <div>{!NC.Age__c} Day{!if(VALUE(NC.Age__c)!=1,'s','')}</div>
+            </div>
+            <div class="col-md-1 cell">
+                <label>NC Type:</label>
+                <div>{!NC.NC_Type__c}</div>
+            </div>
+            <div class="col-md-2 cell">
+                <label>Initiating Site:</label>
+                <div>{!NC.Initiating_Site_name__c}</div>
+            </div>
+            <div class="col-md-2 cell">
+     <!-- Dropdown Menu for NC Actions -->
+     <div class="dropdown pull-right">
+        <button class="btn btn-default" id="dLabel" type="button" data-toggle="dropdown" data-offset="20" aria-haspopup="true" aria-expanded="false">
+          <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+        </button>
+        <ul class="dropdown-menu">
+         <!-- <apex:outputpanel layout="none" rendered="{!AND($ObjectType.Non_Conformance__c.updateable, NC.NC_Status__c != 'Closed')}"><li><a href="/apex/nc_init?id={!$CurrentPage.parameters.Id}">Edit NC</a></li></apex:outputpanel> -->
+          <!--<apex:outputpanel layout="none" rendered="{!Can_Reopen}"><li><a href="#" onclick="reopenncfunc();">Reopen NC</a></li></apex:outputpanel>-->
+           <apex:outputPanel layout="none" rendered="{!NC.OwnerId == $User.Id}">
+            <!--<apex:outputpanel layout="none" rendered="{!OR(AND(NC.NC_Status__c !='Closed', OR(NC.NC_Workflow_Status__c = 'Closed', NC.NC_Workflow_Status__c = 'In Review',NC.NC_Workflow_Status__c = '')),Nc.NC_Status__c!='Reopened',Nc.NC_Status__c!='NC Workflow')}">-->
+               <apex:outputpanel layout="none" rendered="{!AND(NC.NC_Status__c !='Closed',NC.NC_Status__c !='Void',NC.NC_Status__c !='NC Workflow',AND(NC.NC_Status__c !='Reopened',NC.NC_Resolution_Code__c !='NC Workflow'))}">
+               <li><a href="#" onclick="$('#closeNc').modal('show');">Close NC</a></li>
+               </apex:outputpanel>
+           <apex:outputpanel layout="none" rendered="{!NC.NC_Status__c = 'Closed'}">
+                <li><a href="#" onclick="$('#reopentask').modal('show');">Reopen NC</a></li>
+          </apex:outputpanel>
+       <apex:outputPanel layout="none" rendered="{!NC.NC_Status__c !='Closed'}">
+          <!--<apex:outputpanel layout="none" rendered="{!AND(OR(AND(NC.NC_Resolution_Code__c ='NC Workflow', NC.NC_Status__c !='Closed',NC.NC_Status__c != 'Void',NC.NC_Status__c !='Open',NC.NC_Workflow_Status__c != 'Closed'), NC.NC_Workflow_Status__c == 'In Review'),closureTask.size==0)}">-->
+           <apex:outputPanel layout="none" rendered="{!NOT(AND(ischildobjsEmpty,isadhocTskIdsEmpty))}">
+                <li><a href="#" onclick="$('#reopentask').modal('show');">Open NC Tasks</a></li>             
+         </apex:outputpanel>
+       </apex:outputPanel>
+          <apex:outputpanel layout="none" rendered="{!AND( NC.NC_Status__c != 'Void' )}">
+             <li><a href="#" onclick="$('#voidNC').modal('show');">Void NC</a></li>
+         </apex:outputpanel>
+         <apex:outputpanel layout="none" rendered="{!AND(NC.NC_Status__c !='Closed',NC.OwnerId == $User.Id, NC.NC_Status__c != 'Void',NC.NC_Status__c !='Open',NC.NC_Resolution_Code__c == 'NC Workflow')}">
+             <li><a href="#" onclick="$('#voidTask').modal('show');">Void Task</a></li>
+         </apex:outputpanel>
+       <apex:outputpanel layout="none" rendered="{!AND(NC.NC_Status__c !='Closed',NC.NC_Status__c !='Void',NC.NC_Status__c !='Open',NC.NC_Resolution_Code__c == 'NC Workflow',closureTask.size==0 )}">
+        <li><a href="#" onclick="$('#addtask').modal('show');">Add Tasks</a></li>
+        </apex:outputpanel>
+         </apex:outputPanel>
+         <!--<apex:outputpanel layout="none" rendered="{!AND(OR(NC.NC_Status__c = 'Open',NC.NC_Status__c = 'Reopened', NC.NC_Status__c = 'NC Workflow'),NC.NC_Workflow_Status__c = 'Closed')}">
+             <li><a href="#" onclick="$('#reopentask').modal('show');">Open Tasks</a></li>
+         </apex:outputpanel>   -->
+          <!-- <li><a href="#" onClick="alert('QPMS_MESSAGE: This feature is not yet available.');">Export to PDF</a></li> -->
+         <!-- <li><a href="#">Export to Account</a></li> -->
+        </ul>
+      </div>
+    <!-- Print Button -->
+    <button onClick="window.open('/apex/nc_details_print?id={!$CurrentPage.parameters.id}');" class="btn btn-default pull-right">
+            <span class="glyphicon glyphicon-print" aria-hidden="true"></span>
+    </button>
+    <!--<button onClick="window.print();" class="btn btn-pills pull-right">
+            <span class="glyphicon glyphicon-print" aria-hidden="true"></span>
+    </button>-->
+   <!-- Follow Button -->
+                <button id="followBtn" class="btn btn-success pull-right" data-toggle="tooltip" data-placement="top" title="Follow">
+                    
+                </button>
+    <!-- Share Button -->
+        <!--<button id="shareBtn" class="btn btn-primary pull-right" data-toggle="tooltip" data-placement="top" title="Share">
+                <span class="fa fa-share-square"></span>                                        
+        </button> -->
+    <!-- Share Button -->
+    <apex:outputPanel id="auditTrail">
+         <c:nc_audit NonCID="{!recordid}" nc="{!nc}"></c:nc_audit> 
+    </apex:outputPanel>
+    <div class="clearfix"></div>
+    </div>
+</div>   
+     <!--    Signature Dialog        -->
+    <div class="modal fade" id="reopentask" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" >
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" onClick="clearDesErrors('resonforreopen');"><span aria-hidden="true">&times;</span></button>
+                   
+                   
+                    <apex:outputPanel rendered="{!NC.NC_Status__c!='Closed'}">
+                    <h4 class="modal-title" id="myModalLabel">Reopen Tasks</h4>
+                    </apex:outputPanel>
+                   
+                    <apex:outputPanel rendered="{!NC.NC_Status__c=='Closed'}">
+                    <h4 class="modal-title" id="myModalLabel">Reopen NC</h4>
+                    </apex:outputPanel>
+                </div>
+                
+                <div class="modal-body" style="overflow:auto;">
+                    
+                    <div id="signature-section-adding-fields">
+                        <apex:repeat value="{!childobjs}" var="type">
+                            <!--<input type="hidden" name="Id" value="{!type.Id}"/>-->
+                            <!-------task fielda------------------------->
+                                <div class="col-md-12 reopen-widget-holder" style=" height:auto;"> <!-- end of col 12 -->
+                                    <div class="panel-group" id="act_plan_accordion" role="tablist" aria-multiselectable="true">
+                                        <div class="panel panel-default">
+                                            <div class="panel-heading" role="tab" id="headingOne">
+                                                <h4 class="panel-title">
+                                                    
+                                                    <div class="checkbox pull-left">
+                                                        <label>
+                                                            <!--<c:wiz_checkbox FieldId="{!type}_parent"  FieldName="{!type}" initvalue=" " disabled="false"></c:wiz_checkbox>-->
+                                                            <input type="checkbox" class="parentCheckBox" id="{!type}_parent" onchange="selectOnlyParent('#{!type}_parent','reopen_{!type}')"/>{!type}
+                                                            <input type="hidden" id="{!type}_parent_task" class="taskId" name="tId" value="{!gtaskIds[type]}"/>
+                                                        </label>
+                                                    </div>
+                                                   <apex:outputPanel rendered="{!OR(type=='Implementation',type=='Disposition')}">
+                                                    <a data-toggle="collapse" data-parent="#accordion" href="#reopen_{!type}" aria-expanded="false" aria-controls="collapseOne" class="collapsed pull-right">
+                                                        <div class="btn-link"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span></div>
+                                                    </a>
+                                                    <span class="btn-link pull-right select-all" onclick="selectAll('#{!type}_parent', '#reopen_{!type}');">Select All</span>&nbsp;
+                                                   </apex:outputPanel>    
+                                                   <div class="clearfix"></div>
+                                                       
+                                                </h4>  
+                                                
+                                            </div><!--task heading-->
+                                            <div id="reopen_{!type}" class="panel-collapse out collapse" role="tabpanel" aria-labelledby="headingOne" aria-expanded="false" style="height: 0px;">
+                                                <div class="panel-body">
+                                                    <apex:repeat value="{!childobjs[type]}" var="ctask">
+                                                        
+                                                        <div class="checkbox">
+                                                            <label>
+                                                                <apex:outputPanel rendered="{!type=='Implementation'}">
+                                                                    <input type="checkbox" id="{!ctask.Name}" class="checkbox-child {!ctask.Name}_child"   onchange="selectFunction('#{!type}_parent', '#reopen_{!type}');"/> 
+                                                                    <!-- <c:wiz_checkbox FieldId="{!type}_parent"  FieldName="{!type}" initvalue=" " disabled="false"></c:wiz_checkbox>-->
+                                                                    {!ctask.Title__c}
+                                                                </apex:outputPanel>
+                                                                <apex:outputPanel rendered="{!type=='Disposition'}">
+                                                                    <input type="checkbox" id="{!ctask.Name}" class="checkbox-child {!ctask.Name}_child"   onchange="selectFunction('#{!type}_parent', '#reopen_{!type}');"/> 
+                                                                    <!-- <c:wiz_checkbox FieldId="{!type}_parent"  FieldName="{!type}" initvalue=" " disabled="false"></c:wiz_checkbox>-->
+                                                                    {!ctask.Disposition_Type__c}
+                                                                </apex:outputPanel>
+                                                                
+                                                                <input type="hidden" id="{!ctask.Name}_subTask" class="childId" name="cid" value="{!ctask.Id}"/>
+                                                               
+                                                            </label>
+                                                        </div>
+                                                        
+                                                    </apex:repeat>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+      
+                            <!-------task fielda------------------------->
+                        </apex:repeat>
+                        <apex:repeat value="{!adhocTskIds}" var="adh">
+                             <div class="col-md-12 reopen-widget-holder" style=" height:auto;">
+                                <div class="panel-group" id="act_plan_accordion" role="tablist" aria-multiselectable="true">
+                                    <div class="panel panel-default">
+                                         <div class="panel-heading" role="tab" id="headingOne">
+                                            <h4 class="panel-title">
+                                               <div class="checkbox pull-left">
+                                                        <label>
+                                                            <!--<c:wiz_checkbox FieldId="{!adhocTskIds[adh]}_parent"  FieldName="{!adhocTskIds[adh]}" initvalue=" " disabled="false"></c:wiz_checkbox>-->
+                                                            <input type="checkbox" class="parentCheckBox" id="{!adh}_parent" onchange="selectOnlyParent('#{!adh}_parent','reopen_{!adh}')"/>{!adhocTskIds[adh]}
+                                                            <input type="hidden" id="{!adh}_parent_task" class="taskId" name="tId" value="{!adh}"/>
+                                                        </label>
+                                                    </div> 
+                                                 <div class="clearfix"></div>
+                                            </h4>
+                                        </div>
+                                    </div>
+                                 </div>
+                            </div>
+                        </apex:repeat>
+                        
+                        <!-------task fielda------------------------->
+                        <!-------task fielda------------------------->
+                        <!--     screen content -->                                      
+                   <apex:outputPanel layout="none" rendered="{!DigitalSignatureNeeded}">
+                    <div class="col-md-6">                                                                                
+                        <div class="form-group">
+                            <label for="UserName"><span class="mandatory">*</span> User Name:</label>
+                            <br/>
+                            <input class="form-control" type="text" id="unameFrtask_Reopen" />
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="exampleInputEmail1"><span class="mandatory">*</span> Password:</label>
+                            <input class="form-control" type="password" id="pwdFrtask_Reopen" />
+                        </div>
+                    </div>
+                   </apex:outputPanel> 
+                        
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="exampleInputEmail1"><span class="mandatory">*</span> Description:</label>
+                                <textarea class="form-control"  name="resonforreopen" id="resonforreopen" rows="5" maxlength="255"  oninput="maxlengthvalidation(this)"></textarea>
+                                <div class="help-block with-errors" id="resonforreopen_error" style="color: red;"></div>
+                            </div>
+                        </div>
+                        <!--     screen content -->
+                    </div><!--signature-section-adding-fields-->
+                    <div class="clearfix"></div>
+                    <div class="modal-footer">
+                        
+                      <button type="button" id="resettskBtn_Reopen" class="btn btn-default" data-dismiss="modal" onClick="clearDesErrors('resonforreopen');">Cancel</button>
+                        <!--<a href="#" class="btn btn-primary" onClick="reOpenTasks();">Ok</a>-->
+                         <button id="reopentaks" type="button" class="btn btn-primary" onClick="verifyTaskData(this,'Reopen','resonforreopen');">OK</button>
+
+                    </div>
+                </div>
+            </div>  
+        </div><!--modal-dialog modal-lg-->
+    </div><!--modal fade-->
+    
+    <!--    Signature Dialog        -->
+
+     <!--    Signature Dialog        -->
+    <div class="modal fade" id="voidNC" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" >
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" onClick="clearDesErrors('voidncreason');"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Void NC</h4>
+                </div>
+                <div class="modal-body" style="overflow:auto;">
+                    <div id="signature-section-adding-fields">
+                        <apex:outputPanel layout="none" rendered="{!DigitalSignatureNeeded}">
+                            <div class="col-md-6">                                                                                
+                                <div class="form-group">
+                                    <label for="UserName"><span class="mandatory">*</span> User Name:</label>
+                                    <br/>
+                                    <input class="form-control" type="text" id="unameFrtask_Void" />
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="exampleInputEmail1"><span class="mandatory">*</span> Password:</label>
+                                    <input class="form-control" type="password" id="pwdFrtask_Void" />
+                                </div>
+                            </div>
+                       </apex:outputPanel>
+                        
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="exampleInputEmail1"><span class="mandatory">*</span> Description:</label>
+                                <textarea id='voidncreason' class="form-control" rows="5" maxlength="255"  oninput="maxlengthvalidation(this)"></textarea>
+                                <div class="help-block with-errors" id="voidncreason_error" style="color: red;"></div>
+                            </div>
+                        </div>
+                        <!--     screen content -->
+                    
+                    </div><!--signature-section-adding-fields-->
+                    
+                    <div class="clearfix">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="resettskBtn_Void" class="btn btn-default" data-dismiss="modal" onClick="clearDesErrors('voidncreason');">Cancel</button>
+                         <button id="reopentaks" type="button" class="btn btn-primary" onClick="verifyTaskData(this,'Void','voidncreason');">OK</button>
+                    </div>
+
+                </div> <!-- modal-body -->
+            </div> <!-- model-content -->
+        </div><!--modal-dialog modal-lg-->
+    </div><!--modal fade-->
+
+
+    
+    <!-- Below code is for Void Task -->
+
+    <div class="modal fade" id="voidTask" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" >
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true" onClick="clearDesErrors('voidtaskreason');">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Void Task</h4>
+                </div>
+                
+                <div class="modal-body" style="overflow:auto;">
+                    
+                    <div id="signature-section-adding-fields">
+                          <apex:repeat value="{!childobjs_Void}" var="type">
+                            <!--<input type="hidden" name="Id" value="{!type.Id}"/>-->
+                            <!-------task fielda------------------------->
+                                <div class="col-md-12 void-widget-holder" style=" height:auto;"> <!-- end of col 12 -->
+                                    <div class="panel-group" id="act_plan_accordion" role="tablist" aria-multiselectable="true">
+                                        <div class="panel panel-default">
+                                            <div class="panel-heading" role="tab" id="headingOne">
+                                                <h4 class="panel-title">
+                                                    
+                                                    <div class="checkbox pull-left">
+                                                        <label>
+                                                            <!--<c:wiz_checkbox FieldId="{!type}_parent"  FieldName="{!type}" initvalue=" " disabled="false"></c:wiz_checkbox>-->
+                                                            <input type="checkbox" class="parentCheckBox" id="{!type}_parent_void" onchange="selectOnlyParent('#{!type}_parent','void_{!type}')"/>{!type}
+                                                            <input type="hidden" id="{!type}_parent_task_void" class="taskId" name="tId" value="{!gtaskIds_Void[type]}"/>
+                                                        </label>
+                                                    </div>
+                                                    
+                                                   <div class="clearfix"></div>
+                                                       
+                                                </h4>  
+                                                
+                                            </div><!--task heading-->
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+      
+                            <!-------task fielda------------------------->
+                        </apex:repeat>
+                          <apex:repeat value="{!adhocTskIds_void}" var="adh">
+                             <div class="col-md-12 reopen-widget-holder" style=" height:auto;">
+                                <div class="panel-group" id="act_plan_accordion" role="tablist" aria-multiselectable="true">
+                                    <div class="panel panel-default">
+                                         <div class="panel-heading" role="tab" id="headingOne">
+                                            <h4 class="panel-title">
+                                               <div class="checkbox pull-left">
+                                                        <label>
+                                                            <!--<c:wiz_checkbox FieldId="void_{!adh}_parent"  FieldName="void_{!adh}" initvalue=" " disabled="false"></c:wiz_checkbox>-->
+                                                            <input type="checkbox" class="parentCheckBox" id="void_{!adhocTskIds_void[adh]}_parent" onchange="selectOnlyParent('#void_{!adhocTskIds_void[adh]}_parent','void_reopen_{!adhocTskIds_void[adh]}')"/>{!adhocTskIds_void[adh]}
+                                                            <input type="hidden" id="void_{!adhocTskIds_void[adh]}_parent_task" class="taskId" name="tId" value="{!adhocTskIds_void[adh]}"/>
+                                                        </label>
+                                                    </div> 
+                                                 <div class="clearfix"></div>
+                                            </h4>
+                                        </div>
+                                    </div>
+                                 </div>
+                            </div>
+                        </apex:repeat>
+                        
+                        <!-------task fielda------------------------->
+                        <!-------task fielda------------------------->
+                        <!--     screen content -->                                      
+                   <apex:outputPanel layout="none" rendered="{!DigitalSignatureNeeded}">
+                    <div class="col-md-6">                                                                                
+                        <div class="form-group">
+                            <label for="UserName"><span class="mandatory">*</span> User Name:</label>
+                            <br/>
+                            <input class="form-control" type="text" id="unameFrtask_VoidT" />
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="exampleInputEmail1"><span class="mandatory">*</span> Password:</label>
+                            <input class="form-control" type="password" id="pwdFrtask_VoidT" />
+                        </div>
+                    </div>
+                   </apex:outputPanel> 
+                        
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="exampleInputEmail1"><span class="mandatory">*</span> Description:</label>
+                                <textarea id="voidtaskreason" class="form-control" rows="5" maxlength="255"  oninput="maxlengthvalidation(this)"></textarea>
+                                <div class="help-block with-errors" id="voidtaskreason_error" style="color: red;"></div>
+                            </div>
+                        </div>
+                        <!--     screen content -->
+                    </div><!--signature-section-adding-fields-->
+                    <div class="clearfix">
+                    </div>
+                    <div class="modal-footer">
+                        
+                        <button type="button" id="resettskBtn_Void" class="btn btn-default" data-dismiss="modal" onClick="clearDesErrors('voidtaskreason');">Cancel</button>
+                         <button id="voidtaks" type="button" class="btn btn-primary" onClick="verifyTaskData(this,'VoidT','voidtaskreason');">OK</button>
+                    </div>
+                </div>
+            </div>  
+        </div><!--modal-dialog modal-lg-->
+    </div><!--modal fade-->
+    
+    <!--    Signature Dialog        -->
+      <!--CLose NC------------------------------------------------->
+       <div class="modal fade" id="closeNc" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" >
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" onClick="clearDesErrors('closeNcReason');"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Close NC</h4>
+                </div>
+                <div class="modal-body" style="overflow:auto;">
+                    <div id="signature-section-adding-fields">
+                        <apex:outputPanel layout="none" rendered="{!DigitalSignatureNeeded}">
+                            <div class="col-md-6">                                                                                
+                                <div class="form-group">
+                                    <label for="UserName"><span class="mandatory">*</span> User Name:</label>
+                                    <br/>
+                                    <input class="form-control" type="text" id="unameFrtask_CloseNc" />
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="exampleInputEmail1"><span class="mandatory">*</span> Password:</label>
+                                    <input class="form-control" type="password" id="pwdFrtask_CloseNc" />
+                                </div>
+                            </div>
+                       </apex:outputPanel>
+                        
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="exampleInputEmail1"><span class="mandatory">*</span>Description:</label>
+                                <textarea class="form-control" id="closeNcReason" rows="5" maxlength="255"  oninput="maxlengthvalidation(this)"></textarea>
+                                 <div class="help-block with-errors" id="closeNcReason_error" style="color: red;"></div>
+                            </div>
+                        </div>
+                        <!--     screen content -->
+                    
+                    </div><!--signature-section-adding-fields-->
+                    
+                    <div class="clearfix">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="resettskBtn_CloseNc" class="btn btn-default" data-dismiss="modal" onClick="clearDesErrors('closeNcReason');">Cancel</button>
+                         <button id="reopentaks" type="button" class="btn btn-primary" onClick="verifyTaskData(this,'CloseNc','closeNcReason');">OK</button>
+                    </div>
+
+                </div> <!-- modal-body -->
+            </div> <!-- model-content -->
+        </div><!--modal-dialog modal-lg-->
+    </div>
+    
+    
+ <c:wiz_addgenerictasks taskseq="{!taskseqence}"  NC="{!NC}"></c:wiz_addgenerictasks>
+   <!--  NC Header -->
+</apex:component>

@@ -1,0 +1,158 @@
+<apex:component controller="Component_Handler" extensions="QC_custom_settings">
+<apex:attribute name="RecordId" type="Id" Description="NC Product Id" assignto="{!ncProductId}"  />
+<apex:attribute name="editable" type="boolean" description="Show Edit / Delete Links" default="true"/>
+<apex:attribute name="disabled" type="boolean" description="Disables and/or hides add/edit/del functionality" default="false"/>
+<apex:attribute name="notDetails" type="boolean" description="Checks details Page or not" default="true"/>
+<script type="text/javascript">
+     //console.log('existing product   {!JSENCODE(NCP.Product__r.Name)}');
+     existingProducts.push('{!JSENCODE(NCP.Product__c)}'.trim());
+  
+</script>
+
+<div class="panel-group screen-only" id="accordion" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="heading{!RecordId}">
+                <h4 class="panel-title">
+                            <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" data-parent="#accordion" href="#collapse{!RecordId}" aria-expanded="true" aria-controls="collapse{!RecordId}">
+                            <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                            </a>
+                            
+                            <apex:outputpanel layout="none" rendered="{! AND(NOT(NCP.Primary_Product__c), editable, $ObjectType.NC_Product__c.deletable, NOT(disabled) ) }">
+                            <a class="wiz-link" href="#" onclick="deleteProds('{!NCP.Id}')"> Del</a>&nbsp;|&nbsp;
+                            </apex:outputpanel>
+                            
+                            <apex:outputpanel layout="none" rendered="{!AND(NOT(NCP.Primary_Product__c),editable, $ObjectType.NC_Product__c.updateable,NOT(disabled))}">
+                            <a class="wiz-link" href="#" onclick="editprod('{!RecordId}');">Edit</a>&nbsp;|&nbsp;
+                            </apex:outputpanel>
+                            
+                            <apex:outputpanel layout="none" rendered="{!AND(IF(lots.size!=0,IF(ISBLANK(lots[0].Lot_Bacth_Number__c),false,true),true),editable, $ObjectType.Product_Lot_Numbers__c.Createable,NOT(disabled))}">
+                            <a class="wiz-link" href="#"  onclick="addbatch('{!RecordId}', '{!NCP.Product__c}');">Add Batch</a>&nbsp;|&nbsp;
+                            </apex:outputpanel>
+                            
+                            <a data-toggle="collapse" data-parent="#accordion" href="#collapse{!RecordId}" aria-expanded="true" aria-controls="collapse{!RecordId}">
+                             {!IF(isblank(NCP.Product__r.Product_Number__c), '', 'PN. ' + NCP.Product__r.Product_Number__c + ' | ')}{!IF(ISBLANK(NCP.Manufacturing_Site__c), '', NCP.Manufacturing_Site__r.Name + ' | ')}<span class="badge red-badge"><apex:outputfield value="{!NCP.Defect_Count_Unique__c}"/></span> 
+                            </a>
+                          </h4>
+            </div>
+            <div id="collapse{!RecordId}" class="panel-collapse collapse {!IF(lots.size!=0,IF(ISBLANK(lots[0].Lot_Bacth_Number__c),'in','out'),'out')}"  role="tabpanel" aria-labelledby="heading{!RecordId}">
+                <div class="panel-body">
+
+                    <!-- add-prod-wrapper -->
+                    
+                     <apex:repeat value="{!lots}" var="lot">
+                         <script type="text/javascript">
+                         if('Product' != '{!JSENCODE(NCP.Non_Conformance__r.NC_Type__c)}' && !'{!JSENCODE(lot.Lot_Bacth_Number__c)}'){
+                             $('#collapse{!RecordId}').parent().hide();
+                             //$('#heading{!RecordId}').hide()
+                         }
+                         else{
+                            $('#collapse{!RecordId}').parent().show();
+                            //$('#heading{!RecordId}').show()
+                         }
+                         lotBatch=lotBatchMap['{!JSENCODE(NCP.Product__c)}'];
+                         if(!lotBatch){
+                             lotBatch=[];
+                            lotBatchMap['{!JSENCODE(NCP.Product__c)}']=lotBatch;
+                         }
+                         lotBatch.push("{!JSENCODE(lot.Lot_Bacth_Number__c)}".trim());  
+                         
+                         
+               
+                         
+                      </script>
+                      <apex:outputPanel layout="none" rendered="{!AND('Product'==NCP.Non_Conformance__r.NC_Type__c,ISBLANK(lot.Lot_Bacth_Number__c),notDetails)}">
+                         <script type="text/javascript">
+                           var isPrimaryProduct=true;
+                         </script>
+                         <c:wiz_form formclass="initBatchForm validate" formid="initBatchForm" submitpage="stringify_sobject" recordid="" postsavejs="window.location='/apex/NonConformance?id={!NCP.Non_Conformance__c}&pg=nc_products'">
+                            <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}product_lot_numbers__c"/>
+                            <input type="hidden" name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}NC_Product__c" value="{!JSENCODE(lot.NC_Product__c)}" class="QPMS__NC_Product__c" id="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}NC_Product__cInitProd"/>
+                            <input id="lotidInitProd" type="hidden" name="Id" value="{!lot.Id}"/>
+                            <div class="add-toolbar">
+                                <label>Lot/Batch</label>
+                
+                            </div>
+                
+                         
+                            <div >
+                
+                                <div class="add-prod-wrapper">
+                                    <div class="add-product">
+                                        <div class="top-row initProd">
+                                          
+                                                <c:wiz_field divclass="col-md-5" isPopup="true" FieldLabel="{!$ObjectType.Product_Lot_Numbers__c.Fields.Lot_Bacth_Number__c.Label}" required="true"  jsid="batchnum" rendered="{!$ObjectType.Product_Lot_Numbers__c.Fields.Lot_Bacth_Number__c.Accessible}">
+                                                    <c:wiz_input required="true" fieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Lot_Bacth_Number__cInitProd" fieldname="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Lot_Bacth_Number__c" initvalue="" type="text" disabled="{!NOT($ObjectType.Product_Lot_Numbers__c.Fields.Lot_Bacth_Number__c.updateable)}" />    
+                                                </c:wiz_field>
+                                 
+                                                <c:wiz_field divclass="col-md-4" isPopup="true" FieldLabel="{!$ObjectType.Product_Lot_Numbers__c.Fields.Lot_Quantity_Affected__c.Label}" required="true" jsid="qty" rendered="{!$ObjectType.Product_Lot_Numbers__c.Fields.Lot_Quantity_Affected__c.Accessible}">
+                                                    <c:wiz_input required="true" min="1" fieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Lot_Quantity_Affected__cInitProd" type="number" fieldname="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Lot_Quantity_Affected__c"  initvalue="" disabled="{!NOT($ObjectType.Product_Lot_Numbers__c.Fields.Lot_Quantity_Affected__c.updateable)}" />    
+                                                </c:wiz_field>
+                
+                                                <c:wiz_field divclass="col-md-3" isPopup="true" FieldLabel="{!$ObjectType.Product_Lot_Numbers__c.Fields.UOM__c.Label}"  jsid="uom" rendered="{!$ObjectType.Product_Lot_Numbers__c.Fields.UOM__c.Accessible}" required="true">
+                                                    <c:wiz_select disabled="{!NOT($ObjectType.Product_Lot_Numbers__c.Fields.UOM__c.updateable)}" 
+                                                    FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}UOM__cInitProd" 
+                                                    ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Product_Lot_Numbers__c"
+                                                    FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}UOM__c" 
+                                                    required="true" 
+                                                    initvalue=""
+                                                    unSelectedDisplayText="   "
+                                                    developername="UOM" />
+                                                </c:wiz_field>
+                                           
+                
+                                            <div class="clearfix"></div>
+                                        </div>
+                                        <apex:outputpanel layout="block" styleclass="defect-code">
+                                            <div class="col-md-12">
+                                                <label>{!$ObjectType.Product_Lot_Numbers__c.Fields.Defect_Codes__c.Label}</label>
+                                            </div>
+                                            <div class="search-field initProdDefect">
+                                                <c:wiz_multi width="100%" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect_Codes__cInitProd" FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect_Codes__c" multiple="true" queryFields="Name,{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c" type="prod" querytable="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c" dataid="{!NCP.Product__c}" required="false">
+                                                       <apex:repeat value="{!lot.NC_Product_Defects__r}" var="d">
+                                                                         <option selected="selected" value="{!JSENCODE(d.Defect__c)}">{!JSENCODE(d.Defect__r.Name)}</option>
+                                                       </apex:repeat>
+                                                </c:wiz_multi>
+                                                
+                                            </div>
+                                           
+                
+                                        </apex:outputpanel>
+                                    </div>
+                                </div>
+                    </div>
+                    
+                     <button type="button" class="btn btn-primary" id="prodSaveBtn" style="display:none;float:right" onclick="validate(null,submitInitBatchForm,'initBatchForm')"><span class="fa fa-floppy-o"></span> Save</button>
+                     
+                   
+              </c:wiz_form>
+            </apex:outputPanel> 
+                      
+                       <apex:outputPanel layout="none" rendered="{!NOT(ISBLANK(lot.Lot_Bacth_Number__c))}">
+                         <c:wiz_added_batch batch="{!lot}" editable="{!editable}" disabled="{!disabled}"/>
+                      </apex:outputPanel>
+                    </apex:repeat>
+                   
+                    <!-- add-prod-wrapper -->
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+<div class="print-only">
+<h1>{!IF(isblank(NCP.Product__r.Product_Number__c), '', 'PN. ' + NCP.Product__r.Product_Number__c + ' | ')}{!IF(ISBLANK(NCP.Manufacturing_Site__c), '', NCP.Manufacturing_Site__r.Name + ' | ')}{! 'Defect count: ' + TEXT(NCP.Defect_Count_Unique__c) }</h1>    
+<table class="table table-responsive table-bordered">
+   <tbody>
+   <tr>
+     <th>Lot / Batch No</th>
+     <th>Defect Quantity</th>
+     <th>UOM</th>
+     <th>Defect Code</th>
+   </tr>
+   <apex:repeat value="{!lots}" var="lot">
+     <c:wiz_added_batch batch="{!lot}" editable="{!editable}" disabled="{!disabled}" printonly="true"/>
+   </apex:repeat>
+   </tbody>
+</table>
+</div>    
+</apex:component>

@@ -1,0 +1,514 @@
+<apex:component controller="Component_Handler" extensions="QC_custom_settings">
+    <apex:attribute name="ModalId" description="Modal Id" type="string" required="true" />   
+    <apex:attribute name="TochangeFieldName" description="Field that has to change Type"  type="string"  />    
+    <apex:attribute name="Required" description="Field required"  type="boolean"  /> 
+    <apex:attribute name="isLock" description="To lock the record"  type="Boolean"  />   
+    <apex:attribute name="isInApproval" description="the record is in approval or not"  type="Boolean"  />  
+    <apex:attribute name="fieldclass" description="class for field" type="string" default="wiz-fields"/>
+    <apex:attribute name="isDocApprover" description="is Approver" type="Boolean" required="true"/>
+    <apex:attribute name="DOCJsis" description="Javascript id" type="string" />
+    <apex:attribute name="DOC" description="DOC Record" type="Document_Profile__c" />
+    <apex:attribute name="retUrl" description="return Url " type="string" />
+    <apex:attribute name="isSubmitter" description="is current user is submitter " type="Boolean" default="false"/>
+    <apex:attribute name="formId" description="form to be submited " type="string" />    
+    <apex:attribute name="ToChangeFieldId" description="field id that of to be changed field " type="string" />
+    <script>
+            var {!DOCJsis}_approvalRequired='No';
+            var {!DOCJsis}_approved='Approve';
+    		var isrecall=false
+            $( document ).ready(function() {
+                if({!DOC.Approval_Status__c=='Pending Approval'}){
+                    $('#{!DOCJsis}_doVerifyUserNameButton').addClass('hidden');
+                    $('#{!DOCJsis}__ApprovalRescomment').removeClass('changecapaOwner_required');
+                    $('#{!DOCJsis}_Comment_Required').hide();
+                    {!DOCJsis}_approved='Approve';
+                }
+            });
+
+        function {!DOCJsis}_showApproveField(ele,value){
+            {!DOCJsis}_approved=value;
+            if({!DOCJsis}_approved=='Approve'){
+                $('#{!DOCJsis}_Comment_Required').hide();
+                $('#{!DOCJsis}__ApprovalRescomment').removeClass('changecapaOwner_required');
+            }
+            else{
+                $('#{!DOCJsis}_Comment_Required').show(); 
+                $('#{!DOCJsis}__ApprovalRescomment').addClass('changecapaOwner_required');    
+            }
+        }
+        function {!ModalId}_changeField(){
+            cleardata();
+            clearerrors();
+            $('#{!ModalId}').modal('show');
+        }
+    	function cleardata(){
+            $('#{!DOCJsis}Authenticate_user_name').val('');
+            $('#{!DOCJsis}Authenticate_password').val('');
+            $('#{!DOCJsis}_user_name').val(''); 
+            $('#{!DOCJsis}_password').val('');
+        	
+        }
+        function {!DOCJsis}_onClickTab(tab){
+            if(tab=='{!DOCJsis}changeDetails'){
+                //{!DOCJsis}_ClearErrorschangefield();
+                $('#{!DOCJsis}_doVerifyUserNameButton').addClass('hidden');
+                $('#{!DOCJsis}RecallButtonIdNctaskChangeField').removeClass('hidden');/*
+                    $('#{!DOCJsis}Authenticate_user_name').addClass('required');
+                    $('#{!DOCJsis}Authenticate_password').addClass('required'); 
+                    $('#{!DOCJsis}_user_name').removeClass('required');
+                    $('#{!DOCJsis}_password').removeClass('required'); */
+                }
+                else
+                    if(tab=='{!DOCJsis}decision'){
+                        //{!DOCJsis}_ClearErrorschangefield();
+                        $('#{!DOCJsis}_doVerifyUserNameButton').removeClass('hidden');
+                        $('#{!DOCJsis}RecallButtonIdNctaskChangeField').addClass('hidden');
+                        /*     $('#{!DOCJsis}Authenticate_user_name').removeClass('required');
+                        $('#{!DOCJsis}Authenticate_password').removeClass('required'); 
+                        $('#{!DOCJsis}_user_name').addClass('required');
+                        $('#{!DOCJsis}_password').addClass('required'); */
+                    }
+            }
+        function {!DOCJsis}_approvalRequire(ApprReq){
+            var hiddenElements = $('#{!DOCJsis}select_approver, #{!DOCJsis}approver_note').removeClass('hidden');
+            if( ApprReq.checked){
+                $(hiddenElements).removeClass('hidden');
+                $('#Authenticate{!DOCJsis}').addClass('hidden');
+                {!DOCJsis}_approvalRequired='Yes';
+            }
+            else if( !ApprReq.checked){
+                {!DOCJsis}_approvalRequired='No';
+                $('#Authenticate{!DOCJsis}').removeClass('hidden');
+                $(hiddenElements).addClass('hidden');
+            }
+        }
+        function {!DOCJsis}_doSubmitApprovalRequest(){
+            
+        	validatechangecapaOwner();
+        }
+    	function validatechangecapaOwner(){
+            
+            isCapaOwnerValidation=true;
+            
+            $('#{!ToChangeFieldId}'+'_error').html('');
+            if($('#{!ToChangeFieldId}').val()==null||$('#{!ToChangeFieldId}').val()==''){
+                if($('#{!ToChangeFieldId}').is(":visible")){
+                    console.log('inside {!ToChangeFieldId}');
+                    $( '#{!ToChangeFieldId}'+'_error' ).html( "<p><font color='red'>This field is required</font></p>");
+                    isCapaOwnerValidation=false;
+                }
+            }
+            
+            if($('#{!ToChangeFieldId}').val()=='{!DOC.Ownerid}'){
+            	$( '#{!ToChangeFieldId}'+'_error' ).html( "<p><font color='red'>can't be same owner</font></p>");
+                isCapaOwnerValidation=false;
+            }
+
+            $('#{!DOCJsis}_CapaOwnerApprover'+'_error').html('');
+            if($('#{!DOCJsis}_CapaOwnerApprover').val()==null||$('#{!DOCJsis}_CapaOwnerApprover').val()==''){
+                if($('#{!DOCJsis}_CapaOwnerApprover').is(":visible")){
+                    $( '#{!DOCJsis}_CapaOwnerApprover'+'_error' ).html( "<p><font color='red'>This field is required</font></p>");
+                    isCapaOwnerValidation=false;
+                }
+            }
+            
+            $('.changecapaOwner_required').each(
+                function(){
+                    var validateid=this.id;
+                    $( "#"+validateid+'_error' ).html('');
+                    console.log(this.value.length);
+                    console.log(this);
+                    if(this.value.length==0||this.value==''){
+                        console.log($('#'+validateid+'__error' ));
+                        if($('#'+validateid).is(":visible")){
+                            $( '#'+validateid+'_error' ).html( "<p><font color='red'>This field is required</font></p>");
+                            isCapaOwnerValidation=false;
+                        }
+                    }
+                }
+            );
+
+            if(isCapaOwnerValidation){
+                console.log({!DOCJsis}_approvalRequired);
+                if(arguments[0]){
+                    arguments[0]();                    
+                }else{
+                    verifyDigitalSignature();
+                }
+            }
+            if(!isCapaOwnerValidation){
+                return;
+            }
+        }
+        function bootstrapAlert(validateOnmodel,redirectDialogtextcenter){
+            var validateOnmodel=$('#validateOnmodel').html();
+            var redirectDialogtextcenter=$('#validateOnmodel').html();
+            $('#validateOnmodel').html(validateOnmodel);
+            $('#redirectDialogtextcenter').html(redirectDialogtextcenter);
+            $('#NoButtonONredirectDialog').html('OK');
+            $('#YesButtonONredirectDialog').addClass('hidden');
+            var YESButtonInRedirectModalOnClick = function () {
+                $('#'+'{!ModalId}').modal('hide');
+                $('#redirectDialog').modal('hide');
+            };
+            var NOButtonInRedirectModalOnClick = function () {
+                
+            };
+            $('#redirectDialog .btn-primary').bind( "click", YESButtonInRedirectModalOnClick);
+            $('#redirectDialog .btn-default').bind( "click", NOButtonInRedirectModalOnClick);
+            
+            // Show the redirect dialog
+            $('#redirectDialog').modal('show');
+            
+            // Remove the onClick event
+            $('#redirectDialog').on('hidden.bs.modal', function () {
+                $('#redirectDialog .btn-primary').unbind( "click", YESButtonInRedirectModalOnClick);
+                $('#redirectDialog .btn-default').unbind( "click", NOButtonInRedirectModalOnClick);
+            }) 
+        }
+    	function verifyDigitalSignature(){
+            if(!$('.dont-allow-multiple-clicks').attr('disabled')){
+                $('.dont-allow-multiple-clicks').attr('disabled', true);
+            }
+        var isDigitalSignatureRequied='<apex:outputtext value="{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}"/>';
+          if(isDigitalSignatureRequied=='true'&&{!DOCJsis}_approvalRequired=='No'){
+              if($('#{!DOCJsis}Authenticate_user_name').val()!='{!$User.UserName}'){
+                  //bootstrapAlert('Error','Unable to Verify User Name');
+                  console.log($('#{!DOCJsis}Authenticate_user_name').val());
+                  console.log('{!$User.UserName}');
+                  alert('Unable to verify username or password!');
+                  if($('.dont-allow-multiple-clicks').attr('disabled')){
+                      $('.dont-allow-multiple-clicks').attr('disabled', false);
+                  }
+              	return ;
+              }
+                
+              var passowrd=$('#{!DOCJsis}Authenticate_password').val();
+                    Visualforce.remoting.Manager.invokeAction(                    
+                    // @RemoteAction
+                    '{!$RemoteAction.Component_Handler.doVerify}',passowrd,function(result, event){
+                        if(event.status){
+                            
+                            if(result){
+                                //ApprovalResponse('{!DOC.Id}',$('#{!DOCJsis}__ApprovalRescomment').val(),{!DOCJsis}_approved,'{!DOCJsis}');
+                                {!DOCJsis}onValidSubmitOwner();
+                            }
+                            else{
+                                
+                                alert('Unable to verify password!');
+                                //bootstrapAlert('Error','Unable to Verify User Name');
+                                if($('.dont-allow-multiple-clicks').attr('disabled')){
+                                    $('.dont-allow-multiple-clicks').attr('disabled', false);
+                                }
+                            }
+                        }
+                        else{ 
+                            
+                            alert('Unable to verify password!');
+                            //alert('Unable to verify password!');
+                            if($('.dont-allow-multiple-clicks').attr('disabled')){
+                                $('.dont-allow-multiple-clicks').attr('disabled', false);
+                            }
+                        }
+                        
+                    });
+          }else{
+              
+          	{!DOCJsis}onValidSubmitOwner();
+          
+          }
+        }
+    
+    
+        function {!DOCJsis}onValidSubmitOwner(){        
+            //$('#{!formId}').children().attr('name', '');
+            console.log($('#{!formId}').children());
+            $('#{!ToChangeFieldId}').attr('name', 'OwnerId');  
+            if( {!DOCJsis}_approvalRequired=='No'){
+                console.log('{!DOCJsis}_approvalRequired');
+                console.log({!DOCJsis}_approvalRequired);
+                console.log('inside submit form');
+                $('#Ownerid_Task').submit();                
+            }
+            else{
+                var {!DOCJsis}listid=new Array();
+                var {!DOCJsis}ids=$('#{!DOCJsis}_CapaOwnerApprover').val()
+                var maxLength='<apex:outputText value="{!$Setup.QC_settings__c.Max_Approvers__c}" />';
+                if({!DOCJsis}ids.length>maxLength){
+                    return;
+                }
+                for(i=0;i<{!DOCJsis}ids.length;i++){
+                    {!DOCJsis}listid.push({!DOCJsis}ids[i]);
+                    {!DOCJsis}listid.push({!DOCJsis}ids[{!DOCJsis}ids.length-1]);  
+                    console.log('inside submitfor app');
+                    submitApprovalRequestDOCOwner('{!DOC.Id}',{!DOCJsis}listid, $('#{!DOCJsis}__ApprovalRescomment').val(),$('#{!ToChangeFieldId}').val());
+                }
+            }
+        }
+        
+        
+        
+        function {!DOCJsis}_doVerifyUserName(param){
+            
+            console.log(param);
+            if(param!='Approve'){
+            	{!DOCJsis}_approved=param;
+            }
+            validatechangecapaOwner({!DOCJsis}onValidApproval);
+            // validate('null',{!DOCJsis}onValidApproval,'capaForm');
+            
+        }
+		function {!DOCJsis}onValidApproval(){
+            if(!$('.dont-allow-multiple-clicks').attr('disabled')){
+                $('.dont-allow-multiple-clicks').attr('disabled', true);
+            }
+            console.log('inside valid approval');
+            var isDigitalSignatureRequied='<apex:outputtext value="{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}"/>';
+            if(isDigitalSignatureRequied=='true'){
+               console.log(isDigitalSignatureRequied); 
+               var userName=$('#{!DOCJsis}_user_name').val();
+               var passowrd=$('#{!DOCJsis}_password').val();
+               if(isrecall){
+               passowrd=$('#{!DOCJsis}Authenticate_password').val();
+               userName=$('#{!DOCJsis}Authenticate_user_name').val();    
+               }
+               if(userName!='{!$User.UserName}'){
+                  //bootstrapAlert('Error','Unable to Verify User Name');
+                  alert('Unable to verify username!');
+                   if($('.dont-allow-multiple-clicks').attr('disabled')){
+                       $('.dont-allow-multiple-clicks').attr('disabled', false);
+                   }
+              	return ;
+               }
+
+                Visualforce.remoting.Manager.invokeAction(
+                    // @RemoteAction
+                    '{!$RemoteAction.Component_Handler.doVerify}',passowrd,function(result, event){
+                        if(event.status){
+                            if(result){
+                                ApprovalResponse('{!DOC.Id}',$('#{!DOCJsis}__ApprovalRescomment').val(),{!DOCJsis}_approved,'{!DOCJsis}');
+                            }
+                            else{
+                                alert('Unable to verify password!');
+                                if($('.dont-allow-multiple-clicks').attr('disabled')){
+                                    $('.dont-allow-multiple-clicks').attr('disabled', false);
+                                }
+                            }
+                        }
+                        else{ 
+                            alert('Unable to verify password!');
+                            if($('.dont-allow-multiple-clicks').attr('disabled')){
+                                $('.dont-allow-multiple-clicks').attr('disabled', false);
+                            }
+                        }
+                        
+                    });
+            }else{
+                console.log({!DOCJsis}_approved);
+                ApprovalResponse('{!DOC.Id}',$('#{!DOCJsis}__ApprovalRescomment').val(),{!DOCJsis}_approved,'{!DOCJsis}');
+            } 
+        }
+    	function digitalSignature(){
+        
+        }
+    </script>
+    
+     <div class="modal fade" id="{!ModalId}"  role="dialog" aria-labelledby="{!ModalId}">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="{!ModalId}">Change Owner</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div>
+                            
+                            <!-- Nav tabs -->
+                            <ul class="nav nav-tabs" role="tablist">
+                                <li role="presentation" class="active"><a href="#{!DOCJsis}changeDetails" onclick="{!DOCJsis}_onClickTab('{!DOCJsis}changeDetails')" aria-controls="changeDetails" role="tab" data-toggle="tab">Change Details</a></li>
+                                <li id='{!DOCJsis}_LI_decision' class="LI_decision {!isDocApprover} {!if(isDocApprover,'','hidden')}" role="presentation"><a href="#{!DOCJsis}decision" onclick="{!DOCJsis}_onClickTab('{!DOCJsis}decision')" aria-controls="decision" role="tab" data-toggle="tab">Decision</a></li>
+                            </ul>
+                            
+                            <!-- Tab panes -->
+                            <div class="tab-content push-down">
+                                <!-- change details pane  -->
+                                <div role="tabpanel" class="tab-pane active " id="{!DOCJsis}changeDetails">
+                                    <div class="row"><!-- row start -->
+                                        <div class="wiz-form-holder ">
+                                            <div class="wiz-fields  form-group col-md-6 col-sm-6 col-xs-12">
+                                                    <label for="label for change Feild">
+                                                        <span class="mandatory">
+                                                            <apex:outputtext value="*" rendered="{!if(Required==true,true,false)}"/></span>
+                                                        Owner
+                                                    </label><br/>
+                                                    <div  disabled="disabled">                                                        
+														<c:wiz_multi width="100%" querytable="User" Required="true" disabled="true" FieldName="" FieldId="ownerid" typeofuser="CAPA_Owner" initValues="{label: '{!JSENCODE(DOC.Owner.FirstName)}'+' '+'{!JSENCODE(DOC.Owner.LastName)}', value: '{!DOC.ownerid}'}"></c:wiz_multi>				                                                            
+                                                	</div>          
+                                            </div> 
+                                            <c:wiz_form recordid="{!DOC.Id}" formclass="Ownerid_Task validate" formid="Ownerid_Task" submitpage="stringify_sobject"  postsavejs="location.reload();">
+                                                <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Profile__c"/>
+                                                <input type="hidden" name="Id" value="{!DOC.Id}" />
+                                                <apex:componentbody />
+                                            </c:wiz_form>
+                                            <apex:outputPanel rendered="{!NOT(isLock)}">
+                                                <div class="col-md-12">
+                                                    <label for="exampleInputEmail1"> Approval Required:</label><br/>
+                                                    
+                                                    
+                                                    <c:wiz_checkbox FieldId="{!DOCJsis}_chk" FieldName="{!DOCJsis}_chk" initvalue="false"  onChangeFunction="{!DOCJsis}_approvalRequire"></c:wiz_checkbox>
+                                                    
+                                                </div>
+                                            </apex:outputPanel>
+                                            <div class="col-md-12 hidden" id="{!DOCJsis}select_approver">
+                                                <div class="form-group">
+                                                    <label for="exampleInputEmail1"><span class="mandatory ">*</span> Select Approver:</label>
+                                                    <c:wiz_multi disabled="false" multiple="true" FieldId="{!DOCJsis}_CapaOwnerApprover" initValues="" typeofuser="CAPA_Approval"  querytable="User" queryfields="Name" />    
+                                                </div>
+                                            </div>
+                                            
+                                            <apex:outputPanel rendered="{!(isLock)}">
+                                                <div class="wiz-fields-wide">
+                                                    <div class="form-group">
+                                                        <label for="exampleInputEmail1"><span class="mandatory"></span> Note to Approver:</label>
+                                                        <div class="alert alert-info"> <apex:outputField value="{!DOC.Note_To_Approver__c}" /> </div>             
+                                                    </div>
+                                                </div>
+                                            </apex:outputPanel>
+                                            <div class="col-md-12 hidden" id="{!DOCJsis}approver_note">
+                                                <apex:outputPanel rendered="{!NOT(isLock)}">
+                                                    <div class="form-group">
+                                                        <label for="exampleInputEmail1"><span class="mandatory"></span> Note to Approver:</label>
+                                                        <textarea id='{!DOCJsis}__ApprovalReqcomment' type="text" class="form-control"   value=''>{!DOC.Note_To_Approver__c}</textarea>
+                                                    </div>
+                                                </apex:outputPanel>    
+                                            </div>
+                                            <apex:outputPanel rendered="{!AND($Setup.QC_settings__c.Is_Digital_Signature_Needed__c)}">
+                                                <div id='Authenticate{!DOCJsis}' class="">
+                                                    <div class="col-md-6 col-sm-6 col-xs-12 wiz-fields" id="user_name" disabled='disabled'>
+                                                        <div class="form-group disabled" disabled="disabled">
+                                                            <label for="exampleInputEmail1"><span class="mandatory">*</span> User Name:</label>
+                                                            <input id='{!DOCJsis}Authenticate_user_name' class="form-control changecapaOwner_required" type="text" value='' />
+                                                            <div class="help-block with-errors" id="{!DOCJsis}Authenticate_user_name_error"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6 col-sm-6 col-xs-12 wiz-fields" id="password">
+                                                        <div class="form-group">
+                                                            <label for="exampleInputEmail1"><span class="mandatory">*</span> Password:</label>
+                                                            <input id='{!DOCJsis}Authenticate_password' class="form-control changecapaOwner_required" type="password" value='' />
+                                                            <div class="help-block with-errors" id="{!DOCJsis}Authenticate_password_error"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </apex:outputPanel>
+                                            
+                                            
+                                        </div>
+                                    </div> <!-- Row Ends -->
+                                    
+                                    
+                                </div>
+                                
+                                <div role="tabpanel" class="tab-pane" id="{!DOCJsis}decision">
+                                    <div id="decision_form">
+                                        <div class="row"><!-- row start -->
+                                            <div class="wiz-form-holder ">
+                                                
+                                                <div class="wiz-fields-wide push-down">
+                                                    <label for="exampleInputEmail1"><span class="mandatory">*</span> Decision:</label><br/>
+                                                    <div class="btn-group" data-toggle="buttons">
+                                                        <label  class="btn btn-primary active"><span class='fa fa-thumbs-o-up'/>
+                                                            <input onchange="{!DOCJsis}_showApproveField(this.checked, 'Approve')" name="owner_decision" value="APPROVE" autocomplete="off" checked="" type="radio" />Approve
+                                                        </label>
+                                                        <label  class="btn btn-primary"><span class='fa fa-thumbs-o-down'/>
+                                                            <input onchange="{!DOCJsis}_showApproveField(this.checked, 'Reject')" name="owner_decision" value="REJECT" autocomplete="off" type="radio" />Reject
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="wiz-fields-wide push-down" id="comment">
+                                                    <div class="form-group">
+                                                        <label for="exampleInputEmail1"><span id="{!DOCJsis}_Comment_Required" class="mandatory">*</span> Comment:</label>
+                                                        <textarea id='{!DOCJsis}__ApprovalRescomment' type="text" class="form-control " value='' />
+                                                        <div class="help-block with-errors " id="{!DOCJsis}__ApprovalRescomment_error"></div>
+                                                    </div>
+                                                </div>
+                                                <apex:outputPanel rendered="{!AND(isInApproval,$Setup.QC_settings__c.Is_Digital_Signature_Needed__c)}">
+                                                    <div class="wiz-fields" id="user_name" disabled='disabled'>
+                                                        <div class="form-group disabled" disabled="disabled">
+                                                            <label for="exampleInputEmail1"><span class="mandatory">*</span> User Name:</label>
+                                                            <input id='{!DOCJsis}_user_name' class="form-control changecapaOwner_required" type="text" value='' />
+                                                            <div class="help-block with-errors" id="{!DOCJsis}_user_name_error"></div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="wiz-fields" id="password">
+                                                        <div class="form-group">
+                                                            <label for="exampleInputEmail1"><span class="mandatory">*</span> Password:</label>
+                                                            <input id='{!DOCJsis}_password' class="form-control  changecapaOwner_required" type="password" value='' />
+                                                            <div class="help-block with-errors" id="{!DOCJsis}_password_error"></div>
+                                                        </div>
+                                                    </div>
+                                                </apex:outputPanel>
+                                                
+                                            </div>
+                                        </div> <!-- Row Ends -->
+                                    </div>
+                                    
+                                    
+                                </div>
+                                
+                            </div>
+                            
+                        </div>
+                        <div class="clearfix"></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" onclick="{!DOCJsis}cancle();">Cancel</button>
+                            <apex:outputPanel rendered="{!(isLock)}">            
+                                <!--<button type="button" onclick="validate('null',submitNCTaskform);" class="btn btn-primary dont-allow-multiple-clicks">Ok</button>-->            
+                                <apex:outputPanel rendered="true">                     
+                                    <button type="button" id="{!DOCJsis}_doVerifyUserNameButton" onclick=" isrecall=false;{!DOCJsis}_doVerifyUserName('Approve');" class="btn btn-primary dont-allow-multiple-clicks doVerifyUserNameButton">OK</button>                                   
+                                    <apex:outputPanel rendered="{!(isSubmitter)}">     
+                                        <button type="button" id="{!DOCJsis}RecallButtonIdNctaskChangeField" onclick="isrecall=true;{!DOCJsis}_doVerifyUserName('Removed');" class="btn btn-primary dont-allow-multiple-clicks">Recall</button>                     
+                                    </apex:outputPanel>    
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!NOT(isLock)}">
+                                <!--<button type="button" onclick="validate('null',{!DOCJsis}_submitNCTaskform);" class="btn btn-primary dont-allow-multiple-clicks">Ok</button>-->            
+                                <button type="button" onclick="{!DOCJsis}_doSubmitApprovalRequest(true);isrecall=false;" class="btn btn-primary dont-allow-multiple-clicks">OK</button>  
+                            </apex:outputPanel>
+                        </div>
+                        <script>
+                        function {!DOCJsis}cancle(){
+                            /*var r = confirm("All the data will be lost");
+                            if (r == true) {
+                                $('#'+'{!ModalId}').modal('hide');
+                            } else {
+                                console.log("You pressed Cancel!");
+                            }*/
+                            var YESButtonInRedirectModalOnClick = function () {
+                                $('#'+'{!ModalId}').modal('hide');
+                                $('#redirectDialog').modal('hide');
+                            };
+                            var NOButtonInRedirectModalOnClick = function () {
+                                
+                            };
+                            $('#redirectDialog .btn-primary').bind( "click", YESButtonInRedirectModalOnClick);
+                            $('#redirectDialog .btn-default').bind( "click", NOButtonInRedirectModalOnClick);
+                            
+                            // Show the redirect dialog
+                            $('#redirectDialog').modal('show');
+                            
+                            // Remove the onClick event
+                            $('#redirectDialog').on('hidden.bs.modal', function () {
+                                $('#redirectDialog .btn-primary').unbind( "click", YESButtonInRedirectModalOnClick);
+                                $('#redirectDialog .btn-default').unbind( "click", NOButtonInRedirectModalOnClick);
+                            }) 
+                        }
+                        </script>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        
+</apex:component>

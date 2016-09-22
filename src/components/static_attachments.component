@@ -1,0 +1,268 @@
+<apex:component controller="Component_Handler"  extensions="QC_custom_settings">
+    <script type="text/javascript">
+    var fileCount=0;
+    var files=[],fileDecs=[],proStep,proVal;
+    document.addEventListener("DOMContentLoaded", init, false);
+    function init() {
+        document.querySelector('#files').addEventListener('change', handleFileSelect, false);
+    } 
+    function handleFileSelect(e) {
+        if(!e.target.files) return;
+        localFiles = e.target.files;
+        $("#selFileListCont").show();
+        for(var i=0;i<localFiles.length;i++){
+            f = localFiles[i];
+            console.log(f.name+'    size :  '+f.size)
+            if(f.size>=(25*1024*1024)){
+               $("#modal-body_error").text('Cannot upload the files with size greater than or equal to 25MB.');
+               return false;
+            }
+            files.push(f);
+           
+            $("#selectedFileList").append('<li id='+i+' class="list-group-item"><a href="#" class="pull-right"><span class="glyphicon glyphicon-remove"  onclick="removeAttachmentRow(this.parentNode.parentNode);"></span></a> <span class="mandatory">*</span> <label for="exampleInputEmail'+i+'">'+f.name+'</label><input type="text" class="form-control" id="exampleInputEmail'+i+'" maxlength="120" oninput="maxlengthvalidation(this)"  placeholder="Description"><div id="exampleInputEmail'+i+'_error" class="help-block with-errors"></div></li>')
+        }
+        $("#browseBtn").val('Choose Files ['+$("#selectedFileList>li").length+']');
+    }
+    
+    function uploadAttachments(file,fileDesc){
+        $('.progress').show();
+        var attachmentName = file.name;
+        //console.log('attachmentName   '+attachmentName+'   fileDesc  '+fileDesc);
+        
+        fileReader = new FileReader();
+        fileReader.onload = function(e) {
+            attachment = window.btoa(this.result);  //Base 64 encode the file before sending it
+            jQuery.ajax({
+                type: "POST",
+                url: "https://{!JSENCODE(Server)}.salesforce.com/services/data/v{!JSENCODE(API_Version)}/sobjects/Attachment/",
+                contentType:"application/json; charset=utf-8",
+                headers: { 
+                    "Authorization" : "Bearer "+getSessionId()
+                },
+                data    : JSON.stringify({'name':attachmentName,'body':attachment,'parentId':'{!$CurrentPage.parameters.Id}','Description':fileDesc+'@'+$("#stepName").val(),'isprivate':false})
+            }).success(function(result) {
+                console.log(result);
+                if(fileCount<=files.length-2){
+                    proVal=$('.progress-bar').attr('aria-valuenow');
+                    proStep=parseInt(proVal)+10;
+                    $('.progress-bar').css('width', proStep+'%').attr('aria-valuenow',proStep);
+                    fileCount++;
+                    uploadAttachments(files[fileCount],fileDecs[fileCount]);
+                }
+                else{
+                    $('.progress-bar').css('width','100%').attr('aria-valuenow',100);
+                    echo();
+                    /*$('.progress').hide();
+                    $('#fileUpload').modal('hide');
+                    $('.progress-bar').css('width', proStep+'%').attr('aria-valuenow',0); 
+                    $('#uploadAttachmentButton').attr('disabled', false);
+                    $('#resetBtn').attr('disabled', false);*/
+                    //window.location.href = '/apex/'+$("#page").val()+'?id={!$CurrentPage.parameters.Id}&gtid='+$("#gtid").val();
+                    //location.reload();
+                }
+            }).fail(function(err){
+                $("#modal-body_error").text('Unable to Insert file \n Contact your Adminstrator with this error message \n' + JSON.stringify(err));
+                $('.progress').hide();
+                $('.progress-bar').css('width', proStep+'%').attr('aria-valuenow',0);
+                
+            });
+        }
+        fileReader.onerror = function(e) {
+            $("#modal-body_error").text("There was an error reading the file.  Please try again.");
+        }
+        fileReader.onabort = function(e) {
+            $("#modal-body_error").text("There was an error reading the file.  Please try again.");
+        }
+        fileReader.readAsBinaryString(file);  //Read the body of the file
+        
+        
+    }
+    
+    /*function addAnother(){
+             cloneAttachmentTable('attachment_table');
+    }*/
+    function removeAttachmentRow(current_row){
+        var remRowId=$(current_row).attr('id');
+        var attCnt = $('#selectedFileList>li').length;
+        if(attCnt==1){
+            $("#modal-body_error").text('At-Least One Attachment is required.');
+            return false;
+        }
+        $(current_row).remove();
+        files.splice(remRowId,1);
+        $("#selectedFileList > li").each(function(index){
+            $(this).attr('id',index);
+        });
+        attCnt = $('#selectedFileList>li').length;
+        $("#browseBtn").val('Choose Files ['+attCnt+']');
+    }
+    function verifyData(upldBtn){
+      
+        if(files.length==0){
+            $("#modal-body_error").text('Please choose files..')
+            return false;
+        }
+        //console.log('filling out files and file desc....');
+        var isValid=true;
+        fileDecs=[];
+        fileCount=0;
+       
+        $("#selectedFileList > li").each(function(){
+            //lfile=tds.eq(0).find('input')[0].files[0];
+            desc=$(this).find('input')[0].value;
+            if(!desc){
+                isValid=false;
+                return false;
+            }
+            console.log('uploadAttachments   desc  +  '+desc);
+            //files.push(lfile);
+            fileDecs.push(desc);
+        });
+        
+        if(!isValid){
+            $("#modal-body_error").text('Please add required attachments and descriptions');
+            return false;
+        }
+        //console.log('uploadAttachments files  ');
+        //console.log(files);
+       
+       
+        $(upldBtn).attr('disabled', true);
+        $("#resetBtn").attr('disabled',true);
+        proVal;
+        if({!DigitalSignatureNeeded}){
+               var uname=$("#unameFrAtt").val();
+               if(!uname){
+                 $("#modal-body_error").text('Please enter your username.');
+                 $(upldBtn).attr('disabled', false);
+                 $("#resetBtn").attr('disabled',false);
+                 return false;
+               }
+               if(uname!= '{!$User.Username}'){
+                  $("#modal-body_error").text('Username entered is Invalid or Incorrect. Please try again.')
+                  $(upldBtn).attr('disabled', false);
+                  $("#resetBtn").attr('disabled',false);
+                  return false;
+               }
+               var pwd=$("#pwdFrAtt").val();
+               if(!pwd){
+                    $("#modal-body_error").text('Please enter your secure password.')
+                    $(upldBtn).attr('disabled', false);
+                    $("#resetBtn").attr('disabled',false);
+                   return false;
+               }
+               Visualforce.remoting.Manager.invokeAction(
+                   // @RemoteAction
+                   '{!$RemoteAction.Component_Handler.doVerify}',pwd,function(result, event){
+                       if(event.status){
+                           if(result){
+                              
+                               uploadAttachments(files[0],fileDecs[0]);
+                           }
+                           else{
+                               $(upldBtn).attr('disabled',false);
+                               $("#modal-body_error").text('Password entered is incorrect. Please try again.');
+                           }
+                       }
+                       else{
+                           $(upldBtn).attr('disabled',false);
+                           $("#modal-body_error").text('Password entered is incorrect. Please try again.');
+                       }
+                       
+                   });
+        }
+        else{
+           uploadAttachments(files[0],fileDecs[0]);
+        }
+        
+    }
+    
+    function resetAttachments(){
+        files=[];
+        fileDecs=[];
+        fileCount=0;
+        $("#unameFrAtt").val('');
+        $("#pwdFrAtt").val('');
+        $("#selectedFileList").html('');
+        $("#selFileListCont").hide();
+        $("#files").val('')
+        $("#browseBtn").val('Choose Files [0]');
+        $("#modal-body_error").text('');
+    }
+    function afterRerender(){
+                          $('.progress').hide();
+                          $('#fileUpload').modal('hide');
+                          $('.progress-bar').css('width', proStep+'%').attr('aria-valuenow',0); 
+                          $('#uploadAttachmentButton').attr('disabled', false);
+                          $('#resetBtn').attr('disabled', false);
+                          $('.btn').attr('disabled', false);
+                          $('#fileEdit').modal('hide');
+                          $('#Attachmentsave').attr('disabled', false);
+                          $('#AttachmentCancle').attr('disabled', false);
+                          $('#Attachmentdelete').attr('disabled', false);    
+    }
+    </script>
+    <div class="modal fade" id="fileUpload" tabindex="-1" role="dialog" aria-labelledby="">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" onclick="resetAttachments()" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Upload File</h4>
+                     <div style="display:none" class="progress progress-striped active">
+                        <div class="progress-bar" role="progressbar" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100">
+                            <span style="align:center" class="progress-value">Uploading.....</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-body" id="modal-body">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <input type="button" class="btn btn-primary" id="browseBtn" value="Choose Files [0]" onclick=" $('#files').trigger('click');"/>
+                            <input type="file" style="display:none" id="files" name="files" multiple="true"/>
+                        </div>
+                    </div>
+                    
+                    <div class="clearfix"></div>
+                    <p></p>
+                    
+                    <div style="display:none" id="selFileListCont" class="col-md-12">
+                        <div style="min-height: 200px; max-height: 400px; overflow:auto">
+                            <ul id="selectedFileList"  class="list-group">
+                                
+                                
+                                
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <apex:outputPanel layout="none" rendered="{!DigitalSignatureNeeded}">
+                    <div class="col-md-6">                                                                                
+                        <div class="form-group">
+                            <label for="UserName"><span class="mandatory">*</span> User Name:</label>
+                            <br/>
+                            <input class="form-control" type="text" id="unameFrAtt" />
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="exampleInputEmail1"><span class="mandatory">*</span> Password:</label>
+                            <input class="form-control" type="password" id="pwdFrAtt" />
+                        </div>
+                    </div>
+                   </apex:outputPanel> 
+                   <div id="modal-body_error"  style="color:red" class="help-block with-errors">
+                    
+                   </div>
+                </div>
+                <div class="clearfix"></div>
+                <div class="modal-footer">
+                   
+                    <button id="uploadAttachmentButton" type="button" class="btn btn-primary" onClick="verifyData(this);">Upload</button>
+                    <button type="button" id="resetBtn" class="btn" onclick="resetAttachments()">Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</apex:component>

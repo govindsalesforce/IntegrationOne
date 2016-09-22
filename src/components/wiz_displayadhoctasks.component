@@ -1,0 +1,55 @@
+<apex:component >
+  <apex:attribute name="taskTitle"  description="Holds the title of task" type="String" required="true"  />
+  <apex:attribute name="seqInitValue"  description="Holds init value for the sequences" type="String" required="true"  />
+  <apex:attribute name="userInitValue" description="Holds init value for the users"  type="String" required="true"/>
+   <apex:attribute name="allowDaysInitValue" description="Holds init value for the allow days"  type="String" required="true"/>
+  <apex:attribute name="dueDateInitValue" description="Holds init value for the duedate" type="Date" required="true"/>
+ <div class="panel panel-default" >
+         <div class="panel-heading">{!taskTitle}</div>
+        <div class="panel-body">
+            <table class="table">
+               <tbody>
+				</tbody>													
+                    <thead>
+                        <tr>
+                            <td>Adhoc Sequence:</td>
+                            <td width="40%">Owner:</td>
+                            <td width="20%">Allowed Days:</td>
+                            <td>Due Date:</td>
+                        </tr>
+                    </thead>
+                 <tbody>
+                     <tr>
+                         <td>
+                             <select class="form-control" disabled="disabled"><option>{!seqInitValue}</option>
+                         </select>
+                         </td>
+                         <td>
+                             <select class="form-control" disabled="disabled"><option>{!userInitValue}</option>
+                         </select>
+                         </td>
+                         <td>
+                             <input type="text" class="form-control" disabled="disabled" value="{!allowDaysInitValue}"/>
+                         </td>
+                         <td>
+                            <!-- <div class="form-control" disabled="disabled">
+                                 <apex:outputText value="{0,date,dd MMM yyyy}">
+                                     <apex:param value="{!dueDateInitValue}" /> 
+                                 </apex:outputText>
+                               
+                             </div>-->
+                            <div class="input-group" >
+                                <!--<input type="text" class="form-control" disabled="disabled" value="{!dueDateInitValue}"/>-->
+                             <apex:outputText value="{0,date,dd MMM yyyy}" styleClass="form-control input-group" style="background-color:#eeeeee" >
+                                     <apex:param value="{!dueDateInitValue}" /> 
+                             </apex:outputText>
+                             <!--<div class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></div>-->
+                           <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                             </div>
+                         </td>
+                     </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</apex:component>

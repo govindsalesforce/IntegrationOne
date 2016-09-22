@@ -1,0 +1,223 @@
+<!--
+     v1.0     Qualityze_Inc(ST)    Initial Version
+     
+     v1.0.1   Qualityze_Inc(GP)    To fix Bugs 00653
+                                   Created a NC/CAPA and closed the NC/CAPA same day. Discrepancy in the Audit Trial section.
+     v1.0.2   Qualityze_Inc(BK)    20-JUL-2016 To fix Bugs 00679
+
+	 v1.0.3   Qualityze_Inc(ST)    19-AUG-2016 fOR Document Audit
+ -->
+<apex:page sidebar="false" Controller="Component_Handler" readOnly="true"  showHeader="false" standardStylesheets="false" docType="html-5.0" >
+    <html>
+        <head>
+            <meta charset="utf-8" />
+            <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+            <meta name="description" content="" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/app.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/bootstrap-datepicker.min.css')}" />
+            <title>Report</title>
+            
+        </head>
+        <body style="background-color: #FFF;">
+            <script>
+            window.onload =function() { window.print(); };
+            </script>
+            <div class="" id="app_warpper">
+                <div class="report-holder">
+                    <div class="wiz-form-holder" style="padding: 20px;">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <img src ="{! URLFOR($Resource.bt_static,'/static/images/report-logo.png') }" class="report-logo"/>
+                            </div>
+                            <apex:outputPanel rendered="{!$CurrentPage.Parameters.module=='NC'}">
+                                <div class="col-md-12">
+                                    <h1>NC Audit</h1>
+                                    <table class="table table-responsive table-bordered">
+                                        <tbody>
+                                            <tr>
+                                                <th>Modified Date</th>
+                                                <th>Parent</th>
+                                                <th>Changed Record/Field</th>
+                                                <th>Old Value</th>
+                                                <th>New Value</th>
+                                                <th>Action</th>
+                                                <th>Modified By</th>                                                                            
+                                            </tr>
+                                            
+                                            <apex:repeat value="{!histories}" var="nchis">                                                                        
+                                                <tr>
+                                                    <td>
+                                                        <!-- v1.0.1 start -->
+						                                <apex:outputField value="{!nchis.CreatedDate}">
+						                                     
+						                                </apex:outputField>
+						                                <!-- v1.0.1 end -->
+                                                    </td>
+                                                    <td>{!JSENCODE(nchis.Parent__c)}</td>
+                                                    <td>{!JSENCODE(nchis.FieldName__c)}</td>
+                                                    <td><apex:outputField value="{!nchis.OldValue__c}"/></td>
+                                                    <td><apex:outputField value="{!nchis.NewValue__c}"/></td>
+                                                    <td>{!JSENCODE(if(nchis.isCreated__c,'Created',if(nchis.isDeleted__c,'Deleted','Updated')))}</td>
+                                                    <td>{!JSENCODE(nchis.CreatedBy.Name)}</td>                                                                                
+                                                </tr>    
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!$CurrentPage.Parameters.module=='CAPA'}">
+                                <div class="col-md-12">
+                                    <h1>CAPA Audit</h1>
+                                    <table class="table table-responsive table-bordered">
+                                        <tbody>
+                                            <tr>
+                                                <th>Modified Date</th>
+                                                <th>Parent</th>
+                                                <th>Changed Record/Field</th>
+                                                <th>Old Value</th>
+                                                <th>New Value</th>
+                                                <th>Action</th>
+                                                <th>Modified By</th>                                                                            
+                                            </tr>
+                                            
+                                            <apex:repeat value="{!capaHistories}" var="nchis">                                                                        
+                                                <tr>
+                                                    <td>
+                                                        <!-- v1.0.1 start -->
+						                                <apex:outputField value="{!nchis.CreatedDate}">
+						                                     
+						                                </apex:outputField>
+						                                <!-- v1.0.1 end -->
+                                                    </td>
+                                                    <!--v1.0.2 start-->
+                                                    <td>{!JSENCODE(SUBSTITUTE(nchis.Parent__c,'@','/'))}</td> 
+                                                    <!--v1.0.2 End-->
+                                                    <td>{!JSENCODE(nchis.FieldName__c)}</td>
+                                                    <td><apex:outputField value="{!nchis.OldValue__c}"/></td>
+                                                    <td><apex:outputField value="{!nchis.NewValue__c}"/></td>
+                                                    <td>{!JSENCODE(if(nchis.isCreated__c,'Created',if(nchis.isDeleted__c,'Deleted','Updated')))}</td>
+                                                    <td>{!JSENCODE(nchis.CreatedBy.Name)}</td>                                                                                
+                                                </tr>    
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                            </apex:outputPanel>
+                            
+                            <!--v1.0.3 start --->
+                            <!---------change management----------->
+                             <apex:outputPanel rendered="{!$CurrentPage.Parameters.module=='CM'}">
+                                <div class="col-md-12">
+                                    <h1>Change Management Audit</h1>
+                                    <table class="table table-responsive table-bordered">
+                                        <tbody>
+                                            <tr>
+                                                <th>Modified Date</th>
+                                                <th>Parent</th>
+                                                <th>Changed Record/Field</th>
+                                                <th>Old Value</th>
+                                                <th>New Value</th>
+                                                <th>Action</th>
+                                                <th>Modified By</th>                                                                            
+                                            </tr>
+                                            
+                                            <apex:repeat value="{!CMHistories}" var="cmhis">                                                                        
+                                                <tr>
+                                                    <td><apex:outputField value="{!cmhis.CreatedDate}"/></td>
+                                                    <td>{!JSENCODE(SUBSTITUTE(cmhis.Sub_Parent__c,'@','/'))}</td> 
+                                                    <td>{!JSENCODE(cmhis.FieldName__c)}</td>
+                                                    <td><apex:outputField value="{!cmhis.OldValue__c}"/></td>
+                                                    <td><apex:outputField value="{!cmhis.NewValue__c}"/></td>
+                                                    <td>{!JSENCODE(if(cmhis.isCreated__c,'Created',if(cmhis.isDeleted__c,'Deleted','Updated')))}</td>
+                                                    <td>{!JSENCODE(cmhis.CreatedBy.Name)}</td>                                                                                
+                                                </tr>    
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                            </apex:outputPanel>
+                            <!-------------------change management----------------------------------------->
+                            
+                            <!----------Document Type---------->
+                             <apex:outputPanel rendered="{!$CurrentPage.Parameters.module=='DT'}">
+                                <div class="col-md-12">
+                                    <h1>Document Type Audit</h1>
+                                    <table class="table table-responsive table-bordered">
+                                        <tbody>
+                                            <tr>
+                                                <th>Modified Date</th>
+                                                <th>Parent</th>
+                                                <th>Changed Record/Field</th>
+                                                <th>Old Value</th>
+                                                <th>New Value</th>
+                                                <th>Action</th>
+                                                <th>Modified By</th>                                                                            
+                                            </tr>
+                                            
+                                            <apex:repeat value="{!DTHistories}" var="dthis">                                                                        
+                                                <tr>
+                                                    <td><apex:outputField value="{!dthis.CreatedDate}"/></td>
+                                                    <td>{!JSENCODE(SUBSTITUTE(dthis.Sub_Parent__c,'@','/'))}</td> 
+                                                    <td>{!JSENCODE(dthis.FieldName__c)}</td>
+                                                    <td><apex:outputField value="{!dthis.OldValue__c}"/></td>
+                                                    <td><apex:outputField value="{!dthis.NewValue__c}"/></td>
+                                                    <td>{!JSENCODE(if(dthis.isCreated__c,'Created',if(dthis.isDeleted__c,'Deleted','Updated')))}</td>
+                                                    <td>{!JSENCODE(dthis.CreatedBy.Name)}</td>                                                                                
+                                                </tr>    
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                            </apex:outputPanel>
+                            <!--------------------------Document Type----------------------------------->
+                            
+                            <!----------Document Profile---------->
+                             <apex:outputPanel rendered="{!$CurrentPage.Parameters.module=='DP'}">
+                                <div class="col-md-12">
+                                    <h1>Document Profile Audit</h1>
+                                    <table class="table table-responsive table-bordered">
+                                        <tbody>
+                                            <tr>
+                                                <th>Modified Date</th>
+                                                <th>Parent</th>
+                                                <th>Changed Record/Field</th>
+                                                <th>Old Value</th>
+                                                <th>New Value</th>
+                                                <th>Action</th>
+                                                <th>Modified By</th>                                                                            
+                                            </tr>
+                                            
+                                            <apex:repeat value="{!DPHistories}" var="dphis">                                                                        
+                                                <tr>
+                                                    <td><apex:outputField value="{!dphis.CreatedDate}"/></td>
+                                                    <td>{!JSENCODE(SUBSTITUTE(dphis.Sub_Parent__c,'@','/'))}</td> 
+                                                    <td>{!JSENCODE(dphis.FieldName__c)}</td>
+                                                    <td><apex:outputField value="{!dphis.OldValue__c}"/></td>
+                                                    <td><apex:outputField value="{!dphis.NewValue__c}"/></td>
+                                                    <td>{!JSENCODE(if(dphis.isCreated__c,'Created',if(dphis.isDeleted__c,'Deleted','Updated')))}</td>
+                                                    <td>{!JSENCODE(dphis.CreatedBy.Name)}</td>                                                                                
+                                                </tr>    
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                            </apex:outputPanel>
+                            <!--------------------------Document Profile----------------------------------->
+                            <!--v1.0.3 end --->
+                        </div>  
+                    </div>
+                </div>
+            </div>
+            <!--  Footer  -->
+            <div class="col-md-12">
+                &copy; Copyright 2015 | Qualityze | All rights reserved
+            </div>      
+        </body>
+    </html>
+</apex:page>

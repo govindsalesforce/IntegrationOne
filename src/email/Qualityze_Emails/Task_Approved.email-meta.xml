@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <encodingKey>ISO-8859-1</encodingKey>
+    <letterhead>Qualityze_Inc</letterhead>
+    <name>Task:Approved</name>
+    <style>freeForm</style>
+    <subject>{!01I61000000v12Z.RecordType} has been Approved</subject>
+    <textOnly>Hello,
+
+The {!01I61000000v12Z.RecordType} task of {!IF(NOT(ISBLANK(01I61000000v12Z.00N6100000AGyfL)),&apos;NCR&apos;,&apos; &apos;)}{!IF(NOT(ISBLANK(01I61000000v12Z.00N6100000BoYYN)),&apos;CAPA&apos;,&apos; &apos;)} record {!01I61000000v12Z.00N6100000AGyfL} {!01I61000000v12Z.00N6100000BoYYN} is Approved.
+
+
+Thank you.
+
+
+Click here for details.</textOnly>
+    <type>html</type>
+</EmailTemplate>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Risk Lookup</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Risk Lookups</value>
+    </caseValues>
+    <fields>
+        <label><!-- Occurrence Probability --></label>
+        <name>Occurrence_Probability__c</name>
+        <relationshipLabel><!-- Risk Lookups --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Risk Priority --></label>
+        <name>Risk_Priority__c</name>
+        <relationshipLabel><!-- Risk Lookups --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Severity Level --></label>
+        <name>Severity_Level__c</name>
+        <relationshipLabel><!-- Risk Lookups --></relationshipLabel>
+    </fields>
+    <startsWith>Consonant</startsWith>
+</CustomObjectTranslation>

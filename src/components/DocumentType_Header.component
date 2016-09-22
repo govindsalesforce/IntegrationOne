@@ -1,0 +1,419 @@
+<!--
+  v1.0     Qualityze Inc(GRT)          08-JULY-2016     Initial Version.
+                                                        This page includes Document Type Header belonging to the Document Type.
+  
+  v1.1.0     Qualityze Inc(ST)         19-AUG-2016      For DocumentDeactive
+  v1.1.1     Qualityze Inc(ST)         19-AUG-2016      For Audit Trail  
+  v1.1.2      Qualityze Inc(SB)        09-SEP-2016      For PRINT
+-->
+<apex:component controller="Component_Handler" extensions="QC_custom_settings" >
+    <apex:attribute name="doctypeRecordId" type="string" description="Doc Type Header record" assignto="{!doctype_id}"/>  
+    
+    <script>
+    $( document ).ready(function() {
+        var followers ='{!JSENCODE(doctype.Followers__c)}';
+        console.log('followers  '+followers);
+        if(followers.indexOf('{!$User.Id}') == -1){
+            console.log('Not a follower');
+            $('.followBtn').attr('title','Follow');
+            $('.followBtn').html('<span class="fa fa-plus-circle"></span>');
+            $(".followBtn").click(function() {
+                console.log('inside click');
+                followDocument();
+            });
+            
+        }
+        else{
+            console.log('Follower');
+            $('.followBtn').attr('title','Un Follow');
+            $('.followBtn').html('<span class="fa fa-minus-circle"></span>');
+            $(".followBtn" ).click(function() {
+                unfollowDocument();
+            });
+        } 
+    });
+    
+    
+    
+   function CloneRecord(){  
+   
+   
+   
+    var curPageId = "{!JSENCODE($CurrentPage.parameters.id)}";
+   
+    
+    
+    Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.Component_Handler.cloneRecord}',curPageId,
+                                                      function(result, event) {
+                                                          //alert(result);
+                                                          
+                            window.location= '/apex/documentType?id='+result+'&camefromClone=true';
+            });
+       
+     
+   
+   }
+   
+     function editdoc(){
+   
+    var curPageId = "{!$currentpage.parameters.id}";
+    
+    
+   
+      Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.Component_Handler.cloneRecord}',curPageId,
+                                                      function(result, event) {
+                                                          //alert(result);
+                                                          
+                            window.location= '/apex/documentType?id='+result;
+            });
+       
+      
+        
+      }
+    
+    
+    
+    function followDocument(){
+        
+        Visualforce.remoting.Manager.invokeAction(
+            // @RemoteAction
+            '{!$RemoteAction.Component_Handler.followDocumentType}',                                 
+            '{!doc_Id}','{!$User.Id}',
+            
+            // Callback
+            function(result, event){
+                if(result=='0'){
+                    location.reload();
+                }
+                 
+            },
+            // Don't know, couldn't find docs
+            {escape: true}
+        );
+    }
+    function unfollowDocument(){
+        Visualforce.remoting.Manager.invokeAction(
+            // @RemoteAction
+            '{!$RemoteAction.Component_Handler.unfollowDocumentType}',
+            
+            '{!doc_Id}','{!$User.Id}',
+            
+            // Callback
+            function(result, event){
+                
+                if(result=='0'){
+                    location.reload();
+                }
+                
+            },
+            // Don't know, couldn't find docs
+            {escape: true}
+        );
+    }    
+    //v1.1 start
+    function clearDesErrors(opentasks,actionType,reasondesc){
+        console.log('opentasks: '+opentasks+' actionType: '+actionType +'   reasondesc: '+reasondesc);
+        var erroractionid = '#'+reasondesc+'_error'
+        $(erroractionid).empty();
+        $('#'+reasondesc).val('');
+        $("#unameFrtask_"+actionType+"_error").empty();
+        $("#unameFrtask_"+actionType).val('');
+        $("#pwdFrtask_"+actionType+"_error").empty();
+        $("#pwdFrtask_"+actionType).val('');
+    }
+    
+    function verifyTaskData(opentasks,actionType,reasondesc){
+        console.log('opentasks: '+opentasks+' actionType: '+actionType +'   reasondesc: '+reasondesc);
+        var erroractionid = '#'+reasondesc+'_error';
+        var actionid ='#'+reasondesc;
+        $(erroractionid).empty();
+        $("#unameFrtask_"+actionType+"_error").empty();
+        $("#pwdFrtask_"+actionType+"_error").empty();
+        var tskdescription = $(actionid).val();
+        // alert(tskdescription);
+        console.log("after errorempty = " +tskdescription);
+        console.log("Before validation ="+tskdescription);
+        if(tskdescription =='' && !{!DigitalSignatureNeeded}){
+            console.log("tskdescription is empty");
+            $(erroractionid).html( "<p>This Field is Required</p>");
+            return false;
+        }
+        $(opentasks).attr('disabled', true);
+        $("#resettskBtn_"+actionType).attr('disabled',true);
+        if({!DigitalSignatureNeeded}){
+            console.log('digital signature needed');
+            var uname=$("#unameFrtask_"+actionType).val();
+            console.log(uname);
+            var isValid = true
+            if(tskdescription ==''){
+                console.log("tskdescription is empty");
+                $(erroractionid).html( "<p>This Field is Required</p>");
+                //return false;
+                $(opentasks).attr('disabled', false);
+                isValid = false;
+            }
+            
+            if(uname!= '{!JSENCODE($User.Username)}'){
+                //alert('Invalid Username')
+                $("#unameFrtask_"+actionType+"_error").html( "<p>Invalid Username</p>");
+                $(opentasks).attr('disabled', false);
+                $("#resettskBtn_"+actionType).attr('disabled',false);
+                //return false;
+                isValid = false;
+                
+            }
+            
+            if(!uname){
+                //alert('Please enter username');
+                $("#unameFrtask_"+actionType+"_error").html( "<p>Please enter username</p>");
+                $(opentasks).attr('disabled', false);
+                $("#resettskBtn_"+actionType).attr('disabled',false);
+                isValid = false;
+            }
+            
+            var pwd=$("#pwdFrtask_"+actionType).val();
+            if(!pwd){
+                // alert('Please enter password..')
+                $("#pwdFrtask_"+actionType+"_error").html( "<p>Please enter password..</p>");
+                $(opentasks).attr('disabled', false);
+                $("#resettskBtn_"+actionType).attr('disabled',false);
+                isValid = false;
+            }
+            if(!isValid){
+                return isValid;
+            }else{
+                Visualforce.remoting.Manager.invokeAction(
+                    // @RemoteAction
+                    '{!$RemoteAction.Component_Handler.doVerify}',pwd,function(result, event){
+                        //console.log('Inside verifypassword remote function');
+                        if(event.status){
+                            if(result){
+                                //alert(actionType);
+                                updateDocTypeStatus();                 
+                            }
+                            else{
+                                $(opentasks).attr('disabled',false);
+                                // alert('Unable to verify password!');
+                                $("#pwdFrtask_"+actionType+"_error").html( "<p>Unable to verify password!</p>");
+                            }
+                        }
+                        else{
+                            $(opentasks).attr('disabled',false);
+                            // alert('Unable to verify password!');
+                            $("#pwdFrtask_"+actionType+"_error").html( "<p>Unable to verify password!</p>");
+                        }
+                        
+                    });           
+            }
+        }else{
+            updateDocTypeStatus();
+        }
+    }
+    
+    function updateDocTypeStatus(){
+        
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.Component_Handler.updateDocTypeActiveDeactiveStatus}',"{!JSENCODE(doctype.Id)}",$('#docTypereason').val(),"{!JSENCODE(doctype.Status__c)}",function(result, event){
+            if(event.status){
+                console.log(result);
+                if(result){
+                    location.reload();  
+                }else{ 
+                    console.log('!Error');
+                }
+            }   
+        });
+    }
+    //v1.1.0 end
+    </script>
+    
+    
+    <div class="row nc-header" style="height: auto;">
+        
+        <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1 expand-menu visible-xs visible-sm hidden-md hidden-lg" role="button" onclick="headerExpand();">
+            <div class="dropdn-btn"><span class="fa fa-2x fa-angle-double-up"></span></div>
+        </div>
+        
+        <div class="col-lg-2 col-md-2 col-sm-4 col-xs-4 cell ">
+            <label>{!$ObjectType.Document_Type__c.Fields.Name.Label}:</label>
+            <div class="text-nowrap header-val">{!doctype.Name}</div>
+        </div>
+        
+        
+        <div class="col-lg-2 col-md-2 col-sm-4 col-xs-4 cell">
+            <label>Owner:</label>
+            <div class="text-nowrap header-val">{!doctype.Owner.Name}</div>
+        </div>
+        
+        
+        <div class="col-lg-1 col-md-1 col-sm-2 col-xs-6 cell">
+            <label>{!$ObjectType.Document_Type__c.Fields.createdDate.Label}:</label> 
+            <div class="text-nowrap header-val">
+            <apex:outputText value="{0,date, dd MMM yyyy}"> <!-- TODO: Make this dependent on Org settings so that date format can be updated from a central location -->
+                                    <apex:param value="{!doctype.createdDate}"/>
+                                </apex:outputText>
+            </div>
+        </div>
+        
+       
+        
+        <div class="col-lg-1 col-md-1 col-sm-3 col-xs-3 cell">
+            <label>{!$ObjectType.Document_Type__c.Fields.Business_Unit__c.Label}:</label>
+            <div class="text-nowrap header-val">{!doctype.Business_Unit__c}</div>
+        </div>
+        
+        
+       <div class="col-lg-1 col-md-1 col-sm-2 col-xs-6 cell">
+            <label>{!$ObjectType.Document_Type__c.Fields.Initiating_Site__c.Label}:</label>
+            <div class="text-nowrap header-val">{!doctype.Initiating_Site__r.Name}</div>
+        </div>
+        
+        
+        
+        <div class="col-lg-1 col-md-1 col-sm-2 col-xs-6 cell">
+            <label>{!$ObjectType.Document_Type__c.Fields.Status__c.Label}:</label>
+            <div class="text-nowrap header-val">{!doctype.Status__c}</div>
+        </div>
+        
+        
+        <div class="mobile-menu visible-xs visible-sm hidden-md hidden-lg">
+            <div class="clearfix"></div>
+            <div class="menu-item"><a href="#">This is a menu</a></div>
+            <div class="menu-item"><a href="#">This is a menu</a></div>
+            <div class="menu-item"><a href="#">This is a menu</a></div>
+            <div class="menu-item text-right">
+                <button class="btn btn-default ">
+                    <span class="glyphicon glyphicon-print" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 text-right cell hidden-sm hidden-xs">
+            <!-- Dropdown Menu for NC Actions -->
+            <div class="dropdown pull-right">
+                <button class="btn btn-default" id="dLabel" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dLabel">
+                    <li class="hidden-lg">
+                        <div class="collapsed-btns">
+                            <button class="btn btn-primary" data-placement="top" data-target="#audit_trail" data-toggle="modal" href="#" id="auditTrialBtn" title="Audit Trial">
+                                <span class="fa fa-history"></span>                           
+                            </button>
+                           <!-- <button id="followBtn" class="btn btn-success pull-right followBtn"
+                                    data-toggle="tooltip" data-placement="top" title="Follow">
+                            </button>-->
+                            <button class="btn btn-default">
+                                <span class="glyphicon glyphicon-print" aria-hidden="true"></span>
+                            </button>
+                        </div>
+                    </li>
+                    <!--  added by satish -->
+                    <apex:outputPanel layout="none" rendered="{!doctype.isEditable__c}">
+                        <li><a href="#" onclick="editdoc();">Edit</a></li>
+                        <li><a href="#" onclick="CloneRecord();">Clone</a></li>
+                     <apex:outputPanel layout="none"  rendered="{!doctype.Status__c == 'Inactive'}">
+                        <li><a href="#" onclick="$('#activeDoc').modal('show');">Activate </a></li>
+                    </apex:outputPanel>
+                        
+                    <apex:outputPanel layout="none"   rendered="{!doctype.Status__c == 'Active'}">
+                        <li><a href="#" onclick="$('#activeDoc').modal('show');">Deactivate</a></li>
+                    </apex:outputPanel>
+                  </apex:outputPanel>
+                    <apex:outputPanel layout="none" rendered="{!$CurrentPage.parameters.pg=='doctype'}">
+                    <li><a href="#" onclick="window.location.href = '/apex/documentType?id={!JSENCODE($CurrentPage.parameters.id)}&pg=doc_TypeDetails';">Details</a></li>
+                    </apex:outputPanel>
+                    <apex:outputPanel layout="none" rendered="{!$CurrentPage.parameters.pg=='doc_TypeDetails'}">
+                    <li><a href="#" onclick=" window.location.href = '/apex/documentType?id={!JSENCODE($CurrentPage.parameters.id)}&pg=doctype';">Profile</a></li>
+                    </apex:outputPanel>
+                    <!--v1.1.0 document Deactive end-->
+                </ul>
+            </div>
+            <!-- Print Button -->
+                        
+          <!-- <button id="followBtn" class="btn btn-success pull-right followBtn"
+                    data-toggle="tooltip" data-placement="top" title="Follow">
+            </button>-->
+            <!--v1.1.2-->
+            <button
+                onClick="window.open('/apex/DocumentType?id={!$CurrentPage.parameters.id}&pg=docType_details_print');"
+                class="btn btn-pills pull-right">
+                <span class="glyphicon glyphicon-print" aria-hidden="true"></span>
+            </button>
+            <!--v1.1.2-->
+            
+             <!---v1.1.1 start --->
+            <apex:outputPanel id="auditTrail">
+                <c:documenttype_audit rendered="{!$Setup.QC_settings__c.Enable_Audit_Trail__c}" dctId="{!doctypeRecordId}" dt="{!doctype}"/>
+            </apex:outputPanel>
+            <!--v1.1.1  end--->
+            
+            <div class="clearfix"></div>
+            
+        </div>
+    </div>
+    
+      <!--v1.1.0 document Deactive start-->
+       <div class="modal fade" id="activeDoc" tabindex="-1" role="dialog"
+        aria-labelledby="myModalLabel">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                        aria-label="Close"
+                        onClick="clearDesErrors(this,'DocType','docTypereason');">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <!--<h4 class="modal-title" id="myModalLabel"> Active Doc </h4>-->
+                    <h4 class="modal-title" id="myModalLabel">{!IF(JSENCODE(doctype.Status__c)=='Inactive','Active Document Type','Deactive Document Type')}</h4>
+                </div>
+                <div class="modal-body" style="overflow: auto;">
+                    <div id="signature-section-adding-fields">
+                        <apex:outputPanel layout="none"   rendered="{!DigitalSignatureNeeded}">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="UserName"><span class="mandatory">*</span>
+                                    User Name:</label> <br /> <input class="form-control" type="text"  id="unameFrtask_DocType" />
+                                    <div class="help-block with-errors" id="unameFrtask_DocType_error"  style="color: red;"></div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="exampleInputEmail1"><span class="mandatory">*</span>
+                                    Password:</label> <input class="form-control" type="password"  id="pwdFrtask_DocType" />
+                                    <div class="help-block with-errors" id="pwdFrtask_DocType_error"  style="color: red;"></div>
+                          </div>
+                            </div>
+                        </apex:outputPanel>
+
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="exampleInputEmail1"><span class="mandatory">*</span>
+                                    Reason:</label>
+                                <textarea id='docTypereason' class="form-control" rows="5" maxlength="4000"  oninput="maxlengthvalidation(this)"></textarea>
+                                <div class="help-block with-errors" id="docTypereason_error"
+                                    style="color: red;" ></div>
+                            </div>
+                        </div>
+                        <!--     screen content -->
+
+                    </div>
+                    <!--signature-section-adding-fields-->
+
+                    <div class="clearfix"></div>
+                    <div class="modal-footer">
+                        <button type="button" id="resettskBtn_DocType"  class="btn btn-default" data-dismiss="modal" onClick="clearDesErrors(this,'DocType','docTypereason');">Cancel</button>
+                        <button id="reopentaks" type="button" class="btn btn-primary" onClick="verifyTaskData(this,'DocType','docTypereason');">OK</button>
+                    </div>
+
+                </div>
+                <!-- modal-body -->
+            </div>
+            <!-- model-content -->
+        </div>
+        <!--modal-dialog modal-lg-->
+    </div>
+    <!--modal fade-->
+    <!--v1.1.0 document Deactive end-->
+    
+</apex:component>

@@ -1,0 +1,38 @@
+<apex:component >
+<apex:attribute name="ObjectType" description="Please pass {!$ObjectType.Non_Conformance__c} to attribute" type="string" required="true"/>
+<apex:attribute name="ObjectTypeLinkTitle" description="Text to be displayed on link to object homepage" type="string" required="true"/>
+  <nav class="navbar navbar-inverse navbar-static-top" id="headerbar">
+        <div class="container-fluid nav-flush">
+          <div class="navbar-header">
+
+            <div class="menu-icon" onClick="openDrawer()">
+              <span></span>
+            </div>
+            <a class="navbar-brand logo" href="#">
+
+            </a>
+          </div>
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+              <li >
+                <form class="navbar-form navbar-right header-search" style="">
+                  <input class="form-control typeahead" placeholder="Search..." type="search" />
+                  <div class="search-control">
+                  </div>
+                </form>
+              </li>
+
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{!$User.FirstName} {!$User.LastName}<span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu">
+                  <li><a href="/{!ObjectType}/o">{!ObjectTypeLinkTitle}</a></li>
+                  <li><a href="/secur/logout.jsp">Logout</a></li>
+                </ul>
+              </li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+</apex:component>

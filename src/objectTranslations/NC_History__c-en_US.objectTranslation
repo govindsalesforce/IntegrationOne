@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>NC History</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>NC Histories</value>
+    </caseValues>
+    <fields>
+        <label><!-- Description --></label>
+        <name>Description__c</name>
+    </fields>
+    <fields>
+        <label><!-- FieldApiName --></label>
+        <name>FieldApiName__c</name>
+    </fields>
+    <fields>
+        <label><!-- FieldName --></label>
+        <name>FieldName__c</name>
+    </fields>
+    <fields>
+        <label><!-- NewValue --></label>
+        <name>NewValue__c</name>
+    </fields>
+    <fields>
+        <label><!-- Non-Conformance --></label>
+        <name>Non_Conformance__c</name>
+        <relationshipLabel><!-- NC Histories --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Object --></label>
+        <name>Object__c</name>
+    </fields>
+    <fields>
+        <label><!-- OldValue --></label>
+        <name>OldValue__c</name>
+    </fields>
+    <fields>
+        <label><!-- Parent --></label>
+        <name>Parent__c</name>
+        <picklistValues>
+            <masterLabel>Closure</masterLabel>
+            <translation><!-- Closure --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Containment</masterLabel>
+            <translation><!-- Containment --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Implementation</masterLabel>
+            <translation><!-- Implementation --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Investigation</masterLabel>
+            <translation><!-- Investigation --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Non-Conformance</masterLabel>
+            <translation><!-- Non-Conformance --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Resolution</masterLabel>
+            <translation><!-- Resolution --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- isCreated --></label>
+        <name>isCreated__c</name>
+    </fields>
+    <fields>
+        <label><!-- isDeleted --></label>
+        <name>isDeleted__c</name>
+    </fields>
+    <layouts>
+        <layout>NC History Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <startsWith>Consonant</startsWith>
+</CustomObjectTranslation>

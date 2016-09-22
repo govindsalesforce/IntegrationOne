@@ -1,0 +1,321 @@
+<apex:page sidebar="false" showHeader="false" standardStylesheets="false" docType="html-5.0" >
+    <html lang="en">
+        <head>
+            <meta charset="utf-8"/>
+            <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+            <meta name="viewport" content="width=device-width, initial-scale=1"/>
+            <meta name="description" content=""/>
+            <meta name="author" content=""/>
+            
+            
+            <apex:stylesheet value="{!URLFOR($Resource.Static_UI_Help,  'help-assets/stylesheets/help.css')}" />  
+            
+            <apex:includeScript value="{!URLFOR($Resource.Static_UI_Help, '/help-assets/javascripts/jquery.min.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.Static_UI_Help, '/help-assets/javascripts/underscore-min.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.Static_UI_Help, '/help-assets/javascripts/backbone-min.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.Static_UI_Help, '/help-assets/javascripts/help.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.Static_UI_Help, '/help-assets/javascripts/bootstrap.min.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.Static_UI_Help, '/help-assets/javascripts/bootstrap/tab.js')}" />
+            
+            
+            <script>
+            
+            function shownctopics() {
+                
+                $('#nc_help').show(); 
+                $('#capa_help').hide();
+                $('#cr_help').hide();
+                $('#doct_help').hide();
+                return true;
+            }
+            
+            function showcapatopics() {
+                //$('.dropdown').hide();
+                $('#capa_help').show(); 
+                $('#nc_help').hide(); 
+                $('#cr_help').hide();
+                $('#doct_help').hide();
+                return true;
+            }  
+            
+            function showcrtopics() {
+                //$('.dropdown').hide();
+                $('#cr_help').show(); 
+                $('#nc_help').hide(); 
+                $('#capa_help').hide();
+                $('#doct_help').hide();
+                return true;
+            } 
+            
+             function showdoctytopics() {
+                //$('.dropdown').hide();
+                $('#doct_help').show(); 
+                $('#nc_help').hide(); 
+                $('#capa_help').hide();
+                $('#cr_help').hide();
+                return true;
+            } 
+            
+            $(document).ready(function(){
+                var page="{!JSENCODE($CurrentPage.parameters.page)}";
+                var sec="{!JSENCODE($CurrentPage.parameters.secname)}";
+                $('.help').hide();
+                $('#'+page).show();
+                if(sec=='nc_help') {
+                    console.log('show nc sec');
+                    shownctopics();
+                    
+                }
+                if(sec=='capa_help') {
+                    console.log('inside capa sec');
+                    showcapatopics();
+                } 
+                if(sec=='cr_help') {
+                    console.log('inside cm sec');
+                    showcrtopics();
+                } 
+                 if(sec=='doct_help') {
+                    console.log('inside doct sec');
+                    showdoctytopics();
+                } 
+            });
+            function ShowNCSection() {
+                $('.help').hide();
+                $('#NCINIT').show();
+            }                                                                               
+            function ShowProductSection() {
+                $('.help').hide();
+                $('#PRD').show();
+            }       
+            function ShowResolutionSection() {
+                $('.help').hide();    
+                $('#RSK').show();
+            }     
+            function ShowContainmentSection() {
+                $('.help').hide();
+                $('#CNT').show();
+            }      
+            function ShowDispositionSection() {
+                $('.help').hide();
+                $('#DPT').show();
+            }      
+            function ShowInvestigationSection() {
+                $('.help').hide();
+                $('#INT').show();
+            }        
+            function ShowImplementationSection() {
+                $('.help').hide();
+                $('#IMP').show();
+            }           
+            function ShowClosureSection() {
+                $('.help').hide();
+                $('#CLT').show();
+            }       
+            function ShowADHOCSection() {
+                $('.help').hide();
+                $('#ADHOC').show();   }  
+            
+            function showcapainitsection() {
+                $('.help').hide();
+                $('#CAPAINIT').show(); }
+            
+            function showcaparesosection() {
+                $('.help').hide();
+                $('#CAPARESO').show(); }
+            
+            function showcapaInvestigation() {
+                $('.help').hide();
+                $('#CAPAINV').show(); }
+            
+            function showcapaImplementation() {
+                $('.help').hide();
+                $('#CAPAIMP').show(); }
+            
+            
+            function showActionPlan() {
+                $('.help').hide();
+                $('#COMACTPLAN').show(); }
+            
+            function showCapaeffectiveness() {
+                $('.help').hide();
+                $('#CAPAEFR').show(); }
+            
+            function ShowCAPAADHOCSection() {
+                $('.help').hide();
+                $('#CAPAADHOC').show(); }
+            
+            function showCapaclosure() {
+                $('.help').hide();
+                $('#CAPACLOS').show(); }
+            
+            function ChangeTaskOwner() {
+                $('.help').hide();
+                $('#CHNGTASKOWN').show(); }
+            
+            function ChangeTaskDueDate() {
+                $('.help').hide();
+                $('#CHNGDUEDATE').show(); }
+            
+            function ShowTaskApproval() {
+                $('.help').hide();
+                $('#TASKAPP').show(); }
+            
+            function ShowCRIntiation() {
+                $('.help').hide();
+                $('#CRINIT').show();
+            } 
+            function DocIntiation() {
+                $('.help').hide();
+                $('#docinfint').show();
+            } 
+            function CrResolution() {
+                $('.help').hide();
+                $('#resint').show();
+            } 
+            function CrDocChange() {
+                $('.help').hide();
+                $('#DocumentChange').show();
+            } 
+            function CrClosure() {
+                $('.help').hide();
+                $('#ClosureINIT').show();
+            } 
+            function doctinit() {
+                $('.help').hide();
+                $('#DOCINIT').show();
+                 
+            } 
+             function secinit() {
+                $('.help').hide();
+                $('#secid').show();
+             } 
+            </script>
+        </head>
+        <body>
+            
+            <nav class="navbar navbar-inverse navbar-fixed-top">
+                <div class="container">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button> 
+                        <span class="glyphicon glyphicon-align-left drawer-icon visible-sm visible-xs" style=""></span>
+                        <a class="navbar-brand" href="#">Welcome to Qualityze - Help</a> 
+                        <form class="form-inline pull-right text-right" style=" margin:7px;"></form>
+                    </div>                     
+                </div>
+            </nav>
+            
+            <div class="container">
+                <div class="row">  
+                    <div class="col-md-2 col-sm-2 col-xs-2 hidden-xs hidden-sm left-col" >
+                        <div class="select-module fixed">
+                            <div class="dropdown" >
+                                <button class="btn btn-default dropdown-toggle btn-block" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                    Help Topics
+                                    <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="" id="selectModule">
+                                    <li><a href="#nc_help" onclick="shownctopics()">NC Help</a></li>
+                                    <li><a href="#capa_help" onclick="showcapatopics()">CAPA Help</a></li>
+                                    <li><a href="#cr_help" onclick="showcrtopics()">CR Help</a></li>
+                                     <li><a href="#doct_help" onclick="showdoctytopics()">DT Help</a></li>
+                                    <!--<li><a href="#doc_help" >Documents Help</a></li>
+									<li><a href="#audit_help" >Audit Help</a></li>   -->             
+                                </ul>
+                            </div>
+                            
+                            <div class="help-sections">
+                                <ul class="nav nav-tabs hidden" role="tablist">
+                                    <li role="presentation" class="active"><a href="#nc_help" onclick="shownctopics()" aria-controls="nc_help" role="tab" data-toggle="tab">nc_help</a></li>
+                                    <li role="presentation" class="active"><a href="#capa_help" onclick="showcapatopics()" aria-controls="capa_help" role="tab" data-toggle="tab">capa_help</a></li>
+                                    <li role="presentation" class="active"><a href="#cr_help" onclick="showcrtopics()" aria-controls="cr_help" role="tab" data-toggle="tab">cr_help</a></li>
+                                    <li role="presentation" class="active"><a href="#doct_help" onclick="showdoctytopics()" aria-controls="doct_help" role="tab" data-toggle="tab">doct_help</a></li>
+                                    <!--  <li role="presentation"><a href="#doc_help" aria-controls="doc_help" role="tab" data-toggle="tab">doc_help</a></li>
+									<li role="presentation"><a href="#audit_help" aria-controls="audit_help" role="tab" data-toggle="tab">audit_help</a></li>-->
+                                </ul>
+                                
+                                <div class="tab-content help-nav">
+                                    <div role="tabpanel" class="tab-pane" id="nc_help">
+                                        <ul class="list-unstyled nav nav-stacked">      
+                                            
+                                            <li><a href="#NCINIT" onclick="ShowNCSection()"> 1.NC Initiation</a></li><br/>
+                                            <li><a href="#PRD" class="active2" onclick="ShowProductSection()"> 2.Product Information</a></li><br/>
+                                            <li><a href="#RSK" onclick="ShowResolutionSection()"> 3.Resolution</a></li><br/>
+                                            <li><a href="#CNT" onclick="ShowContainmentSection()"> 4.Containment Task</a></li><br/>
+                                            <li><a href="#DPT" onclick="ShowDispositionSection()"> 5.Disposition Task</a></li><br/>
+                                            <li><a href="#INT" onclick="ShowInvestigationSection()">6.Investigation Task</a></li><br/>
+                                            <li><a href="#IMP" onclick="ShowImplementationSection()"> 7.Implementation Task</a></li><br/>
+                                            <li><a href="#CLT" onclick="ShowClosureSection()">8.Closure Task</a></li> <br/>
+                                            <li><a href="#ADHOC" onclick="ShowADHOCSection()">9.Adhoc Task</a></li>   <br/>   
+                                        </ul> 
+                                    </div> 
+                                    
+                                    <div role="tabpanel" class="tab-pane" id="capa_help">
+                                        <ul class="list-unstyled nav nav-stacked">
+                                            <li><a href="#CAPAINIT" onclick="showcapainitsection()">CAPA Initiation</a></li>
+                                            <li><a href="#CAPARESO" onclick="showcaparesosection()">CAPA Resolution</a></li>
+                                            <li><a href="#CAPAINV"  onclick="showcapaInvestigation()">Investigation Task</a> </li>                 
+                                            
+                                            <li><a href="#CAPAIMP" onclick="showcapaImplementation()">Implementation Task</a> 
+                                                <ul class="list-unstyled submenu" >
+                                                    <li><a href="#COMACTPLAN" onclick="showActionPlan()">  Action Plan</a> </li>
+                                                </ul>
+                                            </li> 
+                                            
+                                            
+                                            <li><a href="#CAPAEFR" onclick="showCapaeffectiveness()">Effectiveness Review</a> </li>
+                                            <li><a href="#CAPAADHOC" onclick="ShowCAPAADHOCSection()">Ad-hoc Task</a> </li>
+                                            
+                                            <li><a href="#CAPACLOS" onclick="showCapaclosure()">Capa Closure</a> 
+                                                <ul class="list-unstyled submenu" >
+                                                    <li><a href="#CHNGTASKOWN" onclick="ChangeTaskOwner()">Change Task Owner</a> </li>  
+                                                    <li><a href="#CHNGDUEDATE" onclick="ChangeTaskDueDate()">Change Task Date</a> </li>
+                                                    <li><a href="#TASKAPP" onclick="ShowTaskApproval()">Task Approval</a> </li></ul> 
+                                            </li>     
+                                            
+                                            
+                                        </ul>
+                                    </div> 
+                                    
+                                    <div role="tabpanel" class="tab-pane" id="cr_help">
+                                          <ul class="list-unstyled nav nav-stacked">
+                                          <li><a href="#CRINIT" onclick="ShowCRIntiation()">CR Initiation</a></li>
+                                          <li><a href="#docinfint" onclick="DocIntiation()">Document Information</a></li>
+                                          <li><a href="#resint" onclick="CrResolution()">CR Resolution</a></li>
+                                          <li><a href="#DocumentChange" onclick="CrDocChange()">Document Change</a></li>
+                                          <li><a href="#ClosureINIT" onclick="CrClosure()">Closure</a></li>
+                                          </ul> 
+                                     </div> <!--tabpanel-->
+                                    
+                                    <div role="tabpanel" class="tab-pane" id="doct_help">
+                                        <ul class="list-unstyled nav nav-stacked">
+                                          <li><a href="#DOCINIT" onclick="doctinit()">DT Initiation</a></li>
+                                          <li><a href="#secid" onclick="secinit()">DT Security</a></li>
+                                          
+                                        </ul> 
+                                    </div> 
+                                    
+                                    <div class="clearfix"></div>
+                                </div>
+                            </div>   
+                        </div>  
+                    </div>
+                    
+                    
+                    <div class="col-md-10 col-sm-12 col-xs-12 help-content">  
+                        <div class="help-blocks">
+                            <c:Contextual_Help fromHelpText="true" ShowAll="True" currentpage="{!$CurrentPage.parameters.page}"/> 
+                            <c:Contextual_Help fromHelpText1="true" ShowAll1="true" currentpage1="{!$CurrentPage.parameters.page}"/>
+                            <c:Contextual_Help fromHelpText2="true" ShowAll2="true" currentpage2="{!$CurrentPage.parameters.page}"/>
+                            <c:Contextual_Help fromHelpText3="true" ShowAll3="true" currentpage3="{!$CurrentPage.parameters.page}"/>
+                        </div>
+                    </div>          
+                </div>                 
+            </div>           
+        </body>
+    </html>                                   
+</apex:page>

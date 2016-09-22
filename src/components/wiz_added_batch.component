@@ -1,0 +1,76 @@
+<apex:component >
+<apex:attribute name="batch" type="Product_Lot_Numbers__c" description="batch" />
+<apex:attribute name="editable" type="boolean" description="Display Edit / Delete links" default="true"/>
+<apex:attribute name="disabled" type="boolean" description="Disables and/or hides add/edit/del functionality" default="false"/>
+<apex:attribute name="printonly" type="boolean" description="If enabled only prints data in table form without column headers." default="false"/>
+<apex:outputpanel layout="none" rendered="{! printonly }">
+<tr>
+  <td>{!batch.Lot_Bacth_Number__c}</td>
+  <td>{!batch.Lot_Quantity_Affected__c}</td>
+  <td>{!JSENCODE(batch.UOM__c)}</td>
+  <td>{!JSENCODE(if(batch.NC_Product_Defects__r.size>0,batch.NC_Product_Defects__r[0].Defect__r.Name,''))}<apex:repeat first="1" value="{!batch.NC_Product_Defects__r}" var="d">, {!JSENCODE(d.Defect__r.Name)}</apex:repeat></td>
+</tr>
+</apex:outputpanel>
+<apex:outputpanel layout="none" rendered="{! NOT(printonly) }">
+<!-- add-prod-wrapper -->
+                                                <div class="add-prod-wrapper added-defect screen-only">
+                                                    <div class="add-product">
+                                                        <form>
+                                                            <div class="top-row">
+                                                                <div class="col-md-5">
+                                                                    <label>Lot / Batch No:</label>
+                                                                    <input type="text" class="form-control" value="{!batch.Lot_Bacth_Number__c}"></input>
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <label>Defect Quantity:</label>
+                                                                    <input type="text" class="form-control" value="{!batch.Lot_Quantity_Affected__c}"></input>
+                                                                </div>
+                                                                <div class="col-md-3">
+                                                                    <label>UOM:</label>
+                                                                    <input type="text" class="form-control" value="{!JSENCODE(batch.UOM__c)}"></input>
+                                                                </div>
+                                                                <div class="clearfix"></div>
+                                                                
+                                                            </div>
+
+
+                                                            <div class="defect-code">
+                                                                <div class="col-md-12">
+                                                                    <label>Defect Code:</label>
+                                                                </div>
+                                                                <div class="search-field">
+                                                                    <c:wiz_multi width="100%" FieldId="Added_Defect_Codes__c{!batch.Id}" 
+                                                                    FieldName="Defect_Codes__c" 
+                                                                    multiple="true" 
+                                                                    queryFields="Name,Defect__c" 
+                                                                    querytable="QPMS__Defect__c" 
+                                                                    disabled="true" >
+                                                                      <apex:repeat value="{!batch.NC_Product_Defects__r}" var="d">
+                                                                         <option selected="selected" value="{!JSENCODE(d.id)}">{!JSENCODE(d.Defect__r.Name)}</option>
+                                                                      </apex:repeat>
+                                                                    </c:wiz_multi>
+                                                                </div>
+
+                                                            </div>
+
+
+                                                        </form>
+                                                    </div>
+                                                    <apex:outputpanel layout="none" rendered="{! AND(editable, NOT(disabled)) }">
+                                                    <p class=" close-button text-right">
+                                                        
+                                                        <a href="#" class="edit-link" onclick="editbatch('{!batch.id}');">Edit</a>&nbsp;|&nbsp;
+                                                        <a href="#" class="edit-link" onclick="deleteBatch('{!batch.Id}');">Del</a>
+                                                        <!--
+                                                        <button type="button" class="btn btn-default btn-sm" onclick="deleteBatch('{!batch.Id}');">
+                                                           <span class="glyphicon glyphicon-remove "></span>
+                                                        </button>
+                                                        -->
+
+
+                                                    </p>
+                                                    </apex:outputpanel>
+                                                </div>
+                                                <!-- add-prod-wrapper -->
+</apex:outputpanel>                                                
+</apex:component>

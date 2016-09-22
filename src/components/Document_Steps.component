@@ -1,0 +1,157 @@
+<apex:component >
+    
+    <script type="text/javascript">
+  $(function () {
+        $('[data-toggle="popover"]').popover({html:true})
+  })
+  
+  function genTaskMenu(event){
+                var target = $(event.target);
+                var offset = target.offset();
+
+                console.log(offset.left + " - - " + offset.top);
+
+                // $("#gen_task_dropdown").css({
+                //  'position': 'absolute',
+                //  'top': ,
+                //  'left': offset.left
+                // });
+            }
+
+  
+  
+</script> 
+    <apex:attribute name="subTask" type="General_Task__c[]" description="sobjects" /> 
+    <apex:attribute type="Document_Profile__c" name="DocumentProfiles" description="ReadOnlyMode" required="true"/>
+    <apex:attribute name="erTask" type="General_Task__c" description="sobjects" />
+    <apex:attribute name="crTask" type="General_Task__c" description="sobjects" />
+    
+    <apex:repeat value="{!subTask}" var="generalTask">
+        <apex:outputPanel rendered="{!generalTask.CurrentApprovalSequenceNumber__c==9875684}"></apex:outputPanel>
+        <apex:outputPanel rendered="{!generalTask.Status__c=='9875684'}"></apex:outputPanel>
+        <apex:outputPanel rendered="{!generalTask.Approval_Process_Complete__c}"></apex:outputPanel>
+        
+        <apex:outputPanel rendered="{!generalTask.RecordType.name=='EffectivenessReview'}" >
+            <apex:variable value="{!generalTask}" var="erTask"/> 
+        </apex:outputPanel> 
+        
+        <apex:outputPanel rendered="{!generalTask.RecordType.name=='CollaborationReview'}" >
+            <apex:variable value="{!generalTask}" var="crTask"/> 
+        </apex:outputPanel>
+    </apex:repeat>
+          <div class="col-md-10 col-sm-10 col-xs-12 ">
+
+           <div class="wiz-steps-holder"><!--Wizard steps -->
+          
+                <ul class="nav nav-pills icon-nav" id="nav_cr_initiation">
+                    
+                    <li role="" class="left-nav-scroll-btn hidden visible-xs">
+                                <i class="fa fa-3x fa-angle-left"></i>
+                              </li>
+                                
+                              <li role="presentation" class="{!if($currentpage.parameters.pg='doc_Prof','active','nonactive')}">
+                                <a href="#dt_doc_profile" aria-controls="dt_doc_profile" role="tab" data-toggle="pill" onclick="window.location='/apex/DocumentProfile?id={!JSENCODE($currentPage.parameters.id)}&pg=doc_prof';">
+                                    <div class="icon-bg {!if(AND(DocumentProfiles.status__c!='Draft',DocumentProfiles.status__c!='Void'),'green',if(DocumentProfiles.status__c=='Void','gray','blue'))}">
+                                        <div class="icon doc-cr-change-task">
+                                            <span data-toggle="tooltip" data-placement="bottom" title="" class="status-marker " data-original-title=""></span>
+                                        </div>
+                                    </div>
+                                    <apex:outputText value="{!$Label.Document_Profile}"></apex:outputText>
+
+                                </a>
+                              </li>
+                                
+                              <li role="presentation" class="{!if(DocumentProfiles.Collaboration_Review__c,'','hidden')}">
+                                  
+                                  <a href="#cr_resolution" onclick="window.location.href='/apex/DocumentProfileTask?id={!DocumentProfiles.id}&gtid_cr={!if(ISBLANK(crTask.id),'gt_init_cr',crTask.id)}&type=CollaborationReview'" aria-controls="cr_resolution" role="tab" data-toggle="pill">
+                                        <div class="icon-bg {!if(DocumentProfiles.status__c=='Void','gray',if(JSENCODE($currentPage.parameters.gtid_cr)=='gt_init_cr','blue',if(crTask.status__c=='Open','blue',if(crTask.status__c=='Created','gray',if(crTask.status__c=='Closed','green','blue')))))}">
+                                            <div class="icon common-eff-review">
+                                                <apex:outputText rendered="{!AND(OR(crTask.CurrentApprovalSequenceNumber__c==99999,crTask.CurrentApprovalSequenceNumber__c==999999),OR(crTask.Status__c=='Open'),JSENCODE($CurrentPage.parameters.gtid_cr)!='gt_init_cr')}">
+                                                    <span data-toggle="tooltip" data-placement="bottom" title="" class="status-marker {!if(crTask.CurrentApprovalSequenceNumber__c==999999,'red','gray')}" data-original-title="Collaboration Review {!if(crTask.CurrentApprovalSequenceNumber__c==999999,'Reject','Recall')}"></span>
+                                                </apex:outputText>
+                                                <apex:outputText rendered="{!AND(crTask.Status__c=='Pending Approval',JSENCODE($CurrentPage.parameters.gtid_cr)!='gt_init_cr')}">
+                                                     <span data-toggle="tooltip" data-placement="bottom" title="" class="status-marker yellow" data-original-title="Collaboration Review started"></span>
+                                                </apex:outputText>
+                                                <apex:outputText rendered="{!AND(crTask.Approval_Process_Complete__c,crTask.Status__c=='Closed',JSENCODE($CurrentPage.parameters.gtid_cr)!='gt_init_cr')}">
+                                                    <span data-toggle="tooltip" data-placement="bottom" title="" class="status-marker green" data-original-title="Collaboration Review Completed"></span>
+                                                </apex:outputText>                             
+                                            </div>
+                                        </div>                                        
+                                        <apex:outputText value="{!$Label.Collaboration_Review}"></apex:outputText>
+                                    </a>
+                                <!--<a href="#dt_collab_review" aria-controls="dt_collab_review" role="tab" data-toggle="pill">
+                                    <div class="icon-bg green">
+                                        <div class="icon doc-collab-review">
+                                            <span data-toggle="tooltip" data-placement="bottom" title="" class="status-marker blue" data-original-title="Tool tip"></span>
+                                        </div>
+                                    </div>
+                                    <apex:outputText value="{!$Label.Collaboration_Review}"></apex:outputText>
+                                </a>--->
+                              </li>
+
+                              <li role="presentation" class="">
+                                <a href="#dt_approval" aria-controls="dt_approval" role="tab" data-toggle="pill" onclick="window.location='/apex/DocumentProfile?id={!JSENCODE($currentPage.parameters.id)}&pg=doc_Approval';">
+                                    <div class="icon-bg {!if(AND(DocumentProfiles.status__c=='Draft',(DocumentProfiles.Approval_required__c)),'blue',if(OR(DocumentProfiles.status__c=='Void',NOT(DocumentProfiles.Approval_required__c)),'gray','green'))}">
+                                        <div class="icon doc-approval">
+                                            <span data-toggle="tooltip" data-placement="bottom" title="" class="status-marker {!if(DocumentProfiles.Status__c=='Void','gray',if(DocumentProfiles.Approval_Process_Complete__c,'green',if(DocumentProfiles.Approval_Status__c=='Pending Approval','yellow',if(DocumentProfiles.Approval_Status__c=='Recall','grey',if(DocumentProfiles.Approval_Status__c=='Rejected','red','')))))}" data-original-title="{!if(DocumentProfiles.Approval_Process_Complete__c,'Approved',if(DocumentProfiles.Approval_Status__c=='Pending Approval','Pending Approval',if(DocumentProfiles.Approval_Status__c=='Recall','Recall',if(DocumentProfiles.Approval_Status__c=='Rejected','Rejected',''))))}"></span>
+                                        </div>
+                                    </div>
+                                    <apex:outputText value="{!$Label.Document_Approval}"></apex:outputText>                                  
+                                </a>
+                              </li>
+                                
+                              <!---------{!if(DocumentProfiles.status__c!='Draft','','hidden')}-->
+                              <li role="presentation" class="dropdown {!if(AND(OR(DocumentProfiles.status__c=='Current',DocumentProfiles.status__c=='Expired',DocumentProfiles.status__c=='Revised'),NOT(ISNULL(DocumentProfiles.Effectiveness_Review_Date__c))),'','hidden')}">
+                                                                                            <!---https://c.na34.visual.force.com/apex/DocumentProfileTask?id=a0q61000001SuQsAAK&gtid_er=gt_init&pg=1         if({!ISBLANK(erTask.id)},'gt_init',{!erTask.id})';---->
+                                    <a href="#cr_resolution" onclick="window.location.href='/apex/DocumentProfileTask?id={!DocumentProfiles.id}&gtid_er={!if(ISNULL(erTask.id),'gt_init',erTask.id)}&type=EffectivenessReview'" aria-controls="cr_resolution" role="tab" data-toggle="pill">
+                                        <div class="icon-bg-round {!if(DocumentProfiles.status__c=='Void'||DocumentProfiles.Effectiveness_Review_Date__c!=TODAY(),'gray',if(JSENCODE($currentPage.parameters.gtid_er)=='gt_init','blue',if(erTask.status__c=='Open','blue',if(erTask.status__c=='Created','gray',if(erTask.status__c=='Closed','green','blue')))))}">
+                                            <div class="icon common-eff-review">
+                                                <apex:outputText rendered="{!AND(OR(erTask.CurrentApprovalSequenceNumber__c==99999,erTask.CurrentApprovalSequenceNumber__c==999999),OR(erTask.Status__c=='Open'),JSENCODE($CurrentPage.parameters.gtid_er)!='gt_init')}">
+                                                    <span data-toggle="tooltip" data-placement="bottom" title="" class="status-marker {!if(erTask.CurrentApprovalSequenceNumber__c==999999,'red','gray')}" data-original-title="Effectiveness Review {!if(erTask.CurrentApprovalSequenceNumber__c==999999,'Reject','Recall')}"></span>
+                                                </apex:outputText>
+                                                <apex:outputText rendered="{!AND(erTask.Status__c=='Pending Approval',JSENCODE($CurrentPage.parameters.gtid_er)!='gt_init')}">
+                                                     <span data-toggle="tooltip" data-placement="bottom" title="" class="status-marker yellow" data-original-title="Effectiveness Review Approval started"></span>
+                                                </apex:outputText>
+                                                <apex:outputText rendered="{!AND(erTask.Approval_Process_Complete__c,erTask.Status__c=='Closed',JSENCODE($CurrentPage.parameters.gtid_er)!='gt_init')}">
+                                                    <span data-toggle="tooltip" data-placement="bottom" title="" class="status-marker green" data-original-title="Effectiveness Review Approved"></span>
+                                                </apex:outputText>                             
+                                            </div>
+                                        </div>
+                                        Effectiveness Review
+                                    </a>
+                                </li>
+                              <!-- <li role="presentation" class="dropdown {!if(DocumentProfile.status__c!='Draft','','hidden')}"> 
+                                <a id="drop4" href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="true"> 
+                                    <div class="icon-bg-round gray">
+                                        <div class="icon common-eff-review">
+                                            <span data-toggle="tooltip" data-placement="bottom" title="" class="status-marker red" data-original-title="Tool tip"></span>
+                                        </div>
+                                    </div>
+                                    Effectiveness Review <span class="caret"></span>
+                                </a> 
+                                <ul id="menu1" class="dropdown-menu" aria-labelledby="drop4"> 
+                                    <li><a href="#dt_eff_review" aria-controls="dt_eff_review" role="tab" data-toggle="pill">Effectivenes Review</a></li> 
+                                    <li><a href="#">Submenu 2</a></li> 
+                                    <li><a href="#">Submenu 3</a></li> 
+                                    
+                                </ul> 
+                              </li>
+
+                              <li role="presentation" class="right-nav-scroll-btn hidden visible-xs">
+                                    <i class="fa fa-3x fa-angle-right"></i>
+                              </li>-->
+
+                            </ul>
+
+            </div><!--Wizard steps -->
+          </div>
+
+          <div class="col-md-2 col-sm-2 col-xs-2 right-to-wiz hidden-sm hidden-xs">
+            <div class="btn-group pull-right nc-detail-btn">
+              <a href="#doc_details_readonly" class="btn btn-primary" id="show_details" onclick="window.location='/apex/DocumentProfile?id={!JSENCODE($currentPage.parameters.id)}&pg=doc_Details';">
+                <i class="fa fa-file-text-o"></i>&nbsp;  <apex:outputText value="{!$Label.Document_Details}"></apex:outputText>
+              </a>
+            </div>
+          </div>
+        
+</apex:component>

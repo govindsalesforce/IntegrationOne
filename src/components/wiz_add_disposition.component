@@ -1,0 +1,1715 @@
+<apex:component controller="Component_Handler" extensions="QC_custom_settings">
+<apex:attribute name="divId"  description="Holds the id value for div" type="String" required="true"  />
+<apex:attribute name="tableId"  description="Holds the id value for approval table" type="String" required="true"  />
+<apex:attribute name="dispTypeId"  description="Holds the id value for dispositon type" type="String" required="true"  />
+<apex:attribute name="totalDispQtyId"  description="Holds the id value for totat dispositon quantity" type="String" required="true" />
+<apex:attribute name="prodListId"  description="Holds the id value for product List" type="String" required="true"  />
+<apex:attribute name="prodBatchId"  description="Holds the id value for product Batch" type="String" required="true"  />
+<apex:attribute name="dispQtyId"  description="Holds the id value for disposition quantity" type="String" required="true"  />
+<apex:attribute name="pendDispQtyId"  description="Holds the id value for pending disposition quantity" type="String" required="true"  />
+<apex:attribute name="assignedTo"  description="Holds the id value for assigned user" type="String" required="true" />
+<apex:attribute name="dueDate"  description="Holds the id value for due date" type="String" required="true" />
+<apex:attribute name="dispoInst"  description="Holds the id value for disposition instruction" type="String" required="true" />
+<apex:attribute name="dispoCompBy"  description="Holds the id value of user who completed the disposition of certain type" type="String" required="true" />
+<apex:attribute name="dispoCompDate"  description="Holds the id value for disposition completed date" type="String" required="true" />
+<apex:attribute name="dispoCompComm"  description="Holds the id value for disposition completion comment" type="String" required="true" />
+<apex:attribute name="completed"  description="Holds the id value for completed" type="String" />
+<apex:attribute name="ncId" description="Holds the non conformance id"  type="String"/>
+<apex:attribute name="nc" description="Non Conformance Record"  type="Non_Conformance__c"/>
+<apex:attribute name="dispTask" description="Disposition Record" type="General_Task__c" assignTo="{!disposition}"/>
+<input type="hidden" value="{!dispositionSectionData}"/>
+<script>
+    var dispoType,users,products,productBatch,ProductsDefects,ProductsDefectsCopy,totalDispQty=0,dispQty=0,pendingQty=0,allTotalDispQty=0,hiddenVal,hiddenId,errMsg,disabledCount=0;
+    var allProductsDefects = new Array();
+    var id_start = 0;
+    var deletedRowIds = new Array();
+    $( document ).ready(function() {
+        $("#dispo0").hide();
+        $("#{!divId}").hide();
+        $("#showCompletionDetails").hide();
+        $("#dispo0ShowCompletionDetails").hide();
+        getRemoteData();
+        if($("#dispositionSection").children().length>0){
+            assignDynamicIds();
+            disableDiv();
+        }else{
+            var loggedInUser = "{!JSENCODE($User.id)}";
+            var ncOwner = "{!JSENCODE(nc.ownerid)}";
+            var taskOwner = "{!JSENCODE(dispTask.ownerid)}";
+            var profile = "{!JSENCODE($Profile.Name)}";
+            $("#dispo0").prependTo( "#dispositionSection" ).show();
+            if(loggedInUser != ncOwner && loggedInUser != taskOwner && profile != 'System Administrator'){
+                $("#dispo0 *").attr("disabled","true");
+                $("#disposition").attr("disabled","true");
+                $("#Save").attr("disabled","true");
+                $("#Submit").attr("disabled","true");
+                $("#Cancel").attr("disabled","true");
+                $("#tableId_chk").on("click", function (e) {
+                    var checkbox = $(this);
+                    if (checkbox.is(":checked")) {
+                    // do the confirmation thing here
+                    e.preventDefault();
+                    return false;
+                }
+                });
+                return false;
+            }else{
+                autoPopulateDate("dispo0");
+                var changeFieldStatus = "{!JSENCODE(dispTask.ChangeFieldApprovalStatus__c)}";
+                var status = "{!JSENCODE(dispTask.Status__c)}"
+                if(changeFieldStatus == 'Pending' || status == 'Void'){
+                    $("#disposition").attr("disabled","true");
+                    $("#dispo0 *").attr("disabled","true");
+                }
+            }
+        }
+    });
+    function getRemoteData(){
+        Visualforce.remoting.Manager.invokeAction(
+            // @RemoteAction
+            '{!$RemoteAction.Component_Handler.getDispositionData}','{!ncId}',
+            // Callback
+            function(result, event){
+                dispoType=result['dispoType'];users=result['usrs'];products=result['prod'];
+                $("#{!dispTypeId}").append($("<option />").val('--Select Disposition Type--').text('--Select Disposition Type--'));
+                $("#dispo0Disptype").append($("<option />").val('--Select Disposition Type--').text('--Select Disposition Type--'));
+                $.each(dispoType, function(disp) {
+                    $("#{!dispTypeId}").append($("<option />").val(escapeHtml(dispoType[disp])).text(escapeHtml(dispoType[disp])));
+                    $("#dispo0Disptype").append($("<option />").val(escapeHtml(dispoType[disp])).text(escapeHtml(dispoType[disp])));
+                });
+                $("#{!assignedTo}").append($("<option />").val('').text(''));
+                $("#dispo0assignedTo").append($("<option />").val('').text(''));
+                $.each(users, function(usr) {
+                    var userPrts = users[usr].split('@');
+                    $("#{!assignedTo}").append($("<option />").val(escapeHtml(userPrts[0])).text(escapeHtml(userPrts[1])));
+                    $("#dispo0assignedTo").append($("<option />").val(escapeHtml(userPrts[0])).text(escapeHtml(userPrts[1])));
+                });
+                $("#{!dispoCompBy}").append($("<option />").val('').text(''));
+                $("#dispo0dispoCompBy").append($("<option />").val('').text(''));
+                $.each(users, function(usr) {
+                    var userPrts = users[usr].split('@');
+                    $("#{!dispoCompBy}").append($("<option />").val(escapeHtml(userPrts[0])).text(escapeHtml(userPrts[1])));
+                    $("#dispo0dispoCompBy").append($("<option />").val(escapeHtml(userPrts[0])).text(escapeHtml(userPrts[1])));
+                });
+                $("#{!prodListId}").append($("<option />").val('--Select Product--').text('--Select Product--'));
+                $("#dispo0ProdList").append($("<option />").val('--Select Product--').text('--Select Product--'));
+                $.each(products, function(pro) {
+                    var productPrts=products[pro].split('@');
+                    $("#{!prodListId}").append($("<option />").val(escapeHtml(productPrts[0])).text(escapeHtml(productPrts[1])));
+                    $("#dispo0ProdList").append($("<option />").val(escapeHtml(productPrts[0])).text(escapeHtml(productPrts[1])));
+               });     
+                Visualforce.remoting.Manager.invokeAction(
+                    // @RemoteAction
+                    '{!$RemoteAction.Component_Handler.getProductBatch}',products,
+                    function(result, event){
+                        ProductsDefects = result['prodBat'];
+                        ProductsDefectsCopy = result['prodBat'];
+                        $.each(ProductsDefects, function(prodDef) {
+                            var prodBatPrts = ProductsDefects[prodDef].split('|');
+                            allProductsDefects.push(ProductsDefects[prodDef]);
+                            allTotalDispQty = allTotalDispQty + parseInt(prodBatPrts[2]);
+                            
+                        });
+                        getUpdatedProductDefects();
+                    }
+                );
+            }
+        );
+    }
+    function getUpdatedProductDefects(){
+        var id_start = 0;
+        $("#dispositionSection>div").each(function() {
+            var divId= '{!divId}' + (id_start++);
+            var tableId = $("#"+divId+">div").find('div').eq(1).find('div>div>div>table').attr('id');
+            var noOfRows = $("#"+divId+">div").find('div').eq(1).find('div>div>div>table>tbody>tr').length;
+            var dispVal,selectedProd,selectedBatch,dispLot,selectedProdInfo;
+            for(i=1;i<noOfRows;i++){
+                dispVal = $("#"+tableId+"> tbody").find('tr').eq(i).find('td').eq(2).find('input:first').val();
+                selectedProd = $("#"+tableId+"> tbody").find('tr').eq(i).find('td').eq(0).find('select option:selected').val();
+                selectedBatch = $("#"+tableId+" > tbody").find('tr').eq(i).find('td').eq(1).find('select option:selected').text();
+                dispLot = selectedBatch.split('|');
+                selectedProdInfo = selectedProd+'|'+selectedBatch;
+                if(allProductsDefects.indexOf(selectedProdInfo) > -1){//executes when combination of productid+productBatch+productDefectCount found in allProductDefect----
+                    $.each(allProductsDefects,function(allProdDef){
+                        var prodBatPrts = allProductsDefects[allProdDef].split('|');
+                        if($.trim(prodBatPrts[1]) == $.trim(dispLot[0])){
+                            var index = allProductsDefects.indexOf(allProductsDefects[allProdDef]);
+                            var leftOutCount = prodBatPrts[2] - dispVal;
+                            if(leftOutCount != 0){
+                                prodBatPrts[2] = leftOutCount;
+                                allProductsDefects.splice(index, 1);
+                                allProductsDefects.push(prodBatPrts[0]+'|'+prodBatPrts[1]+'|'+prodBatPrts[2]);
+                                return false;
+                            }else{
+                                allProductsDefects.splice(index, 1);
+                                return false;
+                            }
+                        }
+                    });
+                }else if(allProductsDefects.length != 0){//executes when allProductDefects not empty
+                    $.each(allProductsDefects,function(allProdDef){
+                        var prodBatPrts = allProductsDefects[allProdDef].split('|');
+                        if($.trim(prodBatPrts[1]) == $.trim(dispLot[0])){//executes when product found in allProductDefects
+                            var index = allProductsDefects.indexOf(allProductsDefects[allProdDef]);
+                            if(prodBatPrts[2]>dispLot[1]){
+                                prodBatPrts[2] = parseInt(prodBatPrts[2]) - parseInt(dispVal);
+                            }else if(dispLot[1] > prodBatPrts[2]){
+                                prodBatPrts[2] = parseInt(prodBatPrts[2]) - parseInt(dispVal);
+                            }   
+                            if(prodBatPrts[2] != 0){
+                                allProductsDefects.splice(index, 1);
+                                allProductsDefects.push(prodBatPrts[0]+'|'+prodBatPrts[1]+'|'+prodBatPrts[2]);
+                                return false;
+                            }else{
+                                allProductsDefects.splice(index, 1);
+                                return false;
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    }
+    function checkDispositionTypes(val,tId){
+        var start = 0,count=0;
+        $("#dispositionSection>div").each(function(){
+            divId = 'dispo'+ (start++);
+            dispTypeVal = $("#"+divId+">div").find('div').eq(1).find('div>div>div>table>tbody>tr').eq(0).find('td').find('Select option:selected').val();
+            $("div[id$='_error']").empty();
+            if(dispTypeVal == val){
+                count = count + 1;
+                if(count>1){
+                    $("#"+tId+">tbody>tr").eq(0).find('td').find('div').append(val+' already exist choose another').css('color','red');
+                    $("#"+tId+">tbody>tr").eq(0).find('td').find('Select').val('--Select Disposition Type--');
+                    return false;
+                }
+            }
+        });
+    }
+    function getProductBatch(val,tableId,loc){
+        var remove;
+        var trIndex = $(loc).parent().parent().index();
+        var hiddenProdValue = $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(0).find('input').val();
+        var pendingQty = $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').val();
+        var dispVal = $("#"+tableId+"> tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').val();
+        if(hiddenProdValue.length > 0 && dispVal != ''){
+            var selectedProd = hiddenProdValue;   
+            var selectedBatch = $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(1).find('select option:selected').text();
+            if((dispVal != '' && selectedBatch != '--Select Batch--') || dispVal != '' || selectedBatch != '--Select Batch--'){
+                var dispLot = selectedBatch.split('|');
+                var selectedProdInfo = selectedProd+'|'+selectedBatch;
+                if(dispVal != '' && pendingQty != ''){
+                    remove = true;
+                    if(remove){
+                        var totDispOfParticularDialog = $("#"+tableId+" > tbody").find('tr').eq(0).find('td').eq(1).find('input').val();
+                        totalDispQty = parseInt(totDispOfParticularDialog);
+                        var flag = false;
+                        $.each(allProductsDefects,function(allProdDef){
+                            var prodBatPrts = allProductsDefects[allProdDef].split('|');
+                            if($.trim(prodBatPrts[1]) == $.trim(dispLot[0])){
+                                flag = true;
+                                var index = allProductsDefects.indexOf(allProductsDefects[allProdDef]);
+                                prodBatPrts[2] = parseInt(prodBatPrts[2]) + parseInt(dispVal);
+                                allProductsDefects.splice(index, 1);
+                                allProductsDefects.push(prodBatPrts[0]+'|'+prodBatPrts[1]+'|'+prodBatPrts[2]);
+                                totalDispQty = totalDispQty - parseInt(dispVal);
+                                $("#"+tableId+" > tbody").find('tr').eq(0).find('td').eq(1).find('input').val(totalDispQty);
+                                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(1).find('select').find('option').remove();
+                                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input').val('');
+                                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').val('');
+                                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(1).find('select').append($('<option/>').val('--Select Batch--').text('--Select Batch--'));
+                                $.each(allProductsDefects,function(allProdDef){
+                                    var prodBatPrts = allProductsDefects[allProdDef].split('|');
+                                    if(prodBatPrts[0] == val){
+                                        $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(1).find('select').append($('<option/>').val(escapeHtml(prodBatPrts[2])).text(escapeHtml(prodBatPrts[1])+'|'+escapeHtml(prodBatPrts[2])));
+                                    }
+                                });
+                                if(hiddenProdValue != val){
+                                    $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(0).find('input').val(val);
+                                }
+                                return false;
+                            }
+                        });
+                        if(!flag){//executes when product not found in allProductDefects
+                            newProd = selectedProdInfo.split('|');            
+                            if(newProd[2] == dispVal){
+                                newProd[2] = dispVal;
+                            }else{
+                                newProd[2] = newProd[2] - pendingQty;
+                            }
+                            totalDispQty = totalDispQty - newProd[2];
+                            $("#"+tableId+" > tbody").find('tr').eq(0).find('td').eq(1).find('input').val(totalDispQty);
+                            allProductsDefects.push(newProd[0]+'|'+newProd[1]+'|'+newProd[2]);
+                            $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(1).find('select').find('option').remove();
+                            $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input').val('');
+                            $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').val('');
+                            $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(1).find('select').append($('<option/>').val('--Select Batch--').text('--Select Batch--'));
+                            $.each(allProductsDefects,function(allProdDef){
+                                var prodBatPrts = allProductsDefects[allProdDef].split('|');
+                                if(prodBatPrts[0] == val){
+                                    $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(1).find('select').append($('<option/>').val(escapeHtml(prodBatPrts[2])).text(escapeHtml(prodBatPrts[1])+'|'+escapeHtml(prodBatPrts[2])));
+                                }
+                            });
+                            if(hiddenProdValue != val){
+                                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(0).find('input').val(val);
+                            }
+                            return false;
+                        }          
+                    }
+                }
+            }
+        }else{
+            $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(0).find('input').val(val);
+        }
+        $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(1).find('select').find('option').remove();
+        $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input').val('');
+        $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').val('');
+        $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(1).find('select').append($('<option/>').val('--Select Batch--').text('--Select Batch--'));
+        $.each(allProductsDefects,function(allProdDef){
+            var prodBatPrts = allProductsDefects[allProdDef].split('|');
+            if(prodBatPrts[0] == val){
+                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(1).find('select').append($('<option/>').val(escapeHtml(prodBatPrts[2])).text(escapeHtml(prodBatPrts[1])+'|'+escapeHtml(prodBatPrts[2])));
+            }
+        });
+    }
+    function setDispQtyLimit(val,tableId,loc){
+        var selectedText = $(loc).find('option:selected').text();
+        var splitSelectedText = selectedText.split('|');
+        var splitExitingText,exitingText;
+        var count=0,hiddenBatDefectVal,flag = false;
+        var noOfRows = $("#"+tableId+" >tbody>tr").length;
+        var trIndex = $(loc).parent().parent().index();
+        var hiddDisposedQty = $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:last').val();
+        var hiddenProdValue = $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(0).find('input').val();
+        var pendingQty = $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').val();
+        var dispVal = $("#"+tableId+"> tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').val();
+        var hiddenBatVal = $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(1).find('input').val();
+        if(hiddenBatVal.length > 0 && dispVal != '' && dispVal != undefined){
+            for(i=1 ; i<noOfRows ; i++){
+                exitingText = $("#"+tableId+">tbody>tr").eq(i).find('td').eq(1).find('Select option:selected').text();
+                splitExitingText = exitingText.split('|');
+                $("div[id$='_error']").empty();
+                if(splitSelectedText[0] == splitExitingText[0]){
+                    count = count + 1;
+                    if(count>1){
+                        flag = true;
+                        hiddenBatDefectVal = hiddenBatVal.split('|');
+                        hiddDisposedQty = $("#"+tableId+" > tbody>tr").eq(trIndex).find('td').eq(2).find('input:last').val();
+                        $("#"+tableId+">tbody>tr").eq(trIndex).find('td').eq(1).find('Select option:contains('+hiddenBatVal+')').remove();
+                        $("#"+tableId+">tbody>tr").eq(trIndex).find('td').eq(1).find('Select').append($("<option />").val(val).text(hiddenBatVal).attr('selected',true));
+                        $("#"+tableId+">tbody>tr").eq(trIndex).find('td').eq(2).find('input').eq(0).val(parseInt(hiddDisposedQty));
+                        $("#"+tableId+">tbody>tr").eq(trIndex).find('td').eq(2).find('input').eq(1).val(parseInt(hiddDisposedQty));
+                        $("#"+tableId+">tbody>tr").eq(trIndex).find('td').eq(3).find('input').val(parseInt(hiddenBatDefectVal[1])-parseInt(hiddDisposedQty));
+                    } 
+                }
+            }
+            if(flag == false){
+                var selectedProd = hiddenProdValue;
+                var dispLot = hiddenBatVal.split('|');
+                var selectedProdInfo = hiddenProdValue + '|' + hiddenBatVal;
+                var totDispOfParticularDialog = $("#"+tableId+" > tbody").find('tr').eq(0).find('td').eq(1).find('input').val();
+                totalDispQty = parseInt(totDispOfParticularDialog);
+                var innerFlag = false;
+                $.each(allProductsDefects,function(allProdDef){
+                    var prodBatPrts = allProductsDefects[allProdDef].split('|');
+                    if($.trim(prodBatPrts[1]) == $.trim(dispLot[0])){
+                        innerFlag = true;
+                        var index = allProductsDefects.indexOf(allProductsDefects[allProdDef]);
+                        prodBatPrts[2] = parseInt(prodBatPrts[2]) + parseInt(dispVal);
+                        allProductsDefects.splice(index, 1);
+                        allProductsDefects.push(prodBatPrts[0]+'|'+prodBatPrts[1]+'|'+prodBatPrts[2]);
+                        totalDispQty = totalDispQty - parseInt(dispVal);
+                        $("#"+tableId+" > tbody").find('tr').eq(0).find('td').eq(1).find('input').val(totalDispQty);
+                        if(selectedText == '--Select Batch--'){
+                            $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(1).find('input').val('');
+                            $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input').val('');
+                            $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').val('');
+                            $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').attr('min',0);
+                            $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').attr('max',0);
+                        }else{    
+                            $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(1).find('input').val(selectedText);
+                            $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input').val('');
+                            $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').val('');
+                            $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').attr('min','1');
+                            $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').attr('max',val);
+                        }    
+                        return false;
+                    }
+                });
+                if(!innerFlag){//executes when product not found in allProductDefects
+                    newProd = selectedProdInfo.split('|');            
+                    if(newProd[2] == dispVal){
+                        newProd[2] = dispVal;
+                    }else{
+                        newProd[2] = newProd[2] - pendingQty;
+                    }
+                    totalDispQty = totalDispQty - newProd[2];
+                    $("#"+tableId+" > tbody").find('tr').eq(0).find('td').eq(1).find('input').val(totalDispQty);
+                    if(selectedText == '--Select Batch--'){
+                        $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(1).find('input').val('');
+                        $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input').val('');
+                        $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').val('');
+                        $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').attr('min',0);
+                        $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').attr('max',0);
+                    }else{
+                        $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(1).find('input').val(selectedText);// hidden field in select batch.
+                		$("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input').val('');
+                		$("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').val('');
+                		$("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').attr('min','1');
+                		$("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').attr('max',val);
+                    }
+                    allProductsDefects.push(newProd[0]+'|'+newProd[1]+'|'+newProd[2]);
+                    return false;
+                }    
+            }    
+        }else{
+            for(i=1 ; i<noOfRows ; i++){
+                exitingText = $("#"+tableId+">tbody>tr").eq(i).find('td').eq(1).find('Select option:selected').text();
+                splitExitingText = exitingText.split('|');
+                $("div[id$='_error']").empty();
+                if(splitSelectedText[0] == splitExitingText[0]){
+                    count = count + 1;
+                    if(count>1){
+                        $("#"+tableId+">tbody>tr").eq(trIndex).find('td').eq(1).find('div').append(splitSelectedText[0]+' already exist choose another').css('color','red');
+                        $("#"+tableId+">tbody>tr").eq(trIndex).find('td').eq(1).find('Select').val('--Select Batch--');
+                    }    
+                }
+            }if(selectedText == '--Select Batch--'){
+                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(1).find('input').val('');
+                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input').val('');
+                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').val('');
+                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').attr('min',0);
+                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').attr('max',0);
+            }else{        
+                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(1).find('input').val(selectedText);// hidden field in select batch.
+                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input').val('');
+                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').val('');
+                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').attr('min','1');
+                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').attr('max',val);
+            }     
+        }
+    }
+    function getPendingQty(val,tableId,loc){
+        var product,lot;
+        var dispVal = parseInt(val);
+        var remove = false;
+        var divId = $("#"+tableId).parent().parent().parent().parent().attr('id');
+        var tableRow=$(loc).parent().parent();
+        var trIndex = tableRow.index();
+        product = $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(0).find('select option:selected').val();
+        lot = $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(1).find('select option:selected').val();
+        hiddenVal = $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:last').val();
+        hiddenId = $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:last').attr('id');
+        var maxValue = $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').attr('max');
+        var minValue = $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').attr('min');
+        if(product == '--Select Product--' || lot == '--Select Batch--'){
+            $(loc).val('');
+        }
+        if(product != '--Select Product--' && lot != '--Select Batch--'){
+            if(hiddenVal == dispVal || isNaN(dispVal)){
+                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').val('');
+                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').val('');
+                if(hiddenVal != ''){
+                    $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').val(hiddenVal);
+                    $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').val(maxValue - hiddenVal);
+                }    
+                return false;
+            }else{
+                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').val('');
+                if( dispVal > maxValue || dispVal < minValue){
+                    showDialog('1','Value should be less than or equal to Defect Quantity');
+                    $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').val('');
+                    $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').val('');
+                    // if we accidently enter 0, - value , value greater than maxValue then this code will execute
+                    if(hiddenVal > 0){
+                        $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').val(hiddenVal);
+                        $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').val(maxValue - hiddenVal);
+                    }else{
+                        return false;
+                    }    
+                    return false;
+                }
+                var prodBatch = $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(1).find('select option:selected').text();
+                var lotQty = prodBatch.split('|');
+                pendingQty = lotQty[1] - parseInt(val);
+                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').val(pendingQty);
+                if(pendingQty == 0){
+                    $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').css('background-color','mediumaquamarine');
+                }else{
+                    $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').css('background-color','salmon');
+                }    
+                var totDispOfParticularDialog = $("#"+tableId+" > tbody").find('tr').eq(0).find('td').eq(1).find('input').val();
+                if(totDispOfParticularDialog == ''){
+                    totalDispQty = 0;
+                    totalDispQty = totalDispQty + dispVal;
+                }else if(totDispOfParticularDialog != '' && dispVal > hiddenVal){
+                    totalDispQty = parseInt(totDispOfParticularDialog);
+                    if(allProductsDefects.length != 0)
+                        totalDispQty = totalDispQty + (dispVal - hiddenVal);
+                }else if(totDispOfParticularDialog != '' && dispVal < hiddenVal){
+                    totalDispQty = parseInt(totDispOfParticularDialog);
+                    totalDispQty = totalDispQty - (hiddenVal - dispVal);
+                }else if(hiddenVal == dispVal){
+                    totalDispQty = totalDispQty;
+                }else if(dispVal > hiddenVal){
+                    if(allProductsDefects.length != 0)
+                        totalDispQty = totalDispQty + (dispVal - hiddenVal);
+                }else{
+                    totalDispQty = totalDispQty - (hiddenVal - dispVal);
+                }
+                $("#"+tableId+" > tbody").find('tr').eq(0).find('td').eq(1).find('input').val(totalDispQty);
+                performCalculations(divId,trIndex,remove);
+            }
+        }
+    }
+    function performCalculations(divId,trIndex,remove){
+        var tableId = $("#"+divId+">div>div>div>table").attr('id');
+        var dispVal = parseInt($("#"+tableId+"> tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').val());
+        var maxValue = $("#"+tableId+"> tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').attr('max');
+        var selectedProd = $("#"+tableId+"> tbody").find('tr').eq(trIndex).find('td').eq(0).find('select option:selected').val();
+        var selectedBatch = $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(1).find('select option:selected').text();
+        if((dispVal == '' && selectedBatch == '--Select Batch--') || dispVal == '' || selectedBatch == '--Select Batch--'){
+            return false;
+        }
+        var dispLot = selectedBatch.split('|');
+        var selectedProdInfo = selectedProd+'|'+selectedBatch;
+        if(remove){
+            var totDispOfParticularDialog = $("#"+tableId+" > tbody").find('tr').eq(0).find('td').eq(1).find('input').val();
+            totalDispQty = parseInt(totDispOfParticularDialog);
+            var flag = false;
+            $.each(allProductsDefects,function(allProdDef){
+                var prodBatPrts = allProductsDefects[allProdDef].split('|');
+                if($.trim(prodBatPrts[1]) == $.trim(dispLot[0])){
+                    flag = true;
+                    var index = allProductsDefects.indexOf(allProductsDefects[allProdDef]);
+                    prodBatPrts[2] = parseInt(prodBatPrts[2]) + parseInt(dispVal);
+                    allProductsDefects.splice(index, 1);
+                    allProductsDefects.push(prodBatPrts[0]+'|'+prodBatPrts[1]+'|'+prodBatPrts[2]);
+                    if(!isNaN(dispVal)){
+                    	totalDispQty = totalDispQty - parseInt(dispVal);
+                    }    
+                    $("#"+tableId+" > tbody").find('tr').eq(0).find('td').eq(1).find('input').val(totalDispQty);
+                    return false;
+                }
+            });
+            if(!flag){//executes when product not found in allProductDefects
+                newProd = selectedProdInfo.split('|');            
+                if(newProd[2] == dispVal || !isNaN(dispVal)){
+                    newProd[2] = dispVal;
+                }else{
+                    var pendingQty = $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').val();
+                    newProd[2] = newProd[2] - pendingQty;
+                }
+            	if(newProd[2] != null && !isNaN(newProd[2])){
+                	totalDispQty = totalDispQty - newProd[2];
+                }    
+                $("#"+tableId+" > tbody").find('tr').eq(0).find('td').eq(1).find('input').val(totalDispQty);
+                allProductsDefects.push(newProd[0]+'|'+newProd[1]+'|'+newProd[2]);
+                return false;
+            }          
+        }else{// start of else when remove == 'false'
+            if(allProductsDefects.indexOf(selectedProdInfo) > -1){//executes when combination of productid+productBatch+productDefectCount found in allProductDefect----
+                $.each(allProductsDefects,function(allProdDef){
+                    var prodBatPrts = allProductsDefects[allProdDef].split('|');
+                    if($.trim(prodBatPrts[1]) == $.trim(dispLot[0])){
+                        var leftOutCount;
+                        var index = allProductsDefects.indexOf(allProductsDefects[allProdDef]);
+                        if(parseInt(hiddenVal)>0){
+                            dispVal = parseInt(dispVal) + parseInt(hiddenVal);
+                        }
+                        if(dispVal <= parseInt(prodBatPrts[2])){
+                        	leftOutCount = parseInt(prodBatPrts[2]) - dispVal;
+                        }else{
+                            leftOutCount = dispVal - parseInt(prodBatPrts[2]);
+                        }
+                        if(leftOutCount != 0){
+                            prodBatPrts[2] = leftOutCount;
+                            allProductsDefects.splice(index, 1);
+                            allProductsDefects.push(prodBatPrts[0]+'|'+prodBatPrts[1]+'|'+prodBatPrts[2]);
+                            return false;
+                        }else{
+                            allProductsDefects.splice(index, 1);
+                            return false;
+                        }
+                    }
+                });
+                $("#"+hiddenId).val(dispVal);
+            }else if(allProductsDefects.length != 0){//executes when allProductDefects not empty
+                var flag = false;
+                $.each(allProductsDefects,function(allProdDef){
+                    var prodBatPrts = allProductsDefects[allProdDef].split('|');
+                    if($.trim(prodBatPrts[1]) == $.trim(dispLot[0])){//executes when product found in allProductDefects
+                        flag = true;
+                        var index = allProductsDefects.indexOf(allProductsDefects[allProdDef]);
+                        if(dispVal < hiddenVal){
+                            prodBatPrts[2] = parseInt(prodBatPrts[2]) + (hiddenVal - dispVal);
+                            $("#"+hiddenId).val(dispVal);
+                        }else{
+                            var maxAllowedVal;
+                            if(!isNaN(hiddenVal) && hiddenVal != '' && hiddenVal != undefined){
+                            	maxAllowedVal = parseInt(prodBatPrts[2]) + parseInt(hiddenVal);
+                            }else{
+                                maxAllowedVal = parseInt(prodBatPrts[2]);
+                            }
+                            if(dispVal > maxAllowedVal){
+                                showDialog('1','Value should be less than or equal to Defect Quantity');
+                                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').val(hiddenVal);
+                                $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').val(maxValue - hiddenVal);
+                                totalDispQty = totalDispQty - (dispVal - hiddenVal);
+                                $("#"+tableId+" > tbody").find('tr').eq(0).find('td').eq(1).find('input').val(totalDispQty);
+                            }else{
+                                prodBatPrts[2] = maxAllowedVal - dispVal;
+                                $("#"+hiddenId).val(dispVal);
+                            }    
+                        }    
+                        allProductsDefects.splice(index, 1);
+                        if(prodBatPrts[2] != 0){
+                            allProductsDefects.push(prodBatPrts[0]+'|'+prodBatPrts[1]+'|'+prodBatPrts[2]);
+                        }else{
+                            return false;
+                        }
+                        return false;
+                    }
+                });
+                if(!flag){//executes when product not found in allProductDefects
+                    if(dispVal > hiddenVal){// for to stop altering the values in dispo qty when all the defects are already disposed..
+                        showDialog('1','All Defective Products are disposed.');
+                        $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').val(hiddenVal);
+                        $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').val(maxValue - hiddenVal);
+                        totalDispQty = totalDispQty - (dispVal - hiddenVal);
+                        $("#"+tableId+" > tbody").find('tr').eq(0).find('td').eq(1).find('input').val(totalDispQty);
+                        return false;
+                    }else{// need to check this, if product is entered more than once and then suddenly decrease the defect quantity
+                        newProd = selectedProdInfo.split('|');            
+                        newProd[2] = hiddenVal - dispVal;
+                        $("#"+hiddenId).val(dispVal);
+                        if(newProd[2]!=0)
+                            allProductsDefects.push(newProd[0]+'|'+newProd[1]+'|'+newProd[2]);
+                        return false;
+                    }     
+                }          
+            }else{// executes when whole lot array is empty and we are attempting to alter a column disposed qty-------------------
+                if(dispVal > hiddenVal){// for to stop altering the values in dispo qty when all the defects are already disposed..
+                    showDialog('1','All Defective Products are disposed.');
+                    $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(2).find('input:first').val(hiddenVal);
+                    $("#"+tableId+" > tbody").find('tr').eq(trIndex).find('td').eq(3).find('input').val(maxValue - hiddenVal);
+                    return false;
+                }else{
+                    newProd = selectedProdInfo.split('|');
+                    newProd[2] = hiddenVal - dispVal;
+                    $("#"+hiddenId).val(dispVal);    
+                    if(newProd[2] != 0)
+                        allProductsDefects.push(newProd[0]+'|'+newProd[1]+'|'+newProd[2]);
+                    return false;
+                }    
+            }
+        }
+    }
+    function deleteDiv(loc,divId){
+        var Id;
+        var ncOwner = "{!JSENCODE(nc.ownerid)}";
+        var loggedInUser = "{!JSENCODE($User.id)}";
+        var status = "{!JSENCODE(dispTask.Status__c)}";
+        var taskOwner = "{!JSENCODE(dispTask.ownerid)}";
+        var profile = "{!JSENCODE($Profile.Name)}";
+        var changeFieldStatus = "{!JSENCODE(dispTask.ChangeFieldApprovalStatus__c)}";
+        if(status == 'Closed' || status == 'Void' || status == 'Pending Approval' || changeFieldStatus =='Pending' || status == 'Disposition Pending Completion'){
+            return false;
+        } 
+        if(loggedInUser == ncOwner || loggedInUser == taskOwner || profile == "System Administrator"){
+            if($(loc).attr('disabled')){
+                return false;
+            }else{
+                Id = $("#"+divId).attr('class');
+                var tabId = $("#"+divId+" > div").find('div').eq(1).find('div > div > div > table').attr('id');
+                var rowCount = $('#'+tabId+'>tbody>tr').length;
+                var dispVal,selectedProd,selectedBatch,selectedProdInfo,dispLot
+                var flag=false;
+                for(i=1;i<rowCount;i++){
+                    dispVal = $("#"+tabId+"> tbody").find('tr').eq(i).find('td').eq(2).find('input:first').val();
+                    selectedProd = $("#"+tabId+"> tbody").find('tr').eq(i).find('td').eq(0).find('select option:selected').val();
+                    selectedBatch = $("#"+tabId+" > tbody").find('tr').eq(i).find('td').eq(1).find('select option:selected').text();
+                    selectedProdInfo = selectedProd+'|'+selectedBatch;
+                    dispLot = selectedBatch.split('|');
+                    if(allProductsDefects.length != 0 && selectedProd != 'select' && selectedBatch != '--Select--' && dispVal != ''){
+                        $.each(allProductsDefects,function(allProdDef){
+                            var prodBatPrts = allProductsDefects[allProdDef].split('|');
+                            if($.trim(prodBatPrts[1]) == $.trim(dispLot[0])){
+                                flag = true;
+                                var index = allProductsDefects.indexOf(allProductsDefects[allProdDef]);
+                                allProductsDefects.splice(index, 1);
+                                prodBatPrts[2] = parseInt(prodBatPrts[2]) + parseInt(dispVal);
+                                allProductsDefects.push(prodBatPrts[0]+'|'+prodBatPrts[1]+'|'+prodBatPrts[2]);
+                                return false;
+                            }
+                        });
+                        if(!flag){
+                            allProductsDefects.push(selectedProdInfo);
+                        }    
+                    }else if(selectedProd != 'select'  && selectedBatch != '--Select--' && dispVal != ''){
+                        allProductsDefects.push(selectedProdInfo);
+                    }    
+                }
+            }
+            if(typeof Id != 'undefined'){
+                Visualforce.remoting.Manager.invokeAction(
+                    //@RemoteAction
+                    '{!$RemoteAction.Component_Handler.removeDisposition}',Id,
+                    // Callback removeDisposition
+                    function(result, event){
+                        if(result==0){
+                            window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';
+                        }else{
+                            console.log("Failed to Remove Data!!!!!!!!!");
+                        }    
+                    }
+                );
+                $("#"+divId).remove();
+            }else{
+                $("#"+divId).remove();
+                if($("#dispositionSection").children().length>0){
+                    assignDynamicIds();
+                }else{
+                    window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';
+                }
+                
+            }    
+        }        
+    }
+    var completedFlag = false;
+    function saveSubTask(divId,noOfRows,flag){
+        $("div[id$='_error']").empty();
+        var dispSecId = $(divId).attr('class');
+        var completed = $(divId).find('div>div').eq(1).find('div>div>div').find('div').eq(16+((noOfRows-2)*3)).find('input').val();
+        var completedBy = $(divId).find('div>div').eq(1).find('div>div>div').find('div').eq(19+((noOfRows-2)*3)).find('select option:selected').val();
+        var completionDate = $(divId).find('div>div').eq(1).find('div>div>div').find('div').eq(21+((noOfRows-2)*3)).find('input').val();
+        var completionComment = $(divId).find('div>div').eq(1).find('div>div>div').find('div').eq(25+((noOfRows-2)*3)).find('textarea').val();
+        if(completionComment == null || completionComment == ''){
+            $(divId).find('div>div').eq(1).find('div>div>div').find('div').eq(25+((noOfRows-2)*3)).find('div').append('This Field is Required').css('color','red');
+            $('#saveSubTask').removeAttr('disabled');
+            $('#completedSubTask').removeAttr('disabled');
+            return false;
+        }if(completedBy == null || completedBy == ''){
+            $(divId).find('div>div').eq(1).find('div>div>div').find('div').eq(19+((noOfRows-2)*3)).find('div').append('This Field is Required').css('color','red');
+            $('#saveSubTask').removeAttr('disabled');
+            $('#completedSubTask').removeAttr('disabled');
+            return false;
+        }if(completionDate == null || completionDate == ''){
+            $(divId).find('div>div').eq(1).find('div>div>div').find('div').eq(23+((noOfRows-2)*3)).append('This Field is Required').css('color','red');
+            $('#saveSubTask').removeAttr('disabled');
+            $('#completedSubTask').removeAttr('disabled');
+            return false;
+        }else{
+            Visualforce.remoting.Manager.invokeAction(
+                // @RemoteAction
+                '{!$RemoteAction.Component_Handler.savePendingDisposition}',dispSecId,completed,completedBy,completionDate,completionComment,
+                // Callback
+                function(result,event){
+                    if(result==0){
+                        if(flag){
+                        	console.log("Record Saved Successfully");
+                            var isDigitalneeded='<apex:outputtext value="{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}" />';
+                            if(isDigitalneeded=='true'){
+                                $('#signature').modal('show');
+                                $('#completedSubTask').removeAttr('disabled');
+                            }else{
+                                completedSubTask();
+                            }
+                        }else{
+                            showDialog('0',"Record Saved Successfully");
+                            $('#saveSubTask').removeAttr('disabled');
+                        }    
+                    }else{
+                        console.log("Failed to save the record");
+                        $('#saveSubTask').removeAttr('disabled');
+                    }
+                }
+            );
+            
+        }  
+    }
+    function completedSubTask(){
+        Visualforce.remoting.Manager.invokeAction(
+            // @RemoteAction
+            '{!$RemoteAction.Component_Handler.updateDispositionStatus}','{!dispTask.Id}',
+            // Callback
+            function(result,event){
+                if(result==0){
+                    window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';
+                }else{
+                    console.log("Failed to update status");
+                }
+            }
+        );
+    }
+    function enableDiv(loc,divId){
+        var status = "{!JSENCODE(dispTask.Status__c)}";
+        var changeFieldStatus = "{!JSENCODE(dispTask.ChangeFieldApprovalStatus__c)}";
+        var loggedInUser = "{!JSENCODE($User.id)}";
+        var ncOwner = "{!JSENCODE(nc.ownerid)}";
+        var taskOwner = "{!JSENCODE(dispTask.ownerid)}";
+        var profile = "{!JSENCODE($Profile.Name)}";
+        var saveSubTaskFlag = true;
+        var yes,no;
+        var tabId = $("#"+divId+">div").find('div').eq(1).find("div>div>div>table").attr('id');
+        var noOfRows = $("#"+tabId+" >tbody>tr").length;
+        var assignedUser = $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div').eq(7+((noOfRows-2)*3)).find('select option:selected').val();
+        var compByUser = $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div').eq(19+((noOfRows-2)*3)).find('select option:selected').val();
+        var compBySelectLength = $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div').eq(19+((noOfRows-2)*3)).find('select option').length;
+        var selectId = $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div').eq(19+((noOfRows-2)*3)).find('select').attr('id');
+        var assignedUserId = $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div').eq(7+((noOfRows-2)*3)).find('select').attr('id');
+        var length = $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div').eq(7+((noOfRows-2)*3)).find('select > option').length;
+        if(status == 'Closed' || status == 'Void' || status == 'Pending Approval' || changeFieldStatus =='Pending' || status == 'Disposition Pending Completion' && (loggedInUser != assignedUser && loggedInUser != taskOwner && profile != "System Administrator")){
+            return false;
+        }    
+        if($(loc).attr('disabled') && (status == 'Closed' || status == 'Void'|| status == 'Pending Approval' || changeFieldStatus =='Pending' || status == 'Disposition Pending Completion') && (loggedInUser != assignedUser && loggedInUser != taskOwner && profile != "System Administrator")){
+            return false;
+        }else{
+            if(length == 1){
+                $("#"+assignedUserId).empty();
+                Visualforce.remoting.Manager.invokeAction(
+                    // @RemoteAction
+                    '{!$RemoteAction.Component_Handler.getAuthorizedUsers}','NC_Task_Owner',
+                    // Callback
+                    function(result, event){
+                        users = result;
+                        $.each(users,function(usr) {
+                            var userPrts = users[usr].split('@');
+                            if(userPrts[0] == assignedUser){
+                                $("#"+assignedUserId).append($("<option />").val(escapeHtml(userPrts[0])).text(escapeHtml(userPrts[1])).attr('selected',true));
+                            }else{
+                                $("#"+assignedUserId).append($("<option />").val(escapeHtml(userPrts[0])).text(escapeHtml(userPrts[1])));
+                            }    
+                        });
+                    }    
+                );
+            }
+            if(compBySelectLength == 1 || compBySelectLength == 0){
+                $("#"+selectId).empty();
+                Visualforce.remoting.Manager.invokeAction(
+                    // @RemoteAction
+                    '{!$RemoteAction.Component_Handler.getAuthorizedUsers}','NC_Task_Owner',
+                    // Callback
+                    function(result, event){
+                        users=result;
+                        $.each(users,function(usr) {
+                            var userPrts = users[usr].split('@');
+                            if(compByUser){
+                                if(userPrts[0] == compByUser){
+                                    $("#"+selectId).append($("<option />").val(escapeHtml(userPrts[0])).text(escapeHtml(userPrts[1])).attr('selected',true));
+                                }else{
+                                    $("#"+selectId).append($("<option />").val(escapeHtml(userPrts[0])).text(escapeHtml(userPrts[1])));
+                                }
+                            }else{    
+                                if(userPrts[0] == assignedUser){
+                                    $("#"+selectId).append($("<option />").val(escapeHtml(userPrts[0])).text(escapeHtml(userPrts[1])).attr('selected',true));
+                                }else{
+                                    $("#"+selectId).append($("<option />").val(escapeHtml(userPrts[0])).text(escapeHtml(userPrts[1])));
+                                }
+                            }    
+                        });
+                    }    
+                );
+            }
+            if((loggedInUser == ncOwner || loggedInUser == taskOwner || profile == "System Administrator") && (status != 'Disposition Pending Completion')){
+                $("#"+divId+" *").removeAttr("disabled");
+                $(loc).hide();
+                $("#"+divId+">div").find('div').eq(1).find("div>div>div>table>tbody").find('tr').eq(0).find('td').eq(1).find('input').attr('disabled',true);
+                for(i=1 ; i<noOfRows ; i++){
+                    $("#"+divId+">div").find('div').eq(1).find("div>div>div>table>tbody").find('tr').eq(i).find('td').eq(3).find('input').attr('disabled',true);
+                    $("#"+tabId+">tbody").find('tr').eq(i).find('td').eq(4).find('span').show();
+                }
+                yes = $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div').eq(16+((noOfRows-2)*3)).find('input').eq(0).attr('id');
+                no = $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div').eq(16+((noOfRows-2)*3)).find('input').eq(1).attr('id');
+                setCompletedDateLimits(divId);
+                if($("#"+yes).parent().hasClass('active')){
+                    $("#"+yes).trigger('change');
+                }
+                else if($("#"+no).parent().hasClass('active')){
+                    $("#"+no).trigger('change');
+                }
+            }else if(loggedInUser == assignedUser){
+                var disabled = $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div').eq(15+((noOfRows-2)*3)).attr('disabled');
+                if(disabled){
+                    disabledCount = disabledCount + 1;
+                    if(disabledCount > 1){
+                        return false;
+                    }    
+                }
+                $(loc).hide();
+                if($("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div').eq(25+((noOfRows-2)*3)).find('button').length>0){
+                    $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div').eq(25+((noOfRows-2)*3)).find('button').remove();
+                }
+                var compBy = $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div').eq(15+((noOfRows-2)*3)).attr('id');
+                $("#"+compBy+" *").removeAttr("disabled");
+                yes = $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div').eq(16+((noOfRows-2)*3)).find('input').eq(0).attr('id');
+                no = $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div').eq(16+((noOfRows-2)*3)).find('input').eq(1).attr('id');
+                var showCompDetails = $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div').eq(18+((noOfRows-2)*3)).attr('id');
+                setCompletedDateLimits(divId);
+                $("#"+showCompDetails+" *").removeAttr("disabled");
+                if($("#"+yes).parent().hasClass('active')){
+                    $("#"+yes).trigger('change');
+                }
+                else if($("#"+no).parent().hasClass('active')){
+                    $("#"+no).trigger('change');
+                }
+                $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div').eq(25+((noOfRows-2)*3)).append("<button id='completedSubTask' type='button' style='float: right;margin: 2px;' class='btn btn-success dont-allow-multiple-clicks' onclick=$('#completedSubTask').attr('disabled','true');saveSubTask("+divId+","+noOfRows+","+saveSubTaskFlag+");><span class='fa fa-check-circle'></span> Completed</button>");
+                $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div').eq(25+((noOfRows-2)*3)).append("<button id='saveSubTask' type='button' style='float: right;margin: 2px;' class='btn btn-primary dont-allow-multiple-clicks' onclick=$('#saveSubTask').attr('disabled','true');saveSubTask("+divId+","+noOfRows+");><span class='fa fa-floppy-o'></span> Save</button>");
+                $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div').eq(25+((noOfRows-2)*3)).append("<button id='cancelTask' type='button' style='float: right;margin: 2px;' class='btn btn-default dont-allow-multiple-clicks' onclick='cancelPopup();'><span class='fa fa-close'></span> Cancel</button>");
+            }
+        }    
+    }
+    
+    function disableDiv(){
+        var id_start = 0;
+        var status = "{!JSENCODE(dispTask.Status__c)}";
+        var changeFieldStatus = "{!JSENCODE(dispTask.ChangeFieldApprovalStatus__c)}";
+        var ncOwner = "{!JSENCODE(nc.ownerid)}";
+        var loggedInUser = "{!JSENCODE($User.id)}";
+        var taskOwner = "{!JSENCODE(dispTask.ownerid)}";
+        var profile = "{!JSENCODE($Profile.Name)}";
+        if(ncOwner != loggedInUser && taskOwner != loggedInUser && profile != "System Administrator"){
+            $("#Recall").hide();
+            $("#tableId_chk").on("click", function (e) {
+                    var checkbox = $(this);
+                    if (checkbox.is(":checked")) {
+                    // do the confirmation thing here
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        }
+        if(status == 'Pending Approval' || status == 'Closed' || status == 'Void' || changeFieldStatus == 'Pending' || status == 'Disposition Pending Completion'){
+            $("#disposition").attr("disabled","true");
+            $("#dispositionSection > div").each(function(){
+                var divId = '{!divId}'+ (id_start++);
+                $("#"+divId+">div>div>h4 ").find('a').eq(1).hide();
+                var CompletedDiv = $("#"+divId+">div>div>h4 ").find("a:contains('Completed')").attr('href');
+                if(CompletedDiv != undefined && CompletedDiv != null){
+                    $("a[href$='"+CompletedDiv+"']").hide();
+                    $("#"+divId+">div>div>h4 ").find('a').eq(3).show();
+                    $("#"+divId+">div>div>h4 ").find('a').eq(0).show();
+                }
+                if(status == 'Pending Approval' || status == 'Closed' || status == 'Void' || changeFieldStatus == 'Pending'){
+                    $("#"+divId+">div>div>h4 ").find('a').eq(2).hide();
+                }    
+                $("#"+divId+" *").attr("disabled","true");
+                $("#"+divId+" a").removeAttr("disabled");
+                var tabId = $("#"+divId+">div").find('div').eq(1).find("div>div>div>table").attr('id');
+                var noOfRows = $("#"+tabId+" >tbody>tr").length;
+                for(i=1 ; i<noOfRows ; i++){
+                    $("#"+tabId+">tbody").find('tr').eq(i).find('td').eq(4).find('span').hide();
+                }
+            });
+            $("#Save").hide();
+            $("#Submit").hide();
+            $("#Cancel").hide();
+        }else{
+            $("#dispositionSection > div").each(function(){
+                var divId = '{!divId}'+ (id_start++);
+                if(loggedInUser != ncOwner && taskOwner != loggedInUser && profile != "System Administrator"){
+                    $("#"+divId+">div>div>h4 ").find('a').eq(1).hide();
+                    $("#"+divId+">div>div>h4 ").find('a').eq(2).hide();
+                    $("#disposition").attr("disabled","true");
+                    $("#Save").hide();
+                    $("#Submit").hide();
+                    $("#Cancel").hide();
+                }
+                $("#"+divId+" *").attr("disabled","true");
+                $("#"+divId+" a").removeAttr("disabled");
+                var tabId = $("#"+divId+">div").find('div').eq(1).find("div>div>div>table").attr('id');
+                var noOfRows = $("#"+tabId+" >tbody>tr").length;
+                for(i=1 ; i<noOfRows ; i++){
+                    $("#"+tabId+">tbody").find('tr').eq(i).find('td').eq(4).find('span').hide();
+                }
+            });
+        }
+    }
+        
+    function assignDispoTitle(){
+        var id_start = 0,divId,dispType;
+        $("#dispositionSection > div").each(function(){
+            divId = '{!divId}'+ (id_start++);
+            dispType = $("#"+divId+">div").find('div').eq(1).find("div>div>div>table>tbody").find('tr').eq(0).find('td').eq(0).find('select option:selected').val();
+            if($("#"+divId).find('a').eq(3).text() == '' || $("#"+divId).find('a').eq(3).text() == null){
+                if($("#"+divId).find('a').eq(2).text() == '' || $("#"+divId).find('a').eq(2).text() == null){
+                    $("#"+divId).find('a').eq(2).text('Cancel');
+                }
+                $("#"+divId).find('a').eq(3).text(dispType);
+            }
+        });    
+    }
+     
+    function dateFormat(date){
+        var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun","Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        var day = date.getDate();
+        if(day<10){
+            day = '0'+day;
+        }
+        var month = monthNames[date.getMonth()];
+        var year = date.getFullYear().toString();
+        return day + ' ' + month + ' ' + year;
+    }    
+        
+    function setCompletedDateLimits(divId){
+        var mDate = dateFormat(new Date("{!dispTask.CreatedDate}"));//for completed date
+        var findDiv,noOfRows;
+        noOfRows = $("#"+divId+">div").find('div').eq(1).find('div>div>div>table>tbody>tr').length;
+        findDiv = $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div');
+        findDiv.eq(21+((noOfRows-2)*3)).find('input').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY", maxDate: new Date(),minDate: new Date(mDate)});
+        findDiv.eq(21+((noOfRows-2)*3)).find('.datepicker').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY", maxDate: new Date(), minDate: new Date(mDate)}).on('dp.change', function(e){
+            $('input[name=' + $(this).attr('Id') + ']').val(e.date.format());
+        });
+    }
+    
+    function autoPopulateDate(divId){
+        var maximumDate = dateFormat(new Date("{!IF(NOT(ISBLANK(dispTask.New_Due_Date__c)),dispTask.New_Due_Date__c,dispTask.Due_Date__c)}"));//for due date
+        var minimumDate = dateFormat(new Date("{!nc.CreatedDate}"));//for completed date
+        var today = dateFormat(new Date());
+        var findDiv,noOfRows,initDueDate,initCompDate;
+        noOfRows = $("#"+divId+">div").find('div').eq(1).find('div>div>div>table>tbody>tr').length;
+        findDiv = $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div');
+        initDueDate = findDiv.eq(9+((noOfRows-2)*3)).find('input').attr('value');
+        initCompDate = findDiv.eq(21+((noOfRows-2)*3)).find('input').attr('value');
+        if(new Date("{!IF(NOT(ISBLANK(dispTask.New_Due_Date__c)),dispTask.New_Due_Date__c,dispTask.Due_Date__c)}").getTime() <= new Date().getTime() || maximumDate == today){
+            findDiv.eq(9+((noOfRows-2)*3)).find('input').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY", maxDate: new Date(maximumDate), minDate:new Date(maximumDate)});
+            findDiv.eq(9+((noOfRows-2)*3)).find('.datepicker').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY", maxDate: new Date(maximumDate), minDate: new Date(maximumDate)}).on('dp.change', function(e){
+                $('input[name=' + $(this).attr('name') + ']').val(e.date.format());
+            });
+        }else{    
+            findDiv.eq(9+((noOfRows-2)*3)).find('input').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY", maxDate: new Date(maximumDate), minDate: new Date()});
+            findDiv.eq(9+((noOfRows-2)*3)).find('.datepicker').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY", maxDate: new Date(maximumDate), minDate: new Date()}).on('dp.change', function(e){
+                $('input[name=' + $(this).attr('name') + ']').val(e.date.format());
+            });
+        }    
+        findDiv.eq(21+((noOfRows-2)*3)).find('input').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY", maxDate: new Date(),minDate: new Date(minimumDate)});
+        findDiv.eq(21+((noOfRows-2)*3)).find('.datepicker').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY", maxDate: new Date(), minDate: new Date(minimumDate)}).on('dp.change', function(e){
+            $('input[name=' + $(this).attr('name') + ']').val(e.date.format());
+        });
+        findDiv.eq(9+((noOfRows-2)*3)).find('input').val(initDueDate); 
+        findDiv.eq(21+((noOfRows-2)*3)).find('input').val(initCompDate);
+    }
+    
+    function dateHandler(date,dateInput,divId){
+        var tempId='';
+        $(date).each(function(){
+            if($(this).hasClass('datepicker')){
+                $(this).attr('id',divId+'{!dueDate}'); 
+                tempId=$(this).attr('id');
+            }
+            else if(this.id.indexOf('hidden_error')>0){
+                $(this).attr('id',tempId+'_hidden_error');
+            }
+                else if(this.id.indexOf('error')>0){
+                    $(this).attr('id',tempId+'_error');
+                }
+        }
+        )
+        $(dateInput).each(function(){
+            if(this.type=='hidden'){
+                $(this).attr('name',tempId);
+                $(this).attr('id',tempId+'_hidden');
+            }
+            else if(this.type=='text'){
+                $(this).attr('data-api',tempId) 
+                $(this).attr('data-hiddenId',tempId+'_hidden'); 
+                $(this).attr('id',tempId+'_GRDATE');
+                $(this).attr('name',tempId+'Discard'); 
+            } 
+        });
+        autoPopulateDate(divId);
+    }
+    
+    function updateRowIds(id,tableRow){
+        var id_start = 0;
+        tableRow.each(function(){
+            var tempId='';
+            var rowId= 'productRow_'+ id + (id_start++);
+            $(this).attr('id',rowId);
+            var tds=$(this).find('td');
+            var prodList=tds.eq(0).find('select');
+            prodList.attr('id','{!prodListId}'+rowId);
+            var prodListError=tds.eq(0).find('div');
+            prodListError.attr('id','{!prodListId}'+rowId+'_error');
+            var prodBatch=tds.eq(1).find('select');
+            prodBatch.attr('id','{!prodBatchId}'+rowId);
+            var prodBatchError=tds.eq(1).find('div');
+            prodBatchError.attr('id','{!prodBatchId}'+rowId+'_error');
+            var dispQty=tds.eq(2).find('input:first');
+            dispQty.attr('id','{!dispQtyId}'+rowId);
+            var dispQtyError=tds.eq(2).find('div');
+            dispQtyError.attr('id','{!dispQtyId}'+rowId+'_error');
+            var hidDispQty=tds.eq(2).find('input:last');
+            hidDispQty.attr('id','hiddenDispQty'+id_start+''+rowId);
+            var pendDispQty=tds.eq(3).find('input');
+            pendDispQty.attr('id','{!pendDispQtyId}'+rowId);
+        });
+    }
+        
+    function updateIds(noOfRows,findDiv,divId){
+        findDiv.eq(7+((noOfRows-2)*3)).find('select').attr('id',divId+'{!assignedTo}');
+        findDiv.eq(7+((noOfRows-2)*3)).find('div').attr('id',divId+'{!assignedTo}_error');
+        findDiv.eq(9+((noOfRows-2)*3)).attr('id',divId+'{!dueDate}');    
+        var dueDate = findDiv.eq(9+((noOfRows-2)*3)).find('div');
+        var dueDateinput=findDiv.eq(9+((noOfRows-2)*3)).find('input');
+        dateHandler(dueDate,dueDateinput,divId);  
+        findDiv.eq(13+((noOfRows-2)*3)).find('textarea').attr('id',divId+'{!dispoInst}');
+        findDiv.eq(13+((noOfRows-2)*3)).find('div').attr('id',divId+'{!dispoInst}_error');
+        findDiv.eq(15+((noOfRows-2)*3)).attr('id',divId+'{!completed}');
+        findDiv.eq(16+((noOfRows-2)*3)).find('input').eq(0).attr('id',divId+'{!completed}_yes');
+        findDiv.eq(16+((noOfRows-2)*3)).find('input').eq(0).attr('name',divId);
+        findDiv.eq(16+((noOfRows-2)*3)).find('input').eq(1).attr('id',divId+'{!completed}_no');
+        findDiv.eq(16+((noOfRows-2)*3)).find('input').eq(1).attr('name',divId);
+        findDiv.eq(17+((noOfRows-2)*3)).attr('id',divId+'{!completed}_error');    
+        findDiv.eq(18+((noOfRows-2)*3)).attr('id',divId+'ShowCompletionDetails');
+        var activeRadio = findDiv.eq(16+((noOfRows-2)*3)).find('.active').find('input').attr('Value');
+        if(activeRadio == 'Yes'){
+            $("#"+divId+'ShowCompletionDetails').show();
+        }else{
+            $("#"+divId+'ShowCompletionDetails').hide();    
+        }    
+        findDiv.eq(19+((noOfRows-2)*3)).find('select').attr('id',divId+'{!dispoCompBy}');
+        findDiv.eq(19+((noOfRows-2)*3)).find('div').attr('id',divId+'{!dispoCompBy}_error');
+        findDiv.eq(21+((noOfRows-2)*3)).attr('id',divId+'{!dispoCompDate}');
+        var completionDate = findDiv.eq(21+((noOfRows-2)*3)).find('div');
+        var completionDateInput = findDiv.eq(21+((noOfRows-2)*3)).find('input');
+        dateHandler(completionDate,completionDateInput,divId);      
+        findDiv.eq(25+((noOfRows-2)*3)).find('textarea').attr('id',divId+'{!dispoCompComm}');
+        findDiv.eq(25+((noOfRows-2)*3)).find('div').attr('id',divId+'{!dispoCompComm}_error');
+    }
+            
+    function assignDynamicIds(){
+        $('.usetwentyfour').remove();
+        var id_start = 0,id,dueDateVal,compDateVal;
+        $("#dispositionSection>div").each(function() {
+            var divId= '{!divId}' + (id_start++);
+            $(this).attr('id',divId);
+            $("#"+divId+">div>div>h4 ").find('a').eq(0).attr('href','#'+divId+'href');
+            $("#"+divId+">div>div>h4 ").find('a').eq(1).attr('href','#'+divId+'href');
+            $("#"+divId+">div>div>h4 ").find('a').eq(2).attr('href','#'+divId+'href');
+            $("#"+divId+">div>div>h4 ").find('a').eq(3).attr('href','#'+divId+'href');
+            $("#"+divId+">div ").find('div').eq(1).attr('id',divId+'href');
+            id = $("#"+divId+">div ").find('div').eq(1).attr('id');
+            $("#"+divId+">div").find('div').eq(1).find('div>div>div>table').attr('id',divId+'{!tableId}');
+            var tableRow = $("#"+divId+">div").find('div').eq(1).find('div>div>div>table>tbody>tr');
+            var noOfRows = $("#"+divId+">div").find('div').eq(1).find('div>div>div>table>tbody>tr').length;
+            var findDiv = $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div');
+            if(tableRow.eq(0).find('td').eq(0).find('select option:selected').val() != '--Select Disposition Type--'){
+                dueDateVal = findDiv.eq(9+((noOfRows-2)*3)).find('input[type=text]').val();
+                findDiv.eq(9+((noOfRows-2)*3)).find('input[type=text]').attr('value',dateFormat(new Date(dueDateVal)));
+                compDateVal = findDiv.eq(21+((noOfRows-2)*3)).find('input[type=text]').val();
+                findDiv.eq(21+((noOfRows-2)*3)).find('input[type=text]').attr('value',dateFormat(new Date(compDateVal)));
+            }
+            if(noOfRows >=3){
+                updateRowIds(id,tableRow);
+                updateIds(noOfRows,findDiv,divId); 
+            }else{
+                tableRow.eq(1).attr('id','productRow_'+divId);    
+                tableRow.eq(0).find('td').eq(0).find('select').attr('id',divId+'{!dispTypeId}');
+                tableRow.eq(0).find('td').eq(0).find('div').attr('id',divId+'{!dispTypeId}'+'_error');
+                tableRow.eq(0).find('td').eq(1).find('input').attr('id',divId+'{!totalDispQtyId}');
+                tableRow.eq(1).find('td').eq(0).find('select').attr('id',divId+'{!prodListId}');
+                tableRow.eq(1).find('td').eq(0).find('div').attr('id',divId+'{!prodListId}'+'_error');
+                tableRow.eq(1).find('td').eq(1).find('select').attr('id',divId+'{!prodBatchId}');
+                tableRow.eq(1).find('td').eq(1).find('div').attr('id',divId+'{!prodBatchId}'+'_error');
+                tableRow.eq(1).find('td').eq(2).find('input:first').attr('id',divId+'{!dispQtyId}');
+                tableRow.eq(1).find('td').eq(2).find('input:last').attr('id','hiddenDispQty'+divId);
+                tableRow.eq(1).find('td').eq(2).find('div').attr('id',divId+'{!dispQtyId}'+'_error');    
+                tableRow.eq(1).find('td').eq(3).find('input').attr('id',divId+'{!pendDispQtyId}');
+                $("#"+divId+" > div").find('div').eq(1).find('div>div>div>div>div>div ').attr('id',divId+'{!tableId}');
+                updateIds(noOfRows,findDiv,divId);
+            }    
+        });
+    }
+        
+    function addDisposition(){
+        if(dispoValidation()){
+            //disableDiv();
+            assignDispoTitle();
+            if(allProductsDefects.length == 0){
+                showDialog('1','All Defective Products are disposed.');
+                return false;
+            }else{
+                $("#{!divId}").clone().prependTo( "#dispositionSection" ).show();
+                assignDynamicIds();
+            }
+        }    
+    } 
+    
+    function showCompletedDetails(id){
+        $("#"+id+"ShowCompletionDetails").show();
+    }
+    
+    function hideCompletedDetails(id){
+        $("#"+id+"ShowCompletionDetails").hide();
+    }
+    
+    function checkProductFields(id){
+        var isValid = true;
+        var start = 0,product,lot,dispQty;
+        var tableId = $("#"+id+">div>div>div>table").attr('id');
+        var noOfRows = $("#"+tableId+">tbody>tr").length;
+        $("div[id$='_error']").empty();
+        for(var i=1;i<noOfRows;i++){
+            product = $("#"+tableId+">tbody>tr").eq(i).find('td').eq(0).find('select option:selected').val();
+            if(product == '' || product == null || product == '--Select Product--'){
+                $("#"+tableId+">tbody>tr").eq(i).find('td').eq(0).find('div').append('This Field is Required').css('color','red');
+                isValid = false;
+            }
+            lot = $("#"+tableId+">tbody>tr").eq(i).find('td').eq(1).find('select option:selected').val();
+            if(lot == '' || lot == null || lot == '--Select Batch--'){
+                $("#"+tableId+">tbody>tr").eq(i).find('td').eq(1).find('div').append('This Field is Required').css('color','red');
+                isValid = false;
+            }
+            dispQty = $("#"+tableId+">tbody>tr").eq(i).find('td').eq(2).find('input').val();
+            if(dispQty == '' || dispQty == null || isNaN(dispQty)){
+                $("#"+tableId+">tbody>tr").eq(i).find('td').eq(2).find('div').append('This Field is Required').css('color','red');
+                isValid = false;
+            }
+        }
+        return isValid;
+    }
+    
+    // add products row inside disposition dialog-------------
+    function addProducts(id){
+        if(checkProductFields(id)){
+            if(allProductsDefects.length == 0){
+                showDialog('1','All Defective Products are disposed.');
+                return false;
+            }else{
+                var tableId = $("#"+id+">div>div>div>table").attr('id');
+                var divId = $("#"+id).parent().parent().attr('id');
+                var tabId = tableId;
+                $("#{!divId}>div").find('div').eq(1).find('div>div>div>table').find('tr').eq(2).attr('id','productRow_'+ id + (id_start++)).clone().appendTo("#"+tabId+" > tbody");
+                var tdIndex = $("#"+tabId+">tbody" ).find('tr:last').find('td');    
+                tdIndex.eq(1).find('select').find('option').remove();
+                tdIndex.eq(2).find('input:first').val('');
+                tdIndex.eq(2).find('input:last').val('');
+                tdIndex.eq(3).find('input').val('');
+                $("#"+tabId+">tbody>tr" ).each(function(){
+                    var tempId='';
+                    var rowId= 'productRow_'+ id + (id_start++);
+                    $(this).attr('id',rowId);
+                    var tds=$(this).find('td');
+                    var prodList=tds.eq(0).find('select');
+                    prodList.attr('id','{!prodListId}'+rowId);
+                    var prodListError=tds.eq(0).find('div');
+                    prodListError.attr('id','{!prodListId}'+rowId+'_error');
+                    var prodBatch=tds.eq(1).find('select');
+                    prodBatch.attr('id','{!prodBatchId}'+rowId);
+                    var prodBatchError=tds.eq(1).find('div');
+                    prodBatchError.attr('id','{!prodBatchId}'+rowId+'_error');
+                    var dispQty=tds.eq(2).find('input:first');
+                    dispQty.attr('id','{!dispQtyId}'+rowId);
+                    var dispQtyError=tds.eq(2).find('div');
+                    dispQtyError.attr('id','{!dispQtyId}'+rowId+'_error');
+                    var hidDispQty=tds.eq(2).find('input:last');
+                    hidDispQty.attr('id','hiddenDispQty'+id_start+''+rowId);
+                    var pendDispQty=tds.eq(3).find('input');
+                    pendDispQty.attr('id','{!pendDispQtyId}'+rowId);
+                    var noOfRows = $("#"+id+">div>div>div>table>tbody>tr").length;
+                    var findDiv = $("#"+id+">div>div>div").find('div'); 
+                    if(noOfRows >= 3){
+                        updateIds(noOfRows,findDiv,divId);
+                    }    
+                });
+            }
+        }      
+    }
+    
+    function removeProductRow(currentRow,currentTable){
+        var remove = true,deletedId;
+        var divId = $("#"+currentTable).parent().parent().parent().parent().attr('id');
+        var trIndex = $("#"+currentRow).index();
+        var prodCnt = $('#'+currentTable+'>tbody>tr').length;
+        if(prodCnt==2){
+            showDialog('1','At-least one product is required');
+            return false;
+        }else{
+            performCalculations(divId,trIndex,remove);
+            deletedId = $("#"+currentTable+">tbody>tr").eq(trIndex).attr('class');
+            if(deletedId != '' || deletedId != null){
+                deletedRowIds.push(deletedId);
+            }    
+            $("#"+currentTable+">tbody>tr").eq(trIndex).remove();
+        }
+    }
+</script>
+    
+    <div class="top-buttons text-right">
+        <button id="disposition" class="btn btn-primary" onclick="addDisposition();"><span class="fa fa-plus-square-o"></span> Add Disposition Type</button>
+    </div>
+    
+       
+       <div class="clearfix"></div>
+    
+    
+    <div id="dispositionSection" class="col-md-12">
+        <apex:repeat value="{!dispositionSections}" var="dispositionSection">
+            <div class="{!dispositionSection.Id}" id="{!dispositionSection.Id}" role="tablist" aria-multiselectable="true">
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="headingOne">
+                        <h4 class="panel-title">
+                            <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" href="#{!dispositionSection.Id}href" aria-expanded="true" aria-controls="collapseOne"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span></a>
+                            <a href="#{!dispositionSection.Id}href" class="btn-link pull-right" onclick="deleteDiv(this,this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));">&nbsp;Delete</a>&nbsp;
+                            <a href="#{!dispositionSection.Id}href" class="btn-link pull-right" onclick="enableDiv(this,this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));">Edit</a>&nbsp;
+                            <a data-toggle="collapse" data-parent="#accordion" href="#{!dispositionSection.Id}href" aria-expanded="true" aria-controls="collapseOne" class="acc_title">{!dispositionSection.Disposition_Type__c} (<b>Status:</b>{!dispositionSection.Disposition_Type_Status__c})</a>
+                        </h4>
+                    </div>
+                    <div id="{!dispositionSection.Id}href" class="panel-collapse out collapse in" role="tabpanel" aria-labelledby="headingOne" aria-expanded="true">
+                        <div class="panel-body">
+                            
+                            <div class="row"><!-- row start -->
+                                <div class="col-md-12" id="addProdParent">
+                                    
+                                    <table class="table table-striped" id="{!tableId}">
+                                        <thead>
+                                            <tr>
+                                                <td width="30%"><span class="mandatory"><apex:outputtext value="* "/></span>Disposition Type:</td>
+                                                <td width="30%"><span class="mandatory"><apex:outputtext value=""/></span>Total Disposed Quantity:</td>
+                                                <td width="20%"></td>
+                                                <td></td>
+                                                <td></td>
+                                            </tr>
+                                        </thead>
+                                        
+                                        <tbody>
+                                            <tr id="row_header">
+                                                <td>
+                                                    <select id="{!dispositionSection.Disposition_Type__c}" class="form-control" onchange="checkDispositionTypes($(this).val(),this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'))">
+                                                        <option selected='{!dispositionSection.Disposition_Type__c}'>{!dispositionSection.Disposition_Type__c}</option>
+                                                    </select>
+                                                    <div id="{!dispositionSection.Disposition_Type__c}_error" class="help-block with-errors"></div>
+                                                </td>
+                                                <td>
+                                                    <input type="number" class="form-control" id="{!dispositionSection.Assigned_Disposition_Qty__c}" disabled="true" value="{!dispositionSection.Assigned_Disposition_Qty__c}"/>
+                                                </td>
+                                                <td style="vertical-align: bottom;">
+                                                    <span class="mandatory"><apex:outputtext value="* "/></span>Dispose Quantity:
+                                                </td>
+                                                <td style="vertical-align: bottom;">
+                                                    Pending Quantity:
+                                                </td>
+                                                <td>
+                                                </td>
+                                            </tr>
+                                            <apex:repeat value="{!dispositionSection.Disposition_Products__r}" var="dispositionProduct">
+                                                                                        
+                                                    <tr id="productRow" class="{!dispositionProduct.Id}">
+                                                        <td>
+                                                            <select id="{!dispositionProduct.NC_ProductId__c}" class="form-control" onchange="getProductBatch($(this).val(),this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'),this);">
+                                                                <option value='{!dispositionProduct.NC_ProductId__c}' selected='{!dispositionProduct.NC_Product__c}'>{!dispositionProduct.NC_Product__c}</option>
+                                                            </select>
+                                                            <div id="{!dispositionProduct.NC_Product__c}_error" class="help-block with-errors"></div>
+                                                        </td>
+                                                        <td>
+                                                            <select id="{!dispositionProduct.Product_Batch__c}" class="form-control" onchange="setDispQtyLimit($(this).val(),this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'),this);" required="required">
+                                                                <option value='{!dispositionProduct.Defect_Quantity__c}' selected=''>{!dispositionProduct.Product_Batch__c}</option>
+                                                            </select>
+                                                            <div id="{!dispositionProduct.Product_Batch__c}_error" class="help-block with-errors"></div>
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" min="1" max="{!dispositionProduct.Defect_Quantity__c}" value="{!dispositionProduct.Dispose_Quantity__c}" class="form-control required" id="{!tableId}{!dispQtyId}" onblur="getPendingQty($(this).val(),this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'),this)"/>
+                                                            <input type="hidden" id="hiddenDispQty" value="{!dispositionProduct.Dispose_Quantity__c}"/>
+                                                            <div id="{!dispQtyId}_error" class="help-block with-errors"></div>
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" value="{!dispositionProduct.Pending_Quantity__c}" class="form-control" name="remaining" disabled="true" id="{!pendDispQtyId}" style="{!if(dispositionProduct.Pending_Quantity__c == 0,'background-color:mediumaquamarine','background-color:salmon')}"/><!-- onchange="getTotalDispQty($(this).val(),this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'),this)"/>-->
+                                                        </td>
+                                                        <td style="">
+                                                            <span style="margin-top :10px" class="glyphicon glyphicon-remove" onclick="removeProductRow(this.parentNode.parentNode.getAttribute('id'),this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));" ></span>
+                                                        </td>
+                                                    </tr>
+                                                
+                                            </apex:repeat>
+                                        </tbody>
+                                        
+                                    </table>
+                                    
+                                    
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="btn btn-link" id="addProd" onclick="addProducts($(this).parents().parents().parents().parents().parents().parents().attr('id'));"><span class="glyphicon glyphicon-plus" ></span> Add Product</div>
+                                        </div>
+                                    </div>
+                                    
+                                    
+                                    <div class="wiz-fields">
+                                        <label><span class="mandatory">*</span> Assigned To:</label>
+                                        <select id="{!dispositionSection.Assigned_User__r.Name}" class="form-control" >
+                                            <option value='{!dispositionSection.Assigned_User__c}' selected='{!dispositionSection.Assigned_User__r.Name}'>{!dispositionSection.Assigned_User__r.Name}</option>
+                                        </select>
+                                        <div id="{!dispositionSection.Assigned_User__c}_error" class="help-block with-errors"></div>
+                                    </div>
+                                    
+                                    <c:wiz_field FieldLabel="Due Date" JSId="due_date" Required="true" Wide="false">
+                                        <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"  FieldId="Due_Date"  initdate="{!dispositionSection.Due_Date__c}" updateable="true"/>
+                                    </c:wiz_field>    
+                                    
+                                    
+                                    <div class="wiz-fields-wide col-md-12">
+                                       <label><span class="mandatory">*</span> Disposition Instructions:</label>
+                                       <textarea id="DispositionInst{!dispositionSection.Id}" type="text" class="form-control" required="true" style="overflow: auto; height: 100px;" maxlength="255"  oninput="maxlengthvalidation(this)"></textarea> 
+                                       <div id="DispositionInst{!dispositionSection.Id}_error" class="help-block with-errors"></div>
+                                        <script type="text/javascript"> 
+                                            $('#DispositionInst{!JSENCODE(dispositionSection.Id)}').html('{!JSENCODE(dispositionSection.Disposition_Instruction__c)}');
+                                       </script>
+                                        
+                                    </div>
+                                    
+                                    <div id="completed" class="wiz-fields-wide col-md-12">
+                                        <label><span class="mandatory">*</span> Completed ?</label><br/>
+                                        <div class="btn-group" data-toggle="buttons">
+                                            <label class="{!IF(dispositionSection.Complete__c == 'Yes','btn btn-primary active','btn btn-primary')}" id="{!dispositionSection.Id}lblYes">
+                                                <input name="dispo_completed" value="Yes" autocomplete="off" type="radio" id="{!completed}_yes" onchange="showCompletedDetails(this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));"/>Yes
+                                            </label>
+                                            <label class="{!IF(dispositionSection.Complete__c == 'No','btn btn-primary active','btn btn-primary')}" id="{!dispositionSection.Id}lblNo">
+                                                <input name="dispo_completed" value="No" autocomplete="off" type="radio" id="{!completed}_no" onchange="hideCompletedDetails(this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));"/>No
+                                            </label>
+                                            
+                                        </div>
+                                        <div id="{!dispositionSection.Complete__c}_error" class="help-block with-errors">
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="showCompletionDetails" class="">
+                                        
+                                        <div class="wiz-fields ">
+                                            <label for="exampleInputEmail1"><span class="mandatory">*</span> Completed By:</label>
+                                            <select id="dispositionSection.Completed_By__r.Name" class="form-control" >
+                                                <option value='{!dispositionSection.Completed_By__c}' selected='{!dispositionSection.Completed_By__r.Name}'>{!dispositionSection.Completed_By__r.Name}</option>
+                                            </select>
+                                            <div id="{!dispositionSection.Completed_By__c}_error" class="help-block with-errors"></div>
+                                        </div>
+                                        
+                                        <c:wiz_field FieldLabel="Completed Date" JSId="completed_date" Required="true" Wide="false">
+                                            <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"  FieldId="Completed_Date"  initdate="{!IF(NOT(ISBLANK(dispositionSection.Completed_Date__c)),dispositionSection.Completed_Date__c,today())}" updateable="true"/>
+                                        </c:wiz_field>
+                                        
+                                        <div class="wiz-fields-wide col-md-12">
+                                            <label for="exampleInputEmail1"><span class="mandatory">*</span> Completion Comments:</label>
+                                            <textarea id="DispositionComp{!dispositionSection.Id}" type="text" class="form-control" required="true" maxlength="255"  oninput="maxlengthvalidation(this)" style="overflow: auto; height: 100px;">{!dispositionSection.Completion_Comment__c}</textarea>
+                                            <div id="DispositionComp{!dispositionSection.Id}_error" class="help-block with-errors"></div>
+                                        </div>
+                                   </div>
+                                    
+                                </div>
+                            </div> <!-- Row Ends -->
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>    
+        </apex:repeat>
+        
+    </div>
+    <div class="" id="{!divId}" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingOne">
+                <h4 class="panel-title">
+                    <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" href="#{!divId}href" aria-expanded="true" aria-controls="collapseOne"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span></a>
+                    <a href="#{!divId}href" class="btn-link pull-right" onclick="enableDiv(this,this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));"></a>&nbsp;
+                    <a href="#{!divId}href" class="btn-link pull-right" onclick="deleteDiv(this,this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));">Cancel</a>&nbsp;
+                    <a data-toggle="collapse" data-parent="#accordion" href="#{!divId}href" aria-expanded="true" aria-controls="collapseOne" class="acc_title"></a>
+                </h4>
+            </div>
+            <div id="{!divId}href" class="panel-collapse out collapse in" role="tabpanel" aria-labelledby="headingOne" aria-expanded="true">
+                <div class="panel-body">
+                
+                    <div class="row"><!-- row start -->
+                        <div class="col-md-12" id="addProdParent">
+                            
+                            <table class="table table-striped" id="{!tableId}">
+                                <thead>
+                                    <tr>
+                                        <td width="30%"><span class="mandatory"><apex:outputtext value="* "/></span>Disposition Type:</td>
+                                        <td width="30%"><span class="mandatory"><apex:outputtext value=""/></span>Total Disposed Quantity:</td>
+                                        <td width="20%"></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </thead>
+                                
+                                <tbody>
+                                    <tr id="row_header">
+                                        <td>
+                                            <select id="{!dispTypeId}" class="form-control" onchange="checkDispositionTypes($(this).val(),this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'))">
+                                                
+                                            </select>
+                                            <div id="{!dispTypeId}_error" class="help-block with-errors"></div>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control" id="{!totalDispQtyId}" disabled="true"/>
+                                        </td>
+                                        <td style="vertical-align: bottom;">
+                                            <span class="mandatory"><apex:outputtext value="* "/></span>Dispose Quantity:
+                                        </td>
+                                        <td style="vertical-align: bottom;">
+                                            Pending Quantity:
+                                        </td>
+                                        <td>
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr id="productRow">
+                                        <td>
+                                            <select id="{!prodListId}" class="form-control" onchange="getProductBatch($(this).val(),this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'),this);">
+                                                
+                                            </select>
+                                            <input type="hidden" id="hiddenDispProd"/>
+                                            <div id="{!prodListId}_error" class="help-block with-errors"></div>
+                                        </td>
+                                        <td>
+                                            <select id="{!prodBatchId}" class="form-control" onchange="setDispQtyLimit($(this).val(),this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'),this);" required="required">
+                                                
+                                            </select>
+                                            <input type="hidden" id="hiddenDispProdBat"/>
+                                            <div id="{!prodBatchId}_error" class="help-block with-errors"></div>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control required" id="{!tableId}{!dispQtyId}" onblur="getPendingQty($(this).val(),this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'),this)"/>
+                                            <input type="hidden" id="hiddenDispQty"/>
+                                            <div id="{!dispQtyId}_error" class="help-block with-errors"></div>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control" name="remaining" disabled="true" id="{!pendDispQtyId}"/><!-- onchange="getTotalDispQty($(this).val(),this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'),this)"/>-->
+                                        </td>
+                                        <td style="">
+                                            <span style="margin-top :10px" class="glyphicon glyphicon-remove" onclick="removeProductRow(this.parentNode.parentNode.getAttribute('id'),this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));" ></span>
+                                        </td>
+                                    </tr>
+                                    
+                                </tbody>
+                                
+                            </table>
+                            
+                            
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="btn btn-link" id="addProd" onclick="addProducts($(this).parents().parents().parents().parents().parents().parents().attr('id'));"><span class="glyphicon glyphicon-plus" ></span> Add Product</div>
+                                </div>
+                            </div>
+                                                                                
+                            
+                            <div class="wiz-fields">
+                                <label><span class="mandatory">*</span> Assigned To:</label>
+                                <select id="{!assignedTo}" class="form-control" >
+                                    
+                                </select>
+                                <div id="{!assignedTo}_error" class="help-block with-errors"></div>
+                            </div>
+                            
+                            <c:wiz_field FieldLabel="Due Date" JSId="{!dueDate}JS" Required="true" Wide="false">
+                                <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"  FieldId="{!dueDate}"  initdate="{!IF(NOT(ISBLANK(dispTask.New_Due_Date__c)),dispTask.New_Due_Date__c,dispTask.Due_Date__c)}" updateable="true"/>
+                            </c:wiz_field>    
+                                                                                    
+                            
+                            <div class="wiz-fields-wide col-md-12">
+                                <label><span class="mandatory">*</span> Disposition Instructions:</label>
+                                <textarea id="{!dispoInst}" type="text" class="form-control" required="true" maxlength="255"  oninput="maxlengthvalidation(this)"></textarea>
+                                <div id="{!dispoInst}_error" class="help-block with-errors"></div>
+                            </div>
+                            
+                            <div id="completed" class="wiz-fields-wide col-md-12">
+                                <label><span class="mandatory">*</span> Completed ?</label><br/>
+                                <div class="btn-group" data-toggle="buttons">
+                                    <label class="btn btn-primary ">
+                                        <input name="dispo_completed" value="Yes" autocomplete="off" type="radio" id="{!completed}_yes" onchange="showCompletedDetails(this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));"/>Yes
+                                    </label>
+                                    <label class="btn  btn-primary ">
+                                        <input name="dispo_completed" value="No" autocomplete="off" type="radio" id="{!completed}_no" onchange="hideCompletedDetails(this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));"/>No
+                                    </label>
+                                </div>
+                                <div id="completed_error" class="help-block with-errors">
+                                    
+                                </div>
+                            </div>
+                            
+                            <div id="showCompletionDetails" class="">
+                                
+                                <div class="wiz-fields ">
+                                    <label for="exampleInputEmail1"><span class="mandatory">*</span> Completed By:</label>
+                                    <select id="{!dispoCompBy}" class="form-control" >
+                                        
+                                    </select>
+                                    <div id="{!dispoCompBy}_error" class="help-block with-errors"></div>
+                                </div>
+                                
+                                <c:wiz_field FieldLabel="Completed Date" JSId="completed_date" Required="true" Wide="false">
+                                    <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"  FieldId="{!dispoCompDate}"  initdate="{!today()}" updateable="true"/>
+                                </c:wiz_field>
+                                
+                                <div class="wiz-fields-wide col-md-12">
+                                    <label for="exampleInputEmail1"><span class="mandatory">*</span> Completion Comments:</label>
+                                    <textarea id="{!dispoCompComm}" type="text" class="form-control" required="true" maxlength="255"  oninput="maxlengthvalidation(this)"></textarea>
+                                    <div id="{!dispoCompComm}_error" class="help-block with-errors"></div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </div> <!-- Row Ends -->
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+     <!-- pannel end -->
+    
+    
+    <div class="" id="dispo0" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingOne">
+                <h4 class="panel-title">
+                    <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" href="#dispo0href" aria-expanded="true" aria-controls="collapseOne"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span></a>
+                    <a href="#dispo0href" class="btn-link pull-right" onclick="enableDiv(this,this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));"></a>&nbsp;
+                    <a href="#dispo0href" class="btn-link pull-right" onclick="deleteDiv(this,this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));"></a>&nbsp;
+                    <a data-toggle="collapse" data-parent="#accordion" href="#dispo0href" aria-expanded="true" aria-controls="collapseOne" class="acc_title"></a>
+                </h4>
+            </div>
+            <div id="dispo0href" class="panel-collapse out collapse in" role="tabpanel" aria-labelledby="headingOne" aria-expanded="true">
+                <div class="panel-body">
+                
+                    <div class="row"><!-- row start -->
+                        <div class="col-md-12" id="addProdParent">
+                            
+                            <table class="table table-striped" id="dispo0Table">
+                                <thead>
+                                    <tr>
+                                        <td width="30%"><span class="mandatory"><apex:outputtext value="* "/></span>Disposition Type:</td>
+                                        <td width="30%"><span class="mandatory"><apex:outputtext value=""/></span>Total Disposed Quantity:</td>
+                                        <td width="20%"></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </thead>
+                                
+                                <tbody>
+                                    <tr id="row_header">
+                                        <td>
+                                            <select id="dispo0Disptype" class="form-control" onchange="checkDispositionTypes($(this).val(),this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'))">
+                                                
+                                            </select>
+                                            <div id="dispo0Disptype_error" class="help-block with-errors"></div>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control" id="dispo0TotalDispQty" disabled="true"/>
+                                        </td>
+                                        <td style="vertical-align: bottom;">
+                                            <span class="mandatory"><apex:outputtext value="* "/></span>Dispose Quantity:
+                                        </td>
+                                        <td style="vertical-align: bottom;">
+                                            Pending Quantity:
+                                        </td>
+                                        <td>
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr id="productRow">
+                                        <td>
+                                            <select id="dispo0ProdList" class="form-control" onchange="getProductBatch($(this).val(),this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'),this);">
+                                                
+                                            </select>
+                                            <input type="hidden" id="hiddenDispProdClone"/>
+                                            <div id="dispo0ProdList_error" class="help-block with-errors"></div>
+                                        </td>
+                                        <td>
+                                            <select id="dispo0ProdBatch" class="form-control" onchange="setDispQtyLimit($(this).val(),this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'),this);" required="required">
+                                                
+                                            </select>
+                                            <input type="hidden" id="hiddenDispProdBatClone"/>
+                                            <div id="dispo0ProdBatch_error" class="help-block with-errors"></div>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control required" id="dispo0DispQty" onblur="getPendingQty($(this).val(),this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'),this)"/>
+                                            <input type="hidden" id="hiddenDispQtyClone"/>
+                                            <div id="dispo0DispQty_error" class="help-block with-errors"></div>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control" name="remaining" disabled="true" id="dispo0PendDispQty"/> <!--onchange="getTotalDispQty($(this).val(),this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'),this)"/>-->
+                                        </td>
+                                        <td style="">
+                                            <span style="margin-top :10px" class="glyphicon glyphicon-remove" onclick="removeProductRow(this.parentNode.parentNode.getAttribute('id'),this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));" ></span>
+                                        </td>
+                                    </tr>
+                                    
+                                </tbody>
+                                
+                            </table>
+                            
+                            
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="btn btn-link" id="addProd" onclick="addProducts($(this).parents().parents().parents().parents().parents().parents().attr('id'));"><span class="glyphicon glyphicon-plus" ></span> Add Product</div>
+                                </div>
+                            </div>
+                                                                                
+                            
+                            <div class="wiz-fields">
+                                <label><span class="mandatory">*</span> Assigned To:</label>
+                                <select id="dispo0assignedTo" class="form-control" >
+                                    
+                                </select>
+                                <div id="dispo0assignedTo_error" class="help-block with-errors"></div>
+                            </div>
+                            
+                            <c:wiz_field FieldLabel="Due Date" JSId="dispo0DueDateJS" Required="true" Wide="false">
+                                <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"  FieldId="dispo0DueDate"  initdate="{!IF(NOT(ISBLANK(dispTask.New_Due_Date__c)),dispTask.New_Due_Date__c,dispTask.Due_Date__c)}" updateable="true"/>
+                            </c:wiz_field>
+                                                                                    
+                            
+                            <div class="wiz-fields-wide col-md-12">
+                                <label><span class="mandatory">*</span> Disposition Instructions:</label>
+                                <textarea id="dispo0DispoInst" type="text" class="form-control" required="true" maxlength="255"  oninput="maxlengthvalidation(this)"></textarea>
+                                <div id="dispo0DispoInst_error" class="help-block with-errors"></div>
+                            </div>
+                            
+                            <div id="dispo0completed" class="wiz-fields-wide col-md-12">
+                                <label><span class="mandatory">*</span> Completed ?</label><br/>
+                                <div class="btn-group" data-toggle="buttons">
+                                    <label class="btn btn-primary ">
+                                        <input name="dispo_completed" value="Yes" autocomplete="off" type="radio" id="dispo0Completed_yes" onchange="showCompletedDetails(this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));"/>Yes
+                                    </label>
+                                    <label class="btn  btn-primary">
+                                        <input name="dispo_completed" value="No" autocomplete="off" type="radio" id="dispo0Completed_no" onchange="hideCompletedDetails(this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));"/>No
+                                    </label>
+                                </div>
+                                <div id="dispo0DispoCompleted_error" class="help-block with-errors">
+                                    
+                                </div>
+                            </div>
+                            
+                            <div id="dispo0ShowCompletionDetails" class="">
+                                
+                                <div class="wiz-fields ">
+                                    <label for="exampleInputEmail1"><span class="mandatory">*</span> Completed By:</label>
+                                    <select id="dispo0dispoCompBy" class="form-control" >
+                                        
+                                    </select>
+                                    <div id="dispo0dispoCompBy_error" class="help-block with-errors"></div>
+                                </div>
+                                
+                                <c:wiz_field FieldLabel="Completed Date" JSId="dispo0CompletedDate" Required="true" Wide="false">
+                                    <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"  FieldId="dispo0DispoCompDate"  initdate="{!today()}" updateable="true"/>
+                                </c:wiz_field>
+                                
+                                <div class="wiz-fields-wide col-md-12">
+                                    <label for="exampleInputEmail1"><span class="mandatory">*</span> Completion Comments:</label>
+                                    <textarea id="dispo0DispoCompComm" type="text" class="form-control" required="true" maxlength="255"  oninput="maxlengthvalidation(this)"></textarea>
+                                    <div id="dispo0DispoCompComm_error" class="help-block with-errors"></div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </div> <!-- Row Ends -->
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</apex:component>

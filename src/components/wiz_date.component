@@ -1,0 +1,61 @@
+<!--  
+
+v1.0       Qualityze Inc                               Initial Version
+                                                      
+                                   
+v1.1       Qualityze Inc(GP)    15-SEP-2016           Added required class for validation
+
+-->
+<apex:component controller="wiz_date_controller">
+<apex:attribute name="placeholder" type="String" default="DD MMM YYYY" description="Placeholder"/>
+<apex:attribute name="FieldId" type="String" required="true" description="API Field Id"/>
+<apex:attribute name="FieldName" type="String"  description="API Field Name"/>    
+<apex:attribute name="initdate" assignTo="{!InitDateValue}" type="date" required="true" description="Initial Date Value"/>
+<apex:attribute name="updateable" type="boolean" default="true" description="Is Field updateable"/>
+<apex:attribute name="required" type="string" default="required" description="flag for date input required"/>
+<apex:attribute name="maxdateallowed" type="string" default="" description="Maximum date allowed to be selected in date field (inclusive). MUST BE IN FORMAT {!month(today())}/{!day(today())}/{!year(today())}"/>
+  <!--  <style>
+        .datepicker {
+        padding:0 !important;
+
+        .datepicker-years, .datepicker-months, .datepicker-years, .datepicker-decades {
+          .table-condensed {
+            width: 100%;
+          }
+        }
+
+        .datepicker-decades .table-condensed tr td span{
+          //display:none;
+          overflow:hidden;
+        }
+      }
+    </style>-->
+<script>
+    $(document).ready(function(){
+       $('#{!fieldid}_GRDATE').prop('disabled', {!NOT(updateable)});
+       
+    });
+</script>
+                        <div 
+                            class="input-group datepicker date" 
+                            id="{!FieldId}"
+                            data-maxdateallowed="{!maxdateallowed}" 
+                          >
+                            <input 
+                                data-api="{!FieldId}" 
+                                value="{!InitDateValueString}" 
+                                name="{!FieldId}discard" 
+                                type="text" 
+                                class="form-control date {!required}"   
+                                data-wizdate="true" 
+                                data-hiddenId="{!FieldId}_hidden" 
+                                placeholder="{!PlaceHolder}" 
+                                id="{!FieldId}_GRDATE" 
+                                onClick="$('#{!FieldId} .glyphicon').click()"
+                            ></input> <!-- v1.1 added required class -->
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                          </div>
+                          <input type="hidden" name="{!IF(ISBLANK(FieldName), FieldId, FieldName)}" id="{!FieldId}_hidden" value="{!InitDateISOString}" class="{!required}"></input>
+                          <div id="{!FieldId}_GRDATE_error" class="help-block with-errors"></div>
+                          <div id="{!FieldId}_hidden_error" class="help-block with-errors"></div>
+</apex:component>

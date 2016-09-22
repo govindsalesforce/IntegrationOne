@@ -1,0 +1,4 @@
+<apex:component >
+<apex:attribute name="value" description="Value" type="string" required="true"/>
+<apex:outputtext value="{!value}"/>
+</apex:component>

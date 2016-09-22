@@ -1,0 +1,268 @@
+<apex:component controller="Component_Handler" extensions="QC_custom_settings">
+<apex:attribute name="RecordId" type="Id" Description="NC Task Id" assignto="{!generalTaskId}"  />
+<apex:attribute name="editable" type="boolean" description="Show Edit / Delete Links" default="true"/>
+<apex:attribute name="disabled" type="boolean" description="Disables and/or hides add/edit/del functionality" default="false"/>
+<apex:attribute name="printonly" type="boolean" description="If enabled only prints data in table form without column headers." default="false"/>
+<apex:attribute name="isLock" description="weather the record is lock" type="boolean" required="true" />  
+<apex:attribute name="postsavejs" description="post form submission on empty containment actions" type="string" required="true" />  
+<apex:attribute name="typeofuser" type="string"  description="Type of user to be filtered based on groups"/>    
+<apex:attribute name="SubTakName" type="string"  description="SubTak Name"/>        
+<apex:attribute name="SubTakNameRecordLable" type="string" required="true" description="SubTak Name" />
+
+<input type="hidden" value="{!ContainmentActionData}"/>
+<script>   
+         function delContainAction(id,taskid){
+             $('#'+taskid).addClass('hidden');
+             $('#spinner'+taskid).removeClass('hidden');
+            if(!$('.dont-allow-multiple-clicks').attr('disabled')){
+                    $('.dont-allow-multiple-clicks .btn').attr('disabled', true);
+                }
+         Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.Component_Handler.deleteContainmentAction}',id,function(result, event){ 
+                                                                                                  if(result)
+                                                                                                      //document.location.reload(true); // using .reload causes POST to occur again.  This caused a bug where attachments were attached over and over.
+                                                                                                      //alert('inside del');
+                                                                                                      ajaxAddedContainmentActionsList();
+                                                                                                      //alert('inside del');
+                                                                                                });
+         }    
+    </script>
+
+<!------------------------when empty containment Action------------------------------------>  
+     
+    <apex:outputPanel rendered="{!NOT(containmentActionsSize>0)&&NOT(isLock)}" id="emptycontainmentcontainment">
+    <script>    
+            nocontainmentAction=false;
+            function submitcontainActionformWempt(){
+                if(!$('.dont-allow-multiple-clicks').attr('disabled')){
+                    $('.dont-allow-multiple-clicks').attr('disabled', true);
+                    console.log('prodform inside wiz_added_Containment');
+                    tinyMCE.triggerSave();
+                    console.log('SubmitContainment');
+                    $('#containmentformwempt').submit();
+                }
+            }
+            function ondeleteclickwemptyCa(){            
+            $("#panelwemptyCa").addClass('hidden');
+            nocontainmentAction=true;                
+            }
+            
+            $( document ).ready(function() {
+				var addedContainmentRecordTypeIdvarable='<apex:outputText value="{!JSENCODE($Setup.QC_settings__c.Containment_Action_RecordTypeId__c)}" />';
+                if('{!JSENCODE($CurrentPage.Parameters.type)}'=='AdhocTask'){
+                addedContainmentRecordTypeIdvarable='<apex:outputText value="{!JSENCODE($Setup.QC_settings__c.AdhocTask_Actions_RecordTypeId__c)}" />';
+                }
+				$('input#addedContainmentRecordTypeId').val(addedContainmentRecordTypeIdvarable);
+				});
+    </script>
+      
+                    <div class = "panel panel-default" id="panelwemptyCa">
+                        <div class="panel-heading">
+                            {!JSENCODE(SubTakName)} Action
+                            <apex:outputPanel id="wemptyCa">                            
+                                <label class="pull-right" for="Change">
+                                    <!--
+                                        <a id="deletelinkwemptyCa" class=' wiz-link'  onclick='ondeleteclickwemptyCa();'>Cancel</a>
+-->
+                                    &nbsp;
+                                </label>                                  
+                            </apex:outputPanel>
+                            
+                        </div>
+
+                        <div class = "panel-body">
+                            <div class="add-contain-wrapper add-containment-action screen-only">
+                                <div class="add-containment">
+                                    <span id="containinfo">
+                                            <div class="add-widget-container">
+                                                        <c:wiz_form formclass="containmentformwempty validate" formid="containmentformwempt" submitpage="stringify_sobject" recordid="" postsavejs="{!postsavejs}">
+                                                		<input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}general_sub_task__c"/>
+                                                            <!-- slimscroll panel -->
+                                                            <div >
+                                                            <input id="nccaidwempty" type="hidden" name="Id" value=""/>
+                                                                
+                                                                <div class="add-contain-wrapper">
+                                                                    <div class="add-containment">
+                                                                        <div class="top-row">
+                                                                     
+                                                                                 <input type="hidden" name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}General_Task__c" value="{!RecordId}"/>
+                                                                            	<input type="hidden" name="RecordTypeId" id="addedContainmentRecordTypeId" value=""/>                                                                            	
+                                                                                <c:wiz_field Required="true" divclass="col-md-6" FieldLabel="{!$ObjectType.General_Sub_Task__c.Fields.Completed_By__c.Label}" required="true" jsid="ccb" rendered="{!$ObjectType.General_Sub_Task__c.Fields.Completed_By__c.Accessible}">
+                                                                                    <c:wiz_multi width="100%" disabled="false" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_By__cwempt" FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_By__c"  querytable="User" queryfields="Name" typeofuser="{!typeofuser}"/>    
+                                                                                </c:wiz_field>
+                                                                 
+                                                                                <c:wiz_field divclass="col-md-6" FieldLabel="{!$ObjectType.General_Sub_Task__c.Fields.Completed_Date__c.Label}" required="true" jsid="ddt" rendered="{!$ObjectType.General_Sub_Task__c.Fields.Completed_Date__c.Accessible}">
+                                                                                    <c:wiz_date placeholder="DD MMM YYYY" FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_Date__c" maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"  FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_Date__cwempty" initdate="{!today()}" updateable="true" />   
+                                                                                </c:wiz_field>
+                                                                           <!--
+                                                                                <c:wiz_field divclass="col-md-12"  FieldLabel="{!$ObjectType.General_Sub_Task__c.Fields.Sub_Task_Detail__c.Label}" required="true" jsid="cad" rendered="{!$ObjectType.General_Sub_Task__c.Fields.Sub_Task_Detail__c.Accessible}">
+                                                                                <c:wiz_richtext required="true" FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sub_Task_Detail__c" Fieldid="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sub_Task_Detail__cwempt" initvalue="details..."  rendered="{!$ObjectType.General_Sub_Task__c.Fields.Sub_Task_Detail__c.Accessible}"/>
+                                                                                </c:wiz_field>
+                                                                            -->
+                                                                            <apex:outputPanel rendered="{!$ObjectType.General_Sub_Task__c.Fields.Sub_Task_Detail__c.Accessible}">
+                                                                                <c:wiz_field divclass="col-md-12"  FieldLabel="{!SubTakName} Details" required="true" jsid="cad" rendered="{!$ObjectType.General_Sub_Task__c.Fields.Sub_Task_Detail__c.Accessible}">
+                                                                                    <c:wiz_textarea required="true" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sub_Task_Detail__cwempty" FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sub_Task_Detail__c" initvalue="" ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}General_Sub_Task__c" rendered="{!$ObjectType.General_Sub_Task__c.Fields.Sub_Task_Detail__c.Accessible}"></c:wiz_textarea>
+                                                                                </c:wiz_field>
+                                                                            </apex:outputPanel>
+                                                                        </div>
+                                                                      <!--  <apex:outputpanel layout="block" styleclass="Containment-Detail" rendered="{!$ObjectType.General_Sub_Task__c.Fields.Sub_Task_Detail__c.Accessible}">
+                                                                         
+                                                                            <div class="col-md-12">-->
+                                                                               <!-- <label>Containment Detail</label>
+                                                                                <textarea id="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sub_Task_Detail__c" class="form-control changeMe-setTextArea"  data-fieldname="Sub_Task_Detail__c" data-objectname="Sub_Task_Detail__c" >Containment Details:</textarea>-->
+                                                                           <!--     <c:wiz_field divclass="col-md-12"  FieldLabel="{!$ObjectType.General_Sub_Task__c.Fields.Sub_Task_Detail__c.Label}" required="true" jsid="cad" rendered="{!$ObjectType.General_Sub_Task__c.Fields.Sub_Task_Detail__c.Accessible}">
+                                                                                <c:wiz_textarea FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sub_Task_Detail__c" initvalue="Details..." ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}General_Sub_Task__c" rendered="{!$ObjectType.General_Sub_Task__c.Fields.Sub_Task_Detail__c.Accessible}"></c:wiz_textarea>
+                                                                                </c:wiz_field>-->
+                                                                        <!--    </div>-->
+                                                                            
+                                                                    <!--    </apex:outputpanel>-->
+                                                                    <div class="clearfix"></div>    
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <!-- slimscroll panel -->
+                                                        </c:wiz_form>
+                                
+                                                    </div>
+                                         </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+</apex:outputPanel>
+    <!-----------------------when non empty containment Action----------------------------->
+<apex:form >  
+<apex:actionFunction name="ajaxAddedContainmentActionsList" action="{!loadContainmentActions}" oncomplete="$('#newncc').modal('hide');$('.dont-allow-multiple-clicks').attr('disabled',false);"  reRender="temprary,wemptyCa,emptycontainmentcontainment" />
+<apex:outputPanel id="temprary">
+<apex:outputpanel id="outputPaneAddedContainmentActionsList" layout="none" rendered="{! NOT(printonly) }">
+                <!-- add-containment-wrapper -->
+    <script>
+   
+    </script>
+                     
+                    <apex:repeat value="{!containmentActions}" var="CA">      
+                        <script>
+
+                        if($('.dont-allow-multiple-clicks').attr('disabled')){
+                            $('.dont-allow-multiple-clicks .btn').attr('disabled', false);
+                            }
+                        </script>
+                        <div class="panel-group screen-only" id="accordion" role="tablist" aria-multiselectable="true">
+                                <div class="panel panel-default">
+                                    
+                                    
+                                    <div class="panel-heading" role="tab" id="heading{!CA}">
+                                        <h4 class="panel-title">
+                                            
+                                                    <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" data-parent="#accordion" href="#collapse{!CA}" aria-expanded="true" aria-controls="collapse{!RecordId}">
+                                                    <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                                                    </a>                            
+                                                    
+                                                    
+                                                    <a data-toggle="collapse" data-parent="#accordion" href="#collapse{!CA}" aria-expanded="true" aria-controls="collapse{!CA}">
+                                                       <span ><b>{!JSENCODE(SubTakName)} Action </b> ({!JSENCODE(LEFT(CA.Sub_Task_Detail__c,25))}....)</span> 
+
+                                                    </a>
+                                            <apex:outputpanel rendered="{!NOT(isLock)}">
+                                                    <label class="pull-right" for="Change">
+                                                        <apex:outputPanel >
+                                                        <a class='wiz-link' href="#" onclick='editContainAction("{!CA.id}");'>Edit</a>
+                                                        </apex:outputPanel>
+                                                       &nbsp;|&nbsp;
+                                                        <apex:outputPanel >
+                                                        <i id="spinnertaskid{!JSENCODE(CA.id)}" class="hidden fa fa-spinner fa-spin fa fa-fw"></i>
+                                                        <a class='wiz-link' id='taskid{!JSENCODE(CA.id)}' href="#" onclick='delContainAction("{!JSENCODE(CA.id)}","taskid{!JSENCODE(CA.id)}");'>Delete</a>
+                                                        </apex:outputPanel>
+                                                        &nbsp;
+                                                    </label>  
+                                            </apex:outputpanel>    
+                                         </h4>
+                                    </div>
+                                    
+            
+            
+            <div id="collapse{!CA}" class="panel-collapse collapse out" role="tabpanel" aria-labelledby="heading{!CA}">
+                <div class="panel-body">                        
+                           <div class="add-contain-wrapper added-containment-action screen-only">
+                                                    <div class="add-containment">
+                                                        <form>
+                                                            <div class="top-row">
+                                                                <apex:outputPanel rendered="{!$ObjectType.General_Sub_Task__c.Fields.Completed_By__c.Accessible}">
+                                                                <div class="col-md-6"  disabled="disabled">
+                                                                    <label>{!$ObjectType.General_Sub_Task__c.Fields.Completed_By__c.Label}</label>
+                                                                    <input type="text" class="form-control"  disabled="disabled" value="{!CA.Completed_By__r.Name}"/>
+                                                                </div>
+                                                                </apex:outputPanel>
+                                                            <apex:outputPanel rendered="{!$ObjectType.General_Sub_Task__c.Fields.Completed_Date__c.Accessible}">
+                                                                <div class="col-md-6">
+                                                                    <label>{!$ObjectType.General_Sub_Task__c.Fields.Completed_Date__c.Label}</label>
+                                                                    <input type="hidden" class="form-control" value="{!CA.Completed_Date__c}"></input>
+                                                                    <div class="form-control" disabled="disabled">
+                                                                        <apex:outputText value="{0,date,dd MMM yyyy}">
+                                                                            <apex:param value="{!CA.Completed_Date__c}" /> 
+                                                                        </apex:outputText>
+                                                                        </div>    
+                                                                </div>
+                                                            </apex:outputPanel>
+                                                                <div class="clearfix"></div>
+                                                                
+                                                            </div>
+                                                        <br/>
+                                                            <apex:outputPanel rendered="{!$ObjectType.General_Sub_Task__c.Fields.Sub_Task_Detail__c.Accessible}">
+                                                            <div class="Detail">
+                                                                <div class="col-md-12">
+                                                                    <label>Containment Detail</label>
+                                                                    <!--<textarea class="form-control changeMe-setTextArea" data-fieldname="{!$ObjectType.General_Sub_Task__c.Fields.Sub_Task_Detail__c.Label}" data-objectname="{!$ObjectType.General_Sub_Task__c.Fields.Sub_Task_Detail__c.Label}" >{!CA.Sub_Task_Detail__c}</textarea>-->
+                                                                     <div class="alert alert-info"><apex:outputPanel layout="block" style="overflow: auto; height: 100px;"> <apex:outputField value="{!CA.Sub_Task_Detail__c}"/></apex:outputPanel> </div>
+                                                                </div>
+                                                            
+
+                                                            </div>
+                                                            </apex:outputPanel>
+
+                                                        </form>
+                                                    </div>
+                                                </div>
+
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                        </div>                                    
+                     </apex:repeat> 
+                                              <!-- add-containment-wrapper -->
+</apex:outputpanel>   
+</apex:outputPanel>
+</apex:form>
+<!--<c:wiz_validator onvalid="customvalid();" ignorehidden="true"/>-->
+
+    
+<div class="print-only">
+<h1>Containment Actions</h1>    
+<table class="table table-responsive table-bordered">
+   <tbody>
+   <tr>
+     <th>Containment Detail</th>
+     <th>Completed by</th>
+     <th>Completed Date </th>
+   </tr>
+<apex:repeat value="{!containmentActions}" var="CA">
+    <tr>
+    <td>
+        {!CA.Sub_Task_Detail__c}
+    </td>
+    <td>
+        {!CA.Completed_By__r.Name}
+    </td>
+    <td>
+        <apex:outputText value="{0,date,dd MMM yyyy}">
+            <apex:param value="{!CA.Completed_Date__c}" /> 
+        </apex:outputText>
+    </td>
+    </tr>    
+       </apex:repeat>
+   </tbody>
+</table>
+</div>   
+
+
+</apex:component>

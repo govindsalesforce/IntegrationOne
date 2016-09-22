@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Number Scheme</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Number Schemes</value>
+    </caseValues>
+    <fields>
+        <label><!-- Active --></label>
+        <name>Active__c</name>
+    </fields>
+    <fields>
+        <label><!-- Department --></label>
+        <name>Department__c</name>
+        <relationshipLabel><!-- Number Schemes --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Format --></label>
+        <name>Format__c</name>
+    </fields>
+    <fields>
+        <label><!-- MAXNUMBER --></label>
+        <name>MAXNUMBER__c</name>
+    </fields>
+    <fields>
+        <label><!-- Module --></label>
+        <name>Module__c</name>
+        <picklistValues>
+            <masterLabel>CAPA</masterLabel>
+            <translation><!-- CAPA --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Document</masterLabel>
+            <translation><!-- Document --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>NC</masterLabel>
+            <translation><!-- NC --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Number format --></label>
+        <name>Number_format__c</name>
+    </fields>
+    <fields>
+        <label><!-- Prefix --></label>
+        <name>Prefix__c</name>
+    </fields>
+    <fields>
+        <label><!-- Revision --></label>
+        <name>Revision__c</name>
+        <picklistValues>
+            <masterLabel>1</masterLabel>
+            <translation><!-- 1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>1.1</masterLabel>
+            <translation><!-- 1.1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>A</masterLabel>
+            <translation><!-- A --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>A.1</masterLabel>
+            <translation><!-- A.1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>AA</masterLabel>
+            <translation><!-- AA --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Site --></label>
+        <name>Site__c</name>
+        <relationshipLabel><!-- Number Schemes --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Suffix --></label>
+        <name>Suffix__c</name>
+    </fields>
+    <layouts>
+        <layout>Number Scheme Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <startsWith>Consonant</startsWith>
+    <validationRules>
+        <errorMessage><!-- This record cannot be update able --></errorMessage>
+        <name>Default_Document_Number</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- Only Numbers are allowed --></errorMessage>
+        <name>Number_Format_validation</name>
+    </validationRules>
+</CustomObjectTranslation>

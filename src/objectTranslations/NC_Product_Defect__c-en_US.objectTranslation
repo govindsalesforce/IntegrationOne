@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>NC Product Defect</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>NC Product Defects</value>
+    </caseValues>
+    <fields>
+        <label><!-- CustomerSupplier --></label>
+        <name>CustomerSupplier__c</name>
+    </fields>
+    <fields>
+        <label><!-- Customer/Supplier --></label>
+        <name>Customer_Supplier__c</name>
+        <relationshipLabel><!-- NC Product Defects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Defect --></label>
+        <name>Defect_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Defect --></label>
+        <name>Defect__c</name>
+        <relationshipLabel><!-- NC Product Defects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- NC Created Date --></label>
+        <name>NC_Created_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- NC Number --></label>
+        <name>NC_Number__c</name>
+    </fields>
+    <fields>
+        <label><!-- Non Conformance --></label>
+        <name>Non_Conformance__c</name>
+    </fields>
+    <fields>
+        <label><!-- Primary Defect --></label>
+        <name>Primary_Defect__c</name>
+    </fields>
+    <fields>
+        <label><!-- Product Code --></label>
+        <name>Product_Code__c</name>
+    </fields>
+    <fields>
+        <label><!-- Product Lot Numbers --></label>
+        <name>Product_Lot_Numbers_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Product Lot Numbers --></label>
+        <name>Product_Lot_Numbers__c</name>
+        <relationshipLabel><!-- NC Product Defects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Quantity Affected --></label>
+        <name>Quantity_Affected__c</name>
+    </fields>
+    <fields>
+        <label><!-- Suspect Enabled --></label>
+        <name>Suspect_Enabled__c</name>
+    </fields>
+    <startsWith>Consonant</startsWith>
+</CustomObjectTranslation>

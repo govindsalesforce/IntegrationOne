@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <encodingKey>ISO-8859-1</encodingKey>
+    <letterhead>Qualityze_Inc</letterhead>
+    <name>ChangeDueDateApproval</name>
+    <style>freeForm</style>
+    <subject>Approval Request for Due Date change of {!General_Task__c.RecordType}</subject>
+    <textOnly>Hello,
+
+You have been assigned as an approver for changing the Due date of the {!General_Task__c.RecordType}  task of {!IF(NOT(ISBLANK(General_Task__c.Non_Conformance__c)),&apos;NCR&apos;,&apos; &apos;)}{!IF(NOT(ISBLANK(General_Task__c.CAPA__c)),&apos;CAPA&apos;,&apos; &apos;)} {!IF(NOT(ISBLANK(General_Task__c.Change_Management__c)),&apos;CR&apos;,&apos; &apos;)} record {!General_Task__c.Non_Conformance__c} {!General_Task__c.CAPA__c}
+
+{!General_Task__c.Change_Management__c}.
+
+
+Please log in to the application and complete the approval process by the due date identified.
+
+
+Please contact {!General_Task__c.NonConformanceName__c} {!General_Task__c.CAPA_Owner_Name__c} {!General_Task__c.Change_Management_Owner_Name__c}  if you have any questions about this assignment and/or {!IF(NOT(ISBLANK(General_Task__c.Non_Conformance__c)),&apos;Non conformance&apos;,&apos; &apos;)}{!IF(NOT(ISBLANK(General_Task__c.CAPA__c)),&apos;Capa&apos;,&apos; &apos;)} {!IF(NOT(ISBLANK(General_Task__c.Change_Management__c)),&apos;CR&apos;,&apos; &apos;)} Record
+
+
+Thank you.
+
+
+Click here for details</textOnly>
+    <type>html</type>
+</EmailTemplate>

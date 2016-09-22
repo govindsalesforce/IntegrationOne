@@ -1,0 +1,163 @@
+<apex:component controller="Component_Handler" extensions="QC_custom_settings">
+<apex:attribute name="SubTakName" type="string"  description="SubTak Name" />  
+<apex:attribute name="SubTakNameRecordLable" type="string" required="true" description="SubTak Name" />  
+<script>
+    
+      $( document ).ready(function() {
+          
+
+          var minDate=new Date('{!DATEVALUE(NC.createdDate)}');
+            console.log('containmnet action minDate   '+minDate+'  new Date() '+new Date());
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_Date__c').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY" ,maxDate: new Date(),minDate:minDate})
+                .on('dp.change', function(e){
+                    // $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_Date__c').data("DateTimePicker").minDate(minDate);
+                    //$('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_Date__c').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY"});    
+            });
+                $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_Date__cwempty').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY",maxDate: new Date(),minDate:minDate})
+                .on('dp.change', function(e){
+
+                    // $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_Date__cwempty').data("DateTimePicker").minDate(minDate);               
+            });    
+            
+    		
+		  var title="Add Contaimnent Action ";          
+          var addContainmentRecordTypeIdvarable='<apex:outputText value="{!JSENCODE($Setup.QC_settings__c.Containment_Action_RecordTypeId__c)}" />';
+          if('{!JSENCODE(if(NOT(ISBLANK(SubTakName)),SubTakName,$CurrentPage.Parameters.type))}'=='AdhocTask'){
+              title="Add Adhoc Action ";
+              addContainmentRecordTypeIdvarable='<apex:outputText value="{!JSENCODE($Setup.QC_settings__c.AdhocTask_Actions_RecordTypeId__c)}" />';
+          }
+          $('input#addContainmentRecordTypeId').val(addContainmentRecordTypeIdvarable);
+          $('#newncctitle').html(title);
+    });
+    
+    
+    
+    
+    
+        function resetcontainActform() {
+            clearerrors('containmentform');
+            //clearerrors();
+        console.log('resetcontainform');
+            
+            
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_Date__c').val(null).trigger('change');
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_By__c').val(null).trigger('change');
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sub_Task_Detail__c').val(null).trigger('change');
+            $('#nccaid').attr('name','name');
+        }
+        function createcontainAction() {
+            resetcontainActform();                                                            
+  
+            $('#newncc').show();
+            $('#newncc').modal('show');
+        }
+
+        
+      
+          function editContainAction(RecordId) {
+               
+            resetcontainActform();
+            Visualforce.remoting.Manager.invokeAction(
+                 '{!$RemoteAction.Component_Handler.getContainmentAction}',RecordId,function(result, event){
+                                                                              if({!$ObjectType.General_Sub_Task__c.Fields.Completed_Date__c.Accessible}==true){
+                                                                                      var month=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                                                                                      var mydate=new Date((result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_Date__c));
+                                                                                      var Completed_Date=mydate.getDate()+' '+(month[mydate.getMonth()])+' '+mydate.getFullYear();
+                                                                                      $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_Date__c_hidden').val(mydate.toISOString());
+                                                                                      $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_Date__c_GRDATE').val(Completed_Date);
+                                                                                }
+                
+                                                                              if({!$ObjectType.General_Sub_Task__c.Fields.Sub_Task_Detail__c.Accessible}==true)
+                                                                             $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sub_Task_Detail__c').val(result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sub_Task_Detail__c);
+                                                                              if({!$ObjectType.General_Sub_Task__c.Fields.Completed_By__c.Accessible}==true)              
+                                                                             $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_By__c').html('<option selected="selected" value="' + result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_By__c + '">' + escapeHtml(result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_By__r.Name) + '</option>').trigger('change');
+
+                                                                             $('#nccaid').attr('name', 'Id');
+                                                                             $('#nccaid').val(result.Id?result.Id:null);    
+                                                                             $('#newncc').show();
+                                                                             
+                                                                             $('#newncc').modal('show');
+                                                                       });
+                    
+        }
+        function submitcontainActionform(){
+             if(!$('.dont-allow-multiple-clicks').attr('disabled')){
+             $('.dont-allow-multiple-clicks').attr('disabled', true);
+                    console.log('prodform inside wiz_add_product');
+                   tinyMCE.triggerSave();
+                    $('#containmentform').submit();
+                
+            }
+        }
+
+
+
+    </script>
+    <apex:attribute name="NC" type="Non_Conformance__c" required="true" description="Non-Conformance" />
+    <apex:attribute name="NCTaskId" type="id" required="true" description="Non-Task-Id" />
+    <!--<apex:attribute name="postsavejs" type="string" required="false" description="post form submition" default="window.location = '/apex/nc_containment?id={!NC.id}';" /> -->
+    <apex:attribute name="postsavejs" type="string" required="false" description="post form submition" default="ajaxAddedContainmentActionsList();" /> 
+    <apex:attribute name="typeofuser" type="string"  description="Type of user to be filtered based on groups"/>
+    
+
+    <!--    Add containment Dialog      -->
+    <div class="modal fade" id="newncc"  role="dialog" aria-labelledby="newncc">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="newncctitle"></h4>
+                </div>
+                <div class="modal-body">
+
+                    <!--     screen content -->
+
+                                    <span id="containinfo">
+                                            <div class="add-widget-container">
+                                                        <c:wiz_form formclass="containmentform validate" formid="containmentform" submitpage="stringify_sobject" recordid="" postsavejs="{!postsavejs}">
+                                                
+                                                            <!-- slimscroll panel -->
+                                                            <div >
+                                                            <input id="nccaid" type="hidden" name="Id" value=""/>
+                                                            <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}general_sub_task__c"/>    
+                                                                
+                                                                <div class="add-contain-wrapper">
+                                                                    <div class="add-containment">
+                                                                        <div class="top-row">                                                                
+                                                                                <input type="hidden" name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}General_Task__c" value="{!NCTaskId}"/>                                                                            	
+                                                                            	<input type="hidden" name="RecordTypeId" id='addContainmentRecordTypeId' value=""/>
+                                                                                <c:wiz_field Required="true" divclass="col-md-6" FieldLabel="{!$ObjectType.General_Sub_Task__c.Fields.Completed_By__c.Label}" required="true" jsid="ccb" rendered="{!$ObjectType.General_Sub_Task__c.Fields.Completed_By__c.Accessible}">
+                                                                                    <c:wiz_multi width="100%" disabled="false" FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_By__c" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_By__c" querytable="User" queryfields="Name" typeofuser="{!typeofuser}" />    
+                                                                                </c:wiz_field>
+                                                                 
+                                                                                <c:wiz_field divclass="col-md-6" FieldLabel="{!$ObjectType.General_Sub_Task__c.Fields.Completed_Date__c.Label}" required="true" jsid="ddt" rendered="{!$ObjectType.General_Sub_Task__c.Fields.Completed_Date__c.Accessible}">
+                                                                                    <c:wiz_date placeholder="DD MMM YYYY"  maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"  FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Completed_Date__c" initdate="{!today()}" updateable="true" />   
+                                                                                </c:wiz_field>
+                                                                           
+                                                                                <c:wiz_field divclass="col-md-12"  FieldLabel="Details" required="true" jsid="cad" rendered="{!$ObjectType.General_Sub_Task__c.Fields.Sub_Task_Detail__c.Accessible}">
+                                                                                <c:wiz_textarea required="true" FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sub_Task_Detail__c" initvalue="Details..." ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}General_Sub_Task__c" rendered="{!$ObjectType.General_Sub_Task__c.Fields.Sub_Task_Detail__c.Accessible}"></c:wiz_textarea>
+                                                                                </c:wiz_field>
+                                                                            
+                                                                        </div>
+                                                                      
+                                                                    <div class="clearfix"></div>    
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <!-- slimscroll panel -->
+                                                        </c:wiz_form>
+                                
+                                                    </div>
+                                         </span>
+                            </div>
+        <div class="clearfix"></div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal" >Cancel</button>
+            <button type="button" onclick="validate(null,submitcontainActionform,'containmentform');" class="btn btn-primary dont-allow-multiple-clicks">Ok</button>
+        </div>
+    </div>
+    </div>
+    </div>
+    <c:wiz_validator onvalid="" ignorehidden="false"/>
+
+</apex:component>

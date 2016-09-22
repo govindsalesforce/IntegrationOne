@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>CAPA</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Corrective and Preventive Actions</value>
+    </caseValues>
+    <fields>
+        <label><!-- Approval Status --></label>
+        <name>Approval_Status__c</name>
+        <picklistValues>
+            <masterLabel>Approved</masterLabel>
+            <translation><!-- Approved --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pending Approval</masterLabel>
+            <translation><!-- Pending Approval --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Recall</masterLabel>
+            <translation><!-- Recall --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Rejected</masterLabel>
+            <translation><!-- Rejected --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Approver 1 --></label>
+        <name>Approver_1__c</name>
+        <relationshipLabel><!-- Corrective and Preventive Actions (Approver 1) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 2 --></label>
+        <name>Approver_2__c</name>
+        <relationshipLabel><!-- Corrective and Preventive Actions (Approver 2) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 3 --></label>
+        <name>Approver_3__c</name>
+        <relationshipLabel><!-- Corrective and Preventive Actions (Approver 3) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 4 --></label>
+        <name>Approver_4__c</name>
+        <relationshipLabel><!-- Corrective and Preventive Actions (Approver 4) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 5 --></label>
+        <name>Approver_5__c</name>
+        <relationshipLabel><!-- Corrective and Preventive Actions (Approver 5) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 6 --></label>
+        <name>Approver_6__c</name>
+        <relationshipLabel><!-- Corrective and Preventive Actions (Approver 6) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 7 --></label>
+        <name>Approver_7__c</name>
+        <relationshipLabel><!-- Corrective and Preventive Actions (Approver 7) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver --></label>
+        <name>Approver_8__c</name>
+        <relationshipLabel><!-- Corrective and Preventive Actions (Approver) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver 9 --></label>
+        <name>Approver_9__c</name>
+        <relationshipLabel><!-- Corrective and Preventive Actions (Approver 9) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Approver --></label>
+        <name>Approver__c</name>
+        <relationshipLabel><!-- Corrective and Preventive Actions (Approver) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- CAPA Age --></label>
+        <name>CAPA_Age__c</name>
+    </fields>
+    <fields>
+        <label><!-- CAPA Phase --></label>
+        <name>CAPA_Phase__c</name>
+        <picklistValues>
+            <masterLabel>Closed</masterLabel>
+            <translation><!-- Closed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Investigation</masterLabel>
+            <translation><!-- Investigation --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- CAPA Risk Assessment Required --></label>
+        <name>CAPA_Risk_Assessment_Required__c</name>
+        <picklistValues>
+            <masterLabel>No</masterLabel>
+            <translation><!-- No --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Yes</masterLabel>
+            <translation><!-- Yes --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- CAPA Source --></label>
+        <name>CAPA_Source__c</name>
+        <picklistValues>
+            <masterLabel>Audit</masterLabel>
+            <translation><!-- Audit --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Complaint</masterLabel>
+            <translation><!-- Complaint --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>NCR</masterLabel>
+            <translation><!-- NCR --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Other</masterLabel>
+            <translation><!-- Other --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Supplier</masterLabel>
+            <translation><!-- Supplier --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Trigger/Threshold reached</masterLabel>
+            <translation><!-- Trigger/Threshold reached --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- CAPA Status --></label>
+        <name>CAPA_Status__c</name>
+        <picklistValues>
+            <masterLabel>Closed</masterLabel>
+            <translation><!-- Closed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Inworks</masterLabel>
+            <translation><!-- Inworks --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Open</masterLabel>
+            <translation><!-- Open --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Reopen</masterLabel>
+            <translation><!-- Reopen --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Void</masterLabel>
+            <translation><!-- Void --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Closed Date --></label>
+        <name>Closed_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Closed --></label>
+        <name>Closed__c</name>
+    </fields>
+    <fields>
+        <label><!-- Containment Activity --></label>
+        <name>Containment_Activity__c</name>
+    </fields>
+    <fields>
+        <label><!-- Criticality --></label>
+        <name>Criticality__c</name>
+        <picklistValues>
+            <masterLabel>Critical</masterLabel>
+            <translation><!-- Critical --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>High</masterLabel>
+            <translation><!-- High --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Low</masterLabel>
+            <translation><!-- Low --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Medium</masterLabel>
+            <translation><!-- Medium --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Department --></label>
+        <name>Department__c</name>
+        <relationshipLabel><!-- Corrective and Preventive Actions --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Followers --></label>
+        <name>Followers__c</name>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Immediate Action Taken --></label>
+        <name>Immidiate_Action_Taken__c</name>
+    </fields>
+    <fields>
+        <label><!-- Is In Works --></label>
+        <name>Is_In_Works__c</name>
+    </fields>
+    <fields>
+        <label><!-- Manufacturer / Supplier --></label>
+        <name>Manufacturer_Supplier_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Manufacturer / Supplier --></label>
+        <name>Manufacturer_Supplier__c</name>
+        <relationshipLabel><!-- Corrective and Preventive Actions --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- New Owner --></label>
+        <name>New_Owner__c</name>
+        <relationshipLabel><!-- Corrective and Preventive Actions (New Owner) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Note To Approver --></label>
+        <name>Note_To_Approver__c</name>
+    </fields>
+    <fields>
+        <label><!-- Occurrence Date --></label>
+        <name>Occurance_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Problem Statement --></label>
+        <name>Problem_Statement__c</name>
+    </fields>
+    <fields>
+        <label><!-- Reopen By --></label>
+        <name>Reopen_By__c</name>
+        <relationshipLabel><!-- Corrective and Preventive Actions (Reopen By) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Reopen Date --></label>
+        <name>Reopen_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Reported By --></label>
+        <name>Reported_By__c</name>
+        <relationshipLabel><!-- Corrective and Preventive Actions (Reported By) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Reported Date --></label>
+        <name>Reported_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Resolution Closed Comment --></label>
+        <name>Resolution_Closed_Comment__c</name>
+    </fields>
+    <fields>
+        <label><!-- Resolution Code --></label>
+        <name>Resolution_Code__c</name>
+        <picklistValues>
+            <masterLabel>CAPA Workflow</masterLabel>
+            <translation><!-- CAPA Workflow --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Discarded</masterLabel>
+            <translation><!-- Discarded --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>No Action Required</masterLabel>
+            <translation><!-- No Action Required --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Risk Description --></label>
+        <name>Risk_Description__c</name>
+    </fields>
+    <fields>
+        <label><!-- Risk Occurrence --></label>
+        <name>Risk_Occurrence_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Risk Occurrence --></label>
+        <name>Risk_Occurrence__c</name>
+        <relationshipLabel><!-- Corrective and Preventive Actions --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Risk Priority --></label>
+        <name>Risk_Priority__c</name>
+        <relationshipLabel><!-- Corrective and Preventive Actions --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Risk Severity --></label>
+        <name>Risk_Severity__c</name>
+        <relationshipLabel><!-- Corrective and Preventive Actions --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Site(s) Impacted --></label>
+        <name>Sites_Impacted__c</name>
+        <picklistValues>
+            <masterLabel>NewYork</masterLabel>
+            <translation><!-- NewYork --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Tampa</masterLabel>
+            <translation><!-- Tampa --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Tokyo</masterLabel>
+            <translation><!-- Tokyo --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Source Number --></label>
+        <name>Source_Number__c</name>
+    </fields>
+    <fields>
+        <label><!-- Title --></label>
+        <name>Title__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD_Date10 --></label>
+        <name>UD_Date10__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD_Date9 --></label>
+        <name>UD_Date9__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD_Long_Text_Area7 --></label>
+        <name>UD_Long_Text_Area7__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD_Long_Text_Area8 --></label>
+        <name>UD_Long_Text_Area8__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD_Picklist3 --></label>
+        <name>UD_Picklist3__c</name>
+        <picklistValues>
+            <masterLabel>FPV1</masterLabel>
+            <translation><!-- FPV1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>FPV2</masterLabel>
+            <translation><!-- FPV2 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>FPV3</masterLabel>
+            <translation><!-- FPV3 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- UD_Picklist4 --></label>
+        <name>UD_Picklist4__c</name>
+        <picklistValues>
+            <masterLabel>SPV1</masterLabel>
+            <translation><!-- SPV1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>SPV2</masterLabel>
+            <translation><!-- SPV2 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>SPV3</masterLabel>
+            <translation><!-- SPV3 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>SPV4</masterLabel>
+            <translation><!-- SPV4 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- UD_Text1 --></label>
+        <name>UD_Text1__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD_Text2 --></label>
+        <name>UD_Text2__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD_Text_Area5 --></label>
+        <name>UD_Text_Area5__c</name>
+    </fields>
+    <fields>
+        <label><!-- UD_Text_Area6 --></label>
+        <name>UD_Text_Area6__c</name>
+    </fields>
+    <fields>
+        <label><!-- User Defined --></label>
+        <name>User_Defined__c</name>
+    </fields>
+    <layouts>
+        <layout>CAPA Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <recordTypes>
+        <label><!-- CAPA --></label>
+        <name>CAPA</name>
+    </recordTypes>
+    <startsWith>Consonant</startsWith>
+</CustomObjectTranslation>

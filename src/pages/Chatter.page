@@ -1,0 +1,35 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="true" standardController="Document_Profile__c" extensions="DocumentProfileControllerExt">
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+
+    <script>
+        // Capture all clicks on <a> elements and change the URL for the whole window
+        // Some <a> elements are used for JavaScript function calls, so only capture them
+        //  when the URL starts with the / character.
+        jQuery(document).ready(function($) {
+             $('#chatter-container').contents().find('.publishercontainer').hide();
+        
+        if('{!gtask_cr.Status__c}'=='Closed')
+            {
+                $('#chatter-container').contents().find('.cxallfeedactions').hide();
+                $('#chatter-container').contents().find('.newcommenttextwrapper').hide();
+                $('#chatter-container').contents().find('.feeditemcommenttext').hide();
+                
+                
+            }
+             
+             
+            $('#chatter-container').contents().on('click', 'a', function(e) {
+                if($(this).attr('href').charAt(0) == '/') {
+                    e.preventDefault();
+                    top.window.location.href = $(this).attr('href');
+                }
+            });
+        });
+    </script>
+   
+
+    <div id="chatter-container">
+          <chatter:feedWithFollowers entityId="{!gtask_cr.Id}" />
+    </div>
+    
+</apex:page>

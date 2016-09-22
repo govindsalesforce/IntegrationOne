@@ -1,0 +1,12 @@
+<apex:component >
+<apex:attribute name="ObjectName" type="string" required="true" description="Object Name"/>
+<apex:attribute name="FieldName" type="string" required="true" description="Field Name"/>
+<apex:attribute name="InitValue" type="string" required="false" description="Initial value on page. Pass fields current value into here."/>
+<apex:attribute name="onchangefunction" type="string" default="" description="refrence to on change js function"/>
+<apex:attribute name="disabled" description="Means it is displayed but grayed out and cannot be edited." type="boolean" required="false" default="false"/>
+<!-- TODO: Need to add required attribute -->
+
+<div class="btn-group RadioSet" id="rs{!FieldName}" data-onchangefunction="{!onchangefunction}" data-fieldname="{!FieldName}" data-objectname="{!ObjectName}" data-initvalue="{!InitValue}" data-toggle="buttons" data-disabled="{!disabled}">
+  <apex:componentbody />
+</div>
+</apex:component>

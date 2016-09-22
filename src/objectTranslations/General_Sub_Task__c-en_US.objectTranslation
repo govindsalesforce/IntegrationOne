@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>General Sub Task</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>General Sub Tasks</value>
+    </caseValues>
+    <fields>
+        <label><!-- Action Plan Status --></label>
+        <name>Action_Plan_Status__c</name>
+        <picklistValues>
+            <masterLabel>Complete</masterLabel>
+            <translation><!-- Complete --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pending</masterLabel>
+            <translation><!-- Pending --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Against --></label>
+        <name>Against__c</name>
+        <picklistValues>
+            <masterLabel>Process</masterLabel>
+            <translation><!-- Process --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Product</masterLabel>
+            <translation><!-- Product --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Age --></label>
+        <name>Age__c</name>
+    </fields>
+    <fields>
+        <label><!-- Approval Completed --></label>
+        <name>Approval_Completed__c</name>
+        <picklistValues>
+            <masterLabel>No</masterLabel>
+            <translation><!-- No --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Yes</masterLabel>
+            <translation><!-- Yes --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Assigned User --></label>
+        <name>Assign_User__c</name>
+    </fields>
+    <fields>
+        <label><!-- Assigned Disposition Qty --></label>
+        <name>Assigned_Disposition_Qty__c</name>
+    </fields>
+    <fields>
+        <label><!-- Assigned Role --></label>
+        <name>Assigned_Role__c</name>
+    </fields>
+    <fields>
+        <label><!-- Assigned User --></label>
+        <name>Assigned_User__c</name>
+        <relationshipLabel><!-- General Sub Tasks (Assigned User) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Associated Root Cause Name --></label>
+        <name>Associated_Root_Cause_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Associated Root Causes --></label>
+        <name>Associated_Root_Causes__c</name>
+    </fields>
+    <fields>
+        <label><!-- Capa --></label>
+        <name>Capa__c</name>
+    </fields>
+    <fields>
+        <label><!-- Cause Code Description --></label>
+        <name>Cause_Code_Description__c</name>
+    </fields>
+    <fields>
+        <label><!-- Cause Code Name --></label>
+        <name>Cause_Code_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Cause Code --></label>
+        <name>Cause_Code__c</name>
+        <relationshipLabel><!-- Root Causes --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Change Management --></label>
+        <name>Change_Management__c</name>
+    </fields>
+    <fields>
+        <label><!-- Complete? --></label>
+        <name>Complete__c</name>
+        <picklistValues>
+            <masterLabel>No</masterLabel>
+            <translation><!-- No --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Yes</masterLabel>
+            <translation><!-- Yes --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Completed By --></label>
+        <name>Completed_By_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Completed By --></label>
+        <name>Completed_By__c</name>
+        <relationshipLabel><!-- General Sub Tasks (Completed By) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Completed Date --></label>
+        <name>Completed_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Completed --></label>
+        <name>Completed__c</name>
+        <picklistValues>
+            <masterLabel>No</masterLabel>
+            <translation><!-- No --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Yes</masterLabel>
+            <translation><!-- Yes --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Completion Comment --></label>
+        <name>Completion_Comment__c</name>
+    </fields>
+    <fields>
+        <label><!-- Completion Comments --></label>
+        <name>Completion_Comments__c</name>
+    </fields>
+    <fields>
+        <label><!-- Correction Statement --></label>
+        <name>Correction_Statement__c</name>
+    </fields>
+    <fields>
+        <label><!-- Defect Description --></label>
+        <name>Defect_Description__c</name>
+    </fields>
+    <fields>
+        <label><!-- Defect --></label>
+        <name>Defect_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Defect --></label>
+        <name>Defect__c</name>
+        <relationshipLabel><!-- Root Causes --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Description --></label>
+        <name>Description__c</name>
+    </fields>
+    <fields>
+        <label><!-- Disposition Instruction --></label>
+        <name>Disposition_Instruction__c</name>
+    </fields>
+    <fields>
+        <label><!-- Disposition Type Status --></label>
+        <name>Disposition_Type_Status__c</name>
+        <picklistValues>
+            <masterLabel>Closed</masterLabel>
+            <translation><!-- Closed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Completed</masterLabel>
+            <translation><!-- Completed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Open</masterLabel>
+            <translation><!-- Open --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pending</masterLabel>
+            <translation><!-- Pending --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Disposition Type --></label>
+        <name>Disposition_Type__c</name>
+        <picklistValues>
+            <masterLabel>REWORK</masterLabel>
+            <translation><!-- REWORK --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>RTV</masterLabel>
+            <translation><!-- RTV --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>SCRAP</masterLabel>
+            <translation><!-- SCRAP --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>USE AS IS</masterLabel>
+            <translation><!-- USE AS IS --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Due Date --></label>
+        <name>Due_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- General Task Name --></label>
+        <name>General_Task_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- General Task --></label>
+        <name>General_Task__c</name>
+        <relationshipLabel><!-- General Sub Tasks --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Non Conformance Number --></label>
+        <name>Non_Conformance_Number__c</name>
+    </fields>
+    <fields>
+        <label><!-- Non Conformance Owner --></label>
+        <name>Non_Conformance_Owner__c</name>
+    </fields>
+    <fields>
+        <label><!-- Non-Conformance --></label>
+        <name>Non_Conformance__c</name>
+    </fields>
+    <fields>
+        <label><!-- Parent Task --></label>
+        <name>Parent_Task__c</name>
+    </fields>
+    <fields>
+        <label><!-- Pend Save ActionPlan --></label>
+        <name>Pend_Save_ActionPlan__c</name>
+        <picklistValues>
+            <masterLabel>No</masterLabel>
+            <translation><!-- No --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Yes</masterLabel>
+            <translation><!-- Yes --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Plan Statement --></label>
+        <name>Plan_Statement__c</name>
+    </fields>
+    <fields>
+        <label><!-- Process --></label>
+        <name>Process_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Process --></label>
+        <name>Process__c</name>
+        <relationshipLabel><!-- Root Causes --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Product --></label>
+        <name>Product_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Product --></label>
+        <name>Product__c</name>
+        <relationshipLabel><!-- Root Causes --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Statement --></label>
+        <name>Statement__c</name>
+    </fields>
+    <fields>
+        <label><!-- Sub Task Details --></label>
+        <name>Sub_Task_Detail__c</name>
+    </fields>
+    <fields>
+        <label><!-- Submit WithOut Approval --></label>
+        <name>Submit_WithOut_Approval__c</name>
+        <picklistValues>
+            <masterLabel>NO</masterLabel>
+            <translation><!-- NO --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Yes</masterLabel>
+            <translation><!-- Yes --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Title --></label>
+        <name>Title__c</name>
+    </fields>
+    <fields>
+        <label><!-- Type --></label>
+        <name>Type__c</name>
+        <picklistValues>
+            <masterLabel>Correction</masterLabel>
+            <translation><!-- Correction --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Corrective</masterLabel>
+            <translation><!-- Corrective --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Preventive</masterLabel>
+            <translation><!-- Preventive --></translation>
+        </picklistValues>
+    </fields>
+    <layouts>
+        <layout>General Sub Task Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <recordTypes>
+        <label><!-- Action Plan --></label>
+        <name>Action_Plan</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- AdhocTask Actions --></label>
+        <name>AdhocTask_Actions</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- Containment Actions --></label>
+        <name>Containment_Actions</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- Disposition Section --></label>
+        <name>Disposition_Section</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- Root Cause --></label>
+        <name>Root_Cause</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- Verification Plans --></label>
+        <name>Verification_Plans</name>
+    </recordTypes>
+    <startsWith>Consonant</startsWith>
+</CustomObjectTranslation>

@@ -1,0 +1,58 @@
+<apex:component >
+<apex:attribute name="FieldId" description="unique JS ID" type="string" />
+<apex:attribute name="FieldName" description="API Name" type="string" required="true"/>
+<apex:attribute name="required" description="Required" type="boolean" default="false"/>
+<apex:attribute name="initvalue" description="Initial value" type="string" required="true"/>
+<apex:attribute name="width" description="Field Width" type="string" default="80%" />
+<apex:attribute name="developername" description="Developername" type="String" />
+<apex:attribute name="disabled" description="Disabled" type="boolean" default="false"/>
+<apex:attribute name="onChangeFunction" description="onChange function. Name only, no parentheses please." type="String" required="false"/>
+<apex:attribute name="unSelectedDisplayText" description="text to display if field had no value and no default value. Default value overrides this text" type="String" required="false"/>
+<apex:attribute name="isAddTaskSequence" default="false" type="boolean" description="To check addTaskSequence"/>
+<apex:attribute name="leastSeq" default="0" type="string" description="Least Sequence For Task"/>
+<apex:attribute name="ObjectName" description="API name of the object" type="string" required="true"/>
+<apex:attribute name="name" description="name of the select list" type="string"/>
+
+<script>
+		$(document).ready(function(){
+		       $('#{!IF(ISBLANK(FIeldId), FieldName, FieldId)}').prop('disabled', {!disabled});
+		    
+		    
+		});
+</script>
+<apex:outputpanel layout="none" rendered="{!NOT(Required)}">
+
+    <select  
+    	id="{!IF(ISBLANK(FIeldId), FieldName, FieldId)}" 
+    	style="width: {!width};" 
+    	data-unselecteddisplaytext="{!unSelectedDisplayText}" 
+    	data-value="{!initvalue}" 
+    	name="{!FieldName}" 
+    	class="form-control selectlist" 
+    	data-api="{!FieldName}" 
+        data-objectname="{!ObjectName}"
+        onChange="{!IF(ISBLANK(onChangeFunction), '', onChangeFunction+'(true,this.value)')}"
+    	>
+    	<option></option>
+    </select>
+
+
+</apex:outputpanel>
+<apex:outputpanel layout="none" rendered="{!required}"> 
+<select 
+        style="width: {!width};" 
+        id="{!IF(ISBLANK(FIeldId), FieldName, FieldId)}" 
+        onChange="{!IF(ISBLANK(onChangeFunction), '', onChangeFunction+'(true,this.value)')}" 
+        data-value="{!initvalue}" 
+        data-api="{!FieldName}" 
+        data-objectname="{!ObjectName}"
+        name="{!FieldName}" 
+        class="form-control selectlist" 
+        data-unselecteddisplaytext="{!unSelectedDisplayText}"
+        required="required"
+        isAddTaskSequence="{!isAddTaskSequence}"
+        leastSeq="{!leastSeq}"></select>
+<div id="{!IF(ISBLANK(FIeldId), FieldName, FieldId)}_error" class="help-block with-errors"></div>
+</apex:outputpanel>
+
+</apex:component>

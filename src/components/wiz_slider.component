@@ -1,0 +1,116 @@
+<apex:component >
+<!--
+v1.0                        Qualityze Inc(PRG)          14-JULY-2016            Initial Version.
+                                                                                This page includes Document Type Create belonging to the Document Type.
+
+-->
+<apex:attribute name="FieldId" type="string"  description="Field Id"/>
+<apex:attribute name="FieldName" type="string"  description="Field Name"/>
+<apex:attribute name="isActive" type="string" default=""  description="is active or not"/>
+<apex:attribute name="initvalue" type="boolean" required="false" default="false" description="Initial value on page. Pass fields current value into here."/>
+<apex:attribute name="onchangefunction" type="string" default="slideWidget" description="refrence to on change js function"/>
+<apex:attribute name="isEditable" description="check for diable" type="boolean" default="true" />
+<apex:attribute name="callbackfunction" description="show hide section" type="string" default=""/>
+<script>
+ 
+<!--  Slide widget main function -->
+var {!FieldId}_{!onchangefunction} = function(param){
+if({!isEditable}){
+$('#{!FieldId}_slider').addClass("disabled");
+}
+{!callbackfunction}
+//alert('inside decision'+param)
+if ($(param).hasClass('disabled')) {
+//alert('inside  return decision'+param)
+    return false;
+  } else {
+    {!FieldId}_slideWidgetToggle(param);
+  }
+
+}
+
+var {!FieldId}_slideWidgetToggle = function(param){
+
+if ($(param).hasClass('active')) {
+    console.log('inside if');
+    $(param).toggleClass('active');
+    $(param).children(':checkbox').prop('checked', "false").change();
+   	 console.log('change value to false');
+	 $('#{!FieldId}').attr('Value',false);
+    
+  } else {
+    console.log('inside else');
+    $(param).toggleClass('active');
+    $(param).children(':checkbox').prop('checked', "true").change();
+   			console.log('change value to true');
+		    $('#{!FieldId}').attr('value',true);										
+    
+  };
+  
+  console.log("Checkbox checked = " + $(param).children(':checkbox').is(':checked'));
+   
+}
+
+var CheckSlidWidVal = function(){
+var slidewid = document.getElementsByClassName("slide-widget");
+for (i = 0; i < slidewid.length; i++) { 
+    console.log('forloop - ' + i);
+    slideWidget(this);
+  };
+};
+
+</script>
+<style type="text/css">
+
+.slide-widget {
+  width: 60px;
+  cursor: pointer;
+  overflow: hidden; }
+  .slide-widget .slide-bg {
+    display: block;
+    height: 24px;
+    padding: 1px;
+    background-color: #E2E4E8;
+    border: 1px solid #C7CCD3;
+    border-radius: 12px;
+    -moz-border-radius: 12px; }
+    .slide-widget .slide-bg .slide-knob {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      -moz-border-radius: 50%;
+      background-color: #F5F5F5; }
+    .slide-widget .slide-bg .check {
+      margin: 4px;
+      color: transparent;
+      display: none; }
+  .slide-widget:hover .slide-knob {
+    background-color: #FFF; }
+
+.slide-widget.active .slide-bg {
+  background-color: #4571D6;
+  border-color: #2D5CBA; }
+.slide-widget.active .slide-knob {
+  float: right; }
+.slide-widget.active .check {
+  margin: 4px;
+  color: #FFFFFF;
+  display: block; }
+
+</style>
+
+
+   
+
+<div class="slide-widget {!isActive} form-group" id="{!FieldId}_slider" onclick="{!FieldId}_{!onchangefunction}(this)"  >
+	<div class="slide-bg">
+		<i class="fa fa-check fa-lg pull-left check"></i>
+		<div class="slide-knob"></div>
+	</div>
+	<input type="checkbox" id="{!FieldId}" name="{!FieldId}" value="{!initvalue}" class="hidden" />
+    
+    <apex:componentBody />
+<div id="{!FieldId}_error" class="help-block with-errors"></div>
+<div id="{!FieldId}_hidden_error" class="help-block with-errors"></div>
+</div>
+</apex:component>

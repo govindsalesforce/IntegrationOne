@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <encodingKey>ISO-8859-1</encodingKey>
+    <letterhead>Qualityze_Inc</letterhead>
+    <name>NC Creation</name>
+    <style>freeForm</style>
+    <subject>New NC Record created - {!Non_Conformance__c.Name}</subject>
+    <textOnly>Hello,
+
+New NC Record has been created. Please see details as below:
+
+NC Number: {!Non_Conformance__c.Name}
+
+NC Status: {!Non_Conformance__c.NC_Status__c}
+
+NC Type: {!Non_Conformance__c.NC_Type__c}
+
+
+View in QPMS</textOnly>
+    <type>html</type>
+</EmailTemplate>

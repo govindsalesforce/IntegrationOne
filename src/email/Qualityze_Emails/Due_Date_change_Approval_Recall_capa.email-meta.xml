@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <encodingKey>ISO-8859-1</encodingKey>
+    <letterhead>Qualityze_Inc</letterhead>
+    <name>DueDatechangeApprovalRecall_capa</name>
+    <style>freeForm</style>
+    <subject>Approval Request for the Due Date change of {!01I61000000v12Z.Name} has been Recalled.</subject>
+    <textOnly>Hello,
+
+The approval process of the Due Date change of the {!01I61000000v12Z.RecordType} task of CAPA record {!01I61000000udkO.Name} is Recalled.
+
+
+Recall comment :
+
+{!ApprovalRequest.Comments} .
+
+Thank you.
+
+
+Click here for details{!01I61000000udkO.RecordType}</textOnly>
+    <type>html</type>
+</EmailTemplate>

@@ -1,0 +1,1686 @@
+<!--  
+v1.0        Qualityze Inc(BK)       02-AUG-2016     DocumentDetails DocumentProfile  initial  
+
+-->
+<apex:component controller="Component_Handler" extensions="QC_custom_settings">
+    <apex:attribute type="Boolean" name="readOnly" description="ReadOnlyMode" required="true"/>
+    <apex:attribute type="String" name="Prefix" description="Namespace prefix" required="true"/>
+    <apex:attribute type="Document_Profile__c" name="DocumentProfile" description="ReadOnlyMode" assignTo="{!documentProfileRecord}" required="true"/>
+    <apex:attribute type="Id" name="DocProfileId" description="ReadOnlyMode" required="true" assignTo="{!ProfileId}"/>
+    
+ <apex:attribute type="Boolean" name="isChangeDocOwnerApprover" description="ReadOnlyMode" required="true"/>
+  <apex:attribute type="Boolean" name="isDocOwnerSubmitter" description="ReadOnlyMode" required="true"/> 
+    
+     <!--component created and added  for document change owner-->
+                                     <c:wiz_changedocowner DOC="{!documentProfile}" 
+                                     isDocApprover="{!isChangeDocOwnerApprover}" 
+                                     isSubmitter="{!isDocOwnerSubmitter}"  
+                                     isInApproval="{!documentProfile.Approval_Status__c=='Pending Approval'}" 
+                                     Required="true"
+                                     isLock="{!OR(NOT($ObjectType.Document_Profile__c.Fields.OwnerId.updateable),documentProfile.Approval_Status__c=='Pending Approval')}"
+                                   
+                                     formId="Ownerid_Task" ModalId="DocumentProfileModalId"
+                                     ToChangeFieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}DOC_New_Owner__c"  
+                                     DOCJsis="changeOwner" TochangeFieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c">
+                     
+                                <c:wiz_field FieldLabel="{!$ObjectType.Document_Profile__c.Fields.New_Owner__c.Label}"
+                                  required="true" jsid="change_owner"
+                                  rendered="{!$ObjectType.Document_Profile__c.Fields.New_Owner__c.Accessible}"> 
+                
+                               <c:wiz_multi FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c"
+                                 FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}DOC_New_Owner__c"
+                                 Required="true" multiple="false"
+                                 initValues="{value:'{!documentProfile.New_Owner__c}', label:'{!JSENCODE(documentProfile.New_Owner__r.Name)}'}"
+                                 width="100%" queryFields="Name"
+                                 querytable="User"
+                                 disabled="{!OR(NOT($ObjectType.Document_Profile__c.Fields.OwnerId.updateable),documentProfile.Approval_Status__c=='Pending Approval')}">
+                             </c:wiz_multi>                         
+                              </c:wiz_field>                    
+                              </c:wiz_changedocowner>  
+    
+    <div class="wiz-field nc-resolution">
+        <c:wiz_form RecordId="{!DocumentProfile.id}" formclass="DocProfile validate" formid="DocProfile"  submitpage="stringify_sobject" recordid="" postsavejs="postSubmitDocumentDetails();">
+            <div class="wiz-fields-wide col-md-12">
+                <div class="form-group">
+                    <div class="panel-group" role="tablist">
+                        <div class="form-group">
+                            <div class="panel panel-default"> 
+                                <div class="panel-heading collapsed" role="tab" data-toggle="collapse" href="#pane_name" aria-expanded="false" aria-controls="pane_name"> 
+                                    <h4 class="panel-title"> 
+                                        <a class=""><apex:outputtext value="{!$Label.Document_Initiation}"></apex:outputtext></a> 
+                                    </h4> 
+                                </div> 
+                                <div id="pane_name" class="panel-collapse collapse" role="tabpanel" aria-labelledby="pane_name" aria-expanded="false" style="height: 0px;"> 
+                                    <div class="panel-body">
+                                        <!---panel title data from document create--->
+                                        <!--updated by balu start-->                                        
+                                        <input type="hidden" name="Id" value="{!documentProfile.Id}" />
+                                        <!-- <input type="hidden" name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__Approval_Required__c','Approval_Required__c')}" id="DocDetailsApprovalRequired" value="false" />-->
+                                        <input type="hidden" name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__Submit__c','Submit__c')}" id="DocDetailsSubmit" value="Save" />
+                                        <input type="hidden" id="CurrentApprovalSequenceNumber" name="" value="0" />
+                                        <!--updated by balu end-->                                        
+                                        <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__Document_Profile__c','Document_Profile__c')}" />
+                                        <input type="hidden" name="page" id="page" value="doc_init" /> 
+                                  
+                                       
+                                        
+                                        <apex:repeat value="{!$ObjectType.Document_Profile__c.FieldSets.Doc_user_fields}" var="f">
+                                            <c:wiz_field Wide="{!OR($ObjectType.Document_Profile__c.Fields[f].type=='textarea',$ObjectType.Document_Profile__c.Fields[f].type=='multipicklist',f==IF(NOT(ISBLANK(Prefix)),Prefix+'__Title__c','Title__c'))}"
+                                                         FieldLabel="{!if($ObjectType.Document_Profile__c.Fields[f].Label=='Owner ID','Owner',$ObjectType.Document_Profile__c.Fields[f].Label)}"
+                                                         required="{!f.required}" jsid="{!LEFT(f,LEN(f)-3)}"
+                                                         rendered="{!$ObjectType.Document_Profile__c.Fields[f].Accessible}">
+                                                <div class="clearfix"></div>
+                                                <c:wiz_input rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='string'}"
+                                                             fieldId="{!f}" fieldname="{!f}"
+                                                             type="{!if($ObjectType.Document_Profile__c.Fields[f].type=='double','number','text')}" maxlength="{!if($ObjectType.Document_Profile__c.Fields[f].type=='double',$ObjectType.Document_Profile__c.Fields[f].precision,$ObjectType.Document_Profile__c.Fields[f].length)}"
+                                                             initvalue="{!documentProfile[f]}" required="{!f.required}"
+                                                             disabled="{!OR(readOnly,OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable)))}"></c:wiz_input>
+                                                
+                                                
+                                                <c:wiz_richtext rendered="{!AND(NOT(readOnly),$ObjectType.Document_Profile__c.Fields[f].type=='textarea',NOT($ObjectType.Document_Profile__c.Fields[f].htmlFormatted),NOT(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable))))}"
+                                                                FieldId="{!f}" FieldName="{!f}"
+                                                                initvalue="{!documentProfile[f]}" Required="{!f.required}" maxlength="4000"></c:wiz_richtext>
+                                             <!--<apex:outputpanel rendered="{!AND(readOnly,$ObjectType.Document_Profile__c.Fields[f].type=='textarea',$ObjectType.Document_Profile__c.Fields[f].htmlFormatted,OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable)))}">
+                                                    <div class="alert alert-info">
+                                                        <apex:outputField value="{!documentProfile[f]}" />
+                                                    </div>
+                                                </apex:outputpanel>-->
+							                    <apex:outputpanel rendered="{!AND(readOnly,$ObjectType.Document_Profile__c.Fields[f].type=='textarea',NOT($ObjectType.Document_Profile__c.Fields[f].htmlFormatted))}">
+							                        <div class="alert alert-info">
+							                            <apex:outputField value="{!documentProfile[f]}" />
+							                        </div>
+							                    </apex:outputpanel>                                                                                                
+                                                <c:wiz_date rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='date'}"
+                                                            FieldId="{!f}" required="{!if(f.required,'','none')}none"
+                                                            FieldName="{!f}" initdate="{!documentProfile[f]}"
+                                                            updateable="{!AND(readOnly,NOT(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable))))}">
+                                                </c:wiz_date>
+                                                <c:wiz_textarea rendered="{!AND(NOT(readOnly),$ObjectType.Document_Profile__c.Fields[f].type=='textarea',NOT(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable))))}"
+                                                                ObjectName="{!$ObjectType.Document_Profile__c.name}"
+                                                                FieldId="{!f}" FieldName="{!f}"
+                                                                initvalue="{!documentProfile[f]}" Required="{!f.required}"></c:wiz_textarea>
+                                                <apex:outputpanel rendered="{!AND(readOnly,$ObjectType.Document_Profile__c.Fields[f].type=='textarea')}">
+                                                    <div class="alert alert-info">
+                                                        <apex:outputField value="{!documentProfile[f]}" />
+                                                    </div>
+                                                </apex:outputpanel>
+                                                <!--
+                                                <c:wiz_multi width="100%"
+                                                             onchange="onchangedocumentprofilelookup(this)"
+                                                             rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='reference'}"
+                                                             required="{!f.required}" FieldId="{!f}" multiple="false"
+                                                             queryFields="{!IF(f=='Document_Type__c','Title__c,Name','Name')}"
+                                                             querytable="{!IF(f=='OwnerId','User',$ObjectType.Document_Profile__c.Fields[f].referenceTo[0])}"
+                                                             initvalues="{value: '{!JSENCODE(documentProfile[f])}', label:'{!JSENCODE(documentProfile[$ObjectType.Document_Profile__c.Fields[f].relationshipName].Name)}'}"
+                                                             disabled="{!OR(readOnly,NOT($ObjectType.Document_Profile__c.Fields[f].updateable))}">
+                                                </c:wiz_multi>-->
+                                                <c:wiz_multi width="100%"
+                                                             rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='reference'}"
+                                                             required="{!f.required}" FieldId="{!f}" multiple="false"
+                                                             queryFields="{!IF(f=='Document_Type__c','Title__c,Name','Name')}"
+                                                             querytable="{!IF(f=='OwnerId','User',$ObjectType.Document_Profile__c.Fields[f].referenceTo[0])}"
+                                                             initvalues="{value:'{!if(NOT(ISBLANK(documentProfile[f])),JSENCODE(documentProfile[f]),if(f=='OwnerId',$User.Id,IF(f=='Document_Type__c',IF(NOT(ISBLANK($CurrentPage.parameters.dtid)),$CurrentPage.parameters.dtid,documentProfile[f]),documentProfile[f])))}',label:'{!if(NOT(ISBLANK(documentProfile[f])),if(f=='Document_Type__c',JSENCODE(documentProfile.Document_Type__r.Title__c),JSENCODE(documentProfile[$ObjectType.Document_Profile__c.Fields[f].relationshipName].Name)),if(f=='OwnerId',JSENCODE($User.FirstName) + ' ' + JSENCODE($User.LastName),IF(f=='Document_Type__c',IF(NOT(ISBLANK($CurrentPage.parameters.dtitle)),$CurrentPage.parameters.dtitle,documentProfile[f]),documentProfile[f])))}'}"
+                                                             disabled="{!OR(readOnly,NOT($ObjectType.Document_Profile__c.Fields[f].updateable))}">
+                                                    
+                                                </c:wiz_multi>
+                                                <c:wiz_select ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Profile__c"
+                                                              developername="{!f}" onChangeFunction="" width="100%"
+                                                              rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='picklist'}"
+                                                              FieldId="{!f}" FieldName="{!f}"
+                                                              initvalue="{!documentProfile[f]}"
+                                                              unSelectedDisplayText="   " Required="{!f.required}"
+                                                              disabled="{!OR(readOnly,NOT($ObjectType.Document_Profile__c.Fields[f].updateable))}"></c:wiz_select>
+                                                <apex:outputPanel rendered="{!AND($ObjectType.Document_Profile__c.Fields[f].type=='multipicklist')}">
+                                                    
+                                                    <select id="{!f}" name="{!f}" class="form-control"
+                                                            multiple="multiple" style="width: 100%;"></select>
+                                                    
+                                                    
+                                                </apex:outputPanel>
+                                            </c:wiz_field>
+                                        </apex:repeat>
+                                        
+                                        
+                                        
+                                        <div class="clearfix"></div>
+                                        
+                                    <!--code added by Gaurav for change document owner-->    
+                              <apex:outputPanel rendered="{!AND($ObjectType.Document_Profile__c.Fields.OwnerId.Accessible,NOT(ISBLANK($CurrentPage.parameters.id)))}">
+                                    <div class="col-md-6 col-sm-6 col-xs-12  form-group" id="owner">
+                                        <label for="owner">
+                                            <span class="mandatory">
+                                                *
+                                            </span>Owner:
+                                        </label>
+                                        <apex:outputPanel rendered="{!AND(documentProfile.Approval_Status__c!='Pending Approval',OR(DocumentProfile.Status__c=='Draft',DocumentProfile.Status__c=='Prereleased',DocumentProfile.Status__c=='Current',DocumentProfile.Status__c=='Approved',DocumentProfile.Status__c=='Completed'))}">
+                                            <label class="pull-right" for="Change">
+                                                <a href="#" onclick='DocumentProfileModalId_changeField();'>Change</a>
+                                            </label>
+                                        </apex:outputPanel> 
+                                        
+                                        <apex:outputPanel rendered="{!AND(documentProfile.Approval_Status__c=='Pending Approval',OR(DocumentProfile.Status__c=='Draft',DocumentProfile.Status__c=='Prereleased',DocumentProfile.Status__c=='Current',DocumentProfile.Status__c=='Approved',DocumentProfile.Status__c=='Completed'))}">
+                                            <label class="pull-right" for="Change">
+                                                <a href="#" onclick='DocumentProfileModalId_changeField();'>Pending Approval</a>
+                                            </label>
+                                        </apex:outputPanel> 
+                                        <br/>
+                                        <c:wiz_multi disabled="true"
+                                                     width="100%" FieldId="OwnerId" multiple="false"
+                                                     queryFields="Name" querytable="User" onchange=""
+                                                     initValues="{label: '{!JSENCODE(IF(NOT(ISBLANK(DocumentProfile.OwnerId)) , DocumentProfile.Owner.Name, $User.FirstName + ' ' + $User.LastName))}',
+                                                                 value: '{!JSENCODE(IF(NOT(ISBLANK(DocumentProfile.OwnerId)), DocumentProfile.OwnerId, $User.Id))}'}" />
+                                    </div>
+                                </apex:outputPanel>
+                                        
+                                        
+                                        
+                                        <apex:variable value="{!0}" var="showCustomFieldSection"/>
+                                        <apex:repeat value="{!$ObjectType.Document_Profile__c.FieldSets.Document_Profile_Custom_Fields}" var="f">
+                                            <apex:outputPanel rendered="{!$ObjectType.Document_Profile__c.Fields[f].Accessible}">
+                                                <apex:variable value="{!showCustomFieldSection+1}" var="showCustomFieldSection"/>
+                                            </apex:outputPanel>
+                                        </apex:repeat>
+                                        <apex:outputPanel rendered="{!AND($ObjectType.Document_Profile__c.FieldSets.Document_Profile_Custom_Fields.size!=0,showCustomFieldSection!=0)}">
+                                            <div class="push-down panel-group"></div>
+                                            <div class="panel-group col-md-12" id="accordionCustomFields" role="tablist"
+                                                 aria-multiselectable="true">
+                                                <div class="panel panel-default">
+                                                    <div class="panel-heading" role="tab" id="headingOneCustomFields">
+                                                        <h4 class="panel-title">
+                                                            <a data-toggle="collapse" data-parent="#accordionCustomFields"
+                                                               href="#collapseOneCustomFields" aria-expanded="true"
+                                                               aria-controls="collapseOne" class="collapsed"> <span class="col-exp"></span> Custom Fields
+                                                            </a>
+                                                        </h4>
+                                                    </div>
+                                                    <div id="collapseOneCustomFields" class="panel-collapse collapse out" role="tabpanel" aria-labelledby="headingOne">
+                                                        <div class="panel-body">
+                                                            <apex:repeat value="{!$ObjectType.Document_Profile__c.FieldSets.Document_Profile_Custom_Fields}"
+                                                                         var="f">
+                                                                <c:wiz_field Wide="{!OR($ObjectType.Document_Profile__c.Fields[f].type=='textarea',$ObjectType.Document_Profile__c.Fields[f].type=='multipicklist',f==IF(NOT(ISBLANK(Prefix)),Prefix+'__UD_text9__c','UD_text9__c'))}"
+                                                                             FieldLabel="{!$ObjectType.Document_Profile__c.Fields[f].Label}"
+                                                                             required="{!f.required}" jsid="{!LEFT(f,LEN(f)-3)}"
+                                                                             rendered="{!$ObjectType.Document_Profile__c.Fields[f].Accessible}">
+                                                                    <div class="clearfix"></div>
+                                                                    <c:wiz_richtext maxlength="{!if($ObjectType.Document_Profile__c.Fields[f].length>2000,2000,$ObjectType.Document_Profile__c.Fields[f].length)}"
+                                                                                    rendered="{!AND(OR(NOT(readOnly),NOT(IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))),$ObjectType.Document_Profile__c.Fields[f].type=='textarea',$ObjectType.Document_Profile__c.Fields[f].htmlFormatted,NOT(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable))))}"
+                                                                                    FieldId="{!f}" FieldName="{!f}"
+                                                                                    initvalue="{!documentProfile[f]}"
+                                                                                    Required="{!f.required}"></c:wiz_richtext>
+                                                                    <apex:outputpanel rendered="{!AND(readOnly,$ObjectType.Document_Profile__c.Fields[f].type=='textarea',IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))}">
+                                                                        <div class="alert alert-info">
+                                                                            <apex:outputField value="{!documentProfile[f]}" />
+                                                                        </div>
+                                                                    </apex:outputpanel>
+                                                                    <c:wiz_textarea maxlength="{!if($ObjectType.Document_Profile__c.Fields[f].length>2000,2000,$ObjectType.Document_Profile__c.Fields[f].length)}"
+                                                                                    rendered="{!AND(OR(NOT(readOnly),NOT(IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))),$ObjectType.Document_Profile__c.Fields[f].type=='textarea',f!=IF(NOT(ISBLANK(Prefix)),Prefix+'__Impacted_Sites__c','Impacted_Sites__c'),NOT($ObjectType.Document_Profile__c.Fields[f].htmlFormatted),NOT(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable))))}"
+                                                                                    ObjectName="{!$ObjectType.Document_Profile__c.name}"
+                                                                                    FieldId="{!f}" FieldName="{!f}"
+                                                                                    initvalue="{!documentProfile[f]}"
+                                                                                    Required="{!f.required}"></c:wiz_textarea>
+                                                                    
+                                                                    
+                                                                    <apex:outputpanel rendered="{!AND(readOnly,$ObjectType.Document_Profile__c.Fields[f].type=='textarea',NOT($ObjectType.Document_Profile__c.Fields[f].htmlFormatted),IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))}">
+                                                                        <div class="alert alert-info">
+                                                                            <apex:outputField value="{!documentProfile[f]}" />
+                                                                        </div>
+                                                                    </apex:outputpanel>
+                                                                    
+                                                                    <c:wiz_date rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='date'}"
+                                                                                FieldId="{!f}" required="{!if(f.required,'','none')}none"
+                                                                                FieldName="{!f}" initdate="{!documentProfile[f]}"
+                                                                                updateable="{!NOT(AND(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable),readOnly),IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f))))}">
+                                                                    </c:wiz_date>
+                                                                    
+                                                                    <apex:outputPanel rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='date'}">
+                                                                        <script>                            
+                                                                        $(document).ready(function() {
+                                                                            $("#{!f}").datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY" });
+                                                                        });
+                                                                        </script>
+                                                                        
+                                                                    </apex:outputPanel>                                                        
+                                                                    
+                                                                    <c:wiz_multi width="100%"
+                                                                                 rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='reference'}"
+                                                                                 required="{!f.required}" FieldId="{!f}" multiple="false"
+                                                                                 queryFields="Name"
+                                                                                 querytable="{!IF(f=='OwnerId','User',$ObjectType.Document_Profile__c.Fields[f].referenceTo[0])}"
+                                                                                 filtervalue="{!if(AND(contains(FilterKeys,'Document_Profile__c'),contains(subkey['Document_Profile__c'],f)),LookupFilter[f].Filter_Value__c,'')}"
+                                                                                 initvalues="{value: '{!JSENCODE(documentProfile[f])}', label:'{!JSENCODE(documentProfile[$ObjectType.Document_Profile__c.Fields[f].relationshipName].Name)}'}"
+                                                                                 disabled="{!AND(OR(readOnly,NOT($ObjectType.Document_Profile__c.Fields[f].updateable)),IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))}">
+                                                                        
+                                                                    </c:wiz_multi>
+                                                                    
+                                                                    
+                                                                    <c:wiz_select ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Profile__c"
+                                                                                  developername="{!f}" onChangeFunction="" width="100%"
+                                                                                  rendered="{!OR($ObjectType.Document_Profile__c.Fields[f].type=='picklist')}"
+                                                                                  FieldId="{!f}" FieldName="{!f}"
+                                                                                  initvalue="{!IF(AND(ISBLANK(documentProfile[f]),f=='Source__c'),'Document',documentProfile[f])}"
+                                                                                  unSelectedDisplayText="   " Required="{!f.required}"
+                                                                                  disabled="{!AND(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable),readOnly),IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))}"></c:wiz_select>
+                                                                    <apex:outputPanel rendered="{!AND($ObjectType.Document_Profile__c.Fields[f].type=='multipicklist')}">
+                                                                        
+                                                                        <select id="{!f}" name="{!f}" class="form-control"
+                                                                                multiple="multiple" style="width: 100%;"></select>
+                                                                        
+                                                                        
+                                                                    </apex:outputPanel>
+                                                                    <c:wiz_input rendered="{!OR($ObjectType.Document_Profile__c.Fields[f].type=='string',$ObjectType.Document_Profile__c.Fields[f].type=='double')}"
+                                                                                 fieldId="{!f}" fieldname="{!f}"
+                                                                                 initvalue="{!documentProfile[f]}"
+                                                                                 type="{!if($ObjectType.Document_Profile__c.Fields[f].type=='double','number','text')}" maxlength="{!if($ObjectType.Document_Profile__c.Fields[f].type=='double',$ObjectType.Document_Profile__c.Fields[f].precision,$ObjectType.Document_Profile__c.Fields[f].length)}"
+                                                                                 required="{!f.required}"
+                                                                                 disabled="{!AND(OR(readOnly,NOT($ObjectType.Document_Profile__c.Fields[f].updateable)),IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))}"></c:wiz_input>
+                                                                </c:wiz_field>
+             
+                                                            </apex:repeat>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                </div>
+                                            </div>
+                                            
+                                        </apex:outputPanel>
+                                        
+                                        <!---panel title data from document create--->                                            
+                                    </div>
+                                </div> 
+                            </div> 
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            
+            <!---panel profile data from document create--->
+            
+            <apex:repeat value="{!$ObjectType.Document_Profile__c.FieldSets.DocumentEditLayout}" var="f">
+                <c:wiz_field Wide="{!OR($ObjectType.Document_Profile__c.Fields[f].type=='textarea',$ObjectType.Document_Profile__c.Fields[f].type=='multipicklist',f==IF(NOT(ISBLANK(Prefix)),Prefix+'__Title__c','Title__c'))}"
+                             FieldLabel="{!if($ObjectType.Document_Profile__c.Fields[f].Label=='Owner ID','Owner',$ObjectType.Document_Profile__c.Fields[f].Label)}"
+                             required="{!f.required}" jsid="{!LEFT(f,LEN(f)-3)}"
+                             rendered="{!$ObjectType.Document_Profile__c.Fields[f].Accessible}">
+                    <div class="clearfix"></div>
+                    <c:wiz_input rendered="{!OR($ObjectType.Document_Profile__c.Fields[f].type=='string',$ObjectType.Document_Profile__c.Fields[f].type=='double')}"
+                                 fieldId="{!f}" fieldname="{!f}"
+                                 initvalue="{!documentProfile[f]}" required="{!f.required}"
+                                 type="{!if($ObjectType.Document_Profile__c.Fields[f].type=='double','number','text')}" maxlength="{!if($ObjectType.Document_Profile__c.Fields[f].type=='double',$ObjectType.Document_Profile__c.Fields[f].precision,$ObjectType.Document_Profile__c.Fields[f].length)}"
+                                 disabled="{!AND(OR(readOnly,NOT($ObjectType.Document_Profile__c.Fields[f].updateable)),IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))}"></c:wiz_input>
+                    
+                    
+                    <c:wiz_richtext rendered="{!AND(OR(NOT(readOnly),NOT(IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))),$ObjectType.Document_Profile__c.Fields[f].type=='textarea',$ObjectType.Document_Profile__c.Fields[f].htmlFormatted,NOT(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable))))}"
+                                    FieldId="{!f}" FieldName="{!f}"
+                                    initvalue="{!documentProfile[f]}" Required="{!f.required}" maxlength="4000"></c:wiz_richtext>
+                    <apex:outputpanel rendered="{!AND((readOnly),IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)),$ObjectType.Document_Profile__c.Fields[f].type=='textarea',$ObjectType.Document_Profile__c.Fields[f].htmlFormatted,OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable)))}">
+                        <div class="alert alert-info">
+                            <apex:outputField value="{!documentProfile[f]}" />
+                        </div>
+                    </apex:outputpanel>
+                    
+                    <c:wiz_textarea rendered="{!AND(OR(NOT(readOnly),NOT(IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))),$ObjectType.Document_Profile__c.Fields[f].type=='textarea',f!=IF(NOT(ISBLANK(Prefix)),Prefix+'__Impacted_Sites__c','Impacted_Sites__c'),NOT($ObjectType.Document_Profile__c.Fields[f].htmlFormatted),NOT(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable))))}"
+                                    ObjectName="{!$ObjectType.Document_Profile__c.name}"
+                                    FieldId="{!f}" FieldName="{!f}"
+                                    initvalue="{!documentProfile[f]}" Required="{!f.required}"></c:wiz_textarea>
+                    <apex:outputpanel rendered="{!AND(readOnly,IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)),$ObjectType.Document_Profile__c.Fields[f].type=='textarea',NOT($ObjectType.Document_Profile__c.Fields[f].htmlFormatted),OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable)))}">
+                        <div class="alert alert-info">
+                            <apex:outputField value="{!documentProfile[f]}" />
+                        </div>
+                    </apex:outputpanel>
+                    <c:wiz_date rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='date'}"
+                                FieldId="{!f}" required="{!if(f.required,'','none')}none"
+                                FieldName="{!f}" initdate="{!documentProfile[f]}"
+                                updateable="{!NOT(AND(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable),readOnly),IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f))))}">
+                    </c:wiz_date>
+                    <apex:outputPanel rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='date'}">
+                        <script>                            
+                        $(document).ready(function() {
+                            $("#{!f}").datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY" });
+                        });
+                        </script>
+                        
+                    </apex:outputPanel> 
+                    <c:wiz_multi width="100%"
+                                 rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='reference'}"
+                                 required="{!f.required}" FieldId="{!f}" multiple="false"
+                                 queryFields="Name"
+                                 querytable="{!IF(f=='OwnerId','User',$ObjectType.Document_Profile__c.Fields[f].referenceTo[0])}"
+                                 initvalues="{value: '{!JSENCODE(documentProfile[f])}', label:'{!JSENCODE(documentProfile[$ObjectType.Document_Profile__c.Fields[f].relationshipName].Name)}'}"
+                                 disabled="{!AND(OR(readOnly,NOT($ObjectType.Document_Profile__c.Fields[f].updateable)),IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))}">
+                        
+                    </c:wiz_multi>
+                    <c:wiz_select ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Profile__c"
+                                  developername="{!f}" onChangeFunction="" width="100%"
+                                  rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='picklist'}"
+                                  FieldId="{!f}" FieldName="{!f}"
+                                  initvalue="{!documentProfile[f]}"
+                                  unSelectedDisplayText="   " Required="{!f.required}"
+                                  disabled="{!AND(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable),readOnly),IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))}"></c:wiz_select>
+
+                  <apex:outputPanel rendered="{!AND($ObjectType.Document_Profile__c.Fields[f].type=='multipicklist')}">
+                        
+                        <!-- <select id="{!f}" name="{!f}" class="form-control"
+                                multiple="multiple" style="width: 100%;"></select> -->
+                        
+                        <c:wiz_multi_select disabled="{!AND(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable),readOnly),IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))}" FieldId="{!f}"  FieldName="{!f}" required="" initvalues="{!documentProfile[f]}" ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Profile__c"></c:wiz_multi_select>
+                    </apex:outputPanel>
+                </c:wiz_field>
+                <apex:outputPanel rendered="{!f==IF(NOT(ISBLANK(Prefix)),Prefix+'__Impacted_Sites__c','Impacted_Sites__c')}">
+                    <div class="col-md-12">
+                        <c:wiz_multi width="100%"
+                                     required="{!f.required}"
+                                     FieldId="{!f}"
+                                     multiple="true"
+                                     FieldName="{!f}"
+                                     queryFields="Name"
+                                     querytable="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Manufacturing_Site__c"
+                                     dataid=""                                      
+                                     disabled="{!AND(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable),readOnly),IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))}">
+                            <apex:repeat value="{!ImpactedSites}" var="impatedsite">
+                                <option selected="selected" value="{!JSENCODE(impatedsite.id)}">{!JSENCODE(impatedsite.Name)}</option>
+                            </apex:repeat>
+                        </c:wiz_multi>                                    
+                    </div>
+                    
+                    <!-- initvalues="{value: '{!JSENCODE(documentProfile[f])}', label:'{!JSENCODE(documentProfile[$ObjectType.Document_Profile__c.Fields[f].relationshipName].Name)}'}"-->                       
+                </apex:outputPanel>
+            </apex:repeat>
+            <div class="clearfix">
+                
+            </div>
+            <!---panel profile data from document create--->    
+            
+            <div class="col-md-12">
+                <div class="form-group"> 
+                    <div class="panel-group" role="tablist">
+                        <div class="form-group">  
+                            <div class="panel panel-default"> 
+                                <div class="panel-heading" role="tab" data-toggle="collapse" href="#additional_info" aria-expanded="true" aria-controls="additional_info"> 
+                                    <h4 class="panel-title"> 
+                                        <a class=""> <apex:outputText value="{!$Label.Document_Setup}"></apex:outputText></a> 
+                                    </h4> 
+                                </div> 
+                                <div id="additional_info" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="additional_info" aria-expanded="true" style=""> 
+                                    
+                                    <div class="panel-body">                                                                                       
+                                        
+                                        <!---panel for  Document Settings data from document create--->
+                                        
+                                        <apex:repeat value="{!$ObjectType.Document_Profile__c.FieldSets.Document_Setup}" var="f">
+                                            
+                                            
+                                            <c:wiz_field Wide="{!OR($ObjectType.Document_Profile__c.Fields[f].type=='textarea',$ObjectType.Document_Profile__c.Fields[f].type=='multipicklist',f==IF(NOT(ISBLANK(Prefix)),Prefix+'__Title__c','Title__c'))}"
+                                                         FieldLabel="{!if($ObjectType.Document_Profile__c.Fields[f].Label=='Owner ID','Owner',$ObjectType.Document_Profile__c.Fields[f].Label)}"
+                                                         required="{!f.required}" jsid="{!LEFT(f,LEN(f)-3)}"
+                                                         rendered="{!$ObjectType.Document_Profile__c.Fields[f].Accessible}">
+                                                <div class="clearfix"></div>
+                                                <c:wiz_slider initvalue="{!documentProfile[f]}"
+                                                              FieldName="{!f}" 
+                                                              FieldId="{!f}" 
+                                                              onchangefunction="change" isEditable="{!AND(readOnly,IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))}"
+                                                              isActive="{!IF(documentProfile[f]==false,'','active')}"
+                                                              rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='boolean'}"></c:wiz_slider>
+                                                <c:wiz_input rendered="{!OR($ObjectType.Document_Profile__c.Fields[f].type=='string')}"
+                                                             fieldId="{!f}" 
+                                                             fieldname="{!f}"
+                                                             type="{!if($ObjectType.Document_Profile__c.Fields[f].type=='double','number','text')}"
+                                                             maxlength="{!if($ObjectType.Document_Profile__c.Fields[f].type=='double',$ObjectType.Document_Profile__c.Fields[f].precision,$ObjectType.Document_Profile__c.Fields[f].length)}" 
+                                                             initvalue="{!JSENCODE(documentProfile[f])}" required="{!f.required}"
+                                                             disabled="{!AND(OR(readOnly,NOT($ObjectType.Document_Profile__c.Fields[f].updateable)),IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))}"></c:wiz_input>
+                                                <c:wiz_input rendered="{!OR($ObjectType.Document_Profile__c.Fields[f].type=='double')}"
+                                                             fieldId="{!f}" 
+                                                             fieldname="{!f}"
+                                                             type="{!if($ObjectType.Document_Profile__c.Fields[f].type=='double','number','text')}"
+                                                             maxlength="{!if($ObjectType.Document_Profile__c.Fields[f].type=='double',$ObjectType.Document_Profile__c.Fields[f].precision,$ObjectType.Document_Profile__c.Fields[f].length)}" 
+                                                             initvalue="{!documentProfile[f]}" required="{!f.required}"
+                                                             disabled="{!AND(OR(readOnly,NOT($ObjectType.Document_Profile__c.Fields[f].updateable)),IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))}"></c:wiz_input>
+                                                                                               
+                                                
+                                                <c:wiz_richtext rendered="{!AND(OR(NOT(readOnly),NOT(IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))),$ObjectType.Document_Profile__c.Fields[f].type=='textarea',$ObjectType.Document_Profile__c.Fields[f].htmlFormatted,NOT(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable))))}"
+                                                                FieldId="{!f}" FieldName="{!f}"
+                                                                initvalue="{!documentProfile[f]}"
+                                                                Required="{!f.required}" maxlength="4000"></c:wiz_richtext>
+                                                                
+                                                <apex:outputpanel rendered="{!AND(readOnly,IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)),$ObjectType.Document_Profile__c.Fields[f].type=='textarea',$ObjectType.Document_Profile__c.Fields[f].htmlFormatted,OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable)))}">
+                                                    <div class="alert alert-info">
+                                                        <apex:outputField value="{!documentProfile[f]}" />
+                                                    </div>
+                                                </apex:outputpanel>
+                                                
+                                                <c:wiz_textarea rendered="{!AND(OR(NOT(readOnly),NOT(IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))),$ObjectType.Document_Profile__c.Fields[f].type=='textarea',f!=IF(NOT(ISBLANK(Prefix)),Prefix+'__Impacted_Sites__c','Impacted_Sites__c'),NOT($ObjectType.Document_Profile__c.Fields[f].htmlFormatted),NOT(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable))))}"
+                                                                ObjectName="{!$ObjectType.Document_Profile__c.name}"
+                                                                FieldId="{!f}" FieldName="{!f}"
+                                                                initvalue="{!JSENCODE(documentProfile[f])}" Required="{!f.required}"></c:wiz_textarea>
+                                                                
+                                                <apex:outputpanel rendered="{!AND(readOnly,IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)),$ObjectType.Document_Profile__c.Fields[f].type=='textarea',NOT($ObjectType.Document_Profile__c.Fields[f].htmlFormatted),OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable)))}">
+                                                    <div class="alert alert-info">
+                                                        <apex:outputField value="{!documentProfile[f]}" />
+                                                    </div>
+                                                </apex:outputpanel>
+                                                
+                                                <c:wiz_date rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='date'}"
+                                                            FieldId="{!f}" required="{!if(f.required,'required','none')}"
+                                                            FieldName="{!f}" initdate="{!documentProfile[f]}"
+                                                            updateable="{!NOT(AND(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable),readOnly),IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f))))}">
+                                                </c:wiz_date>           
+                                                <apex:outputPanel rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='date'}">
+                                                    <script type="text/javascript">                            
+                                                    
+                                                        //   $("#{!f}").datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY" <apex:outputText value=", minDate:new Date()" rendered="{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__Pre_Release_Duration_Date__c','Pre_Release_Duration_Date__c'))==f}" />});
+                                                          $("#{!f}").datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY"});
+                                                    
+                                                    </script>
+                                                    
+                                                </apex:outputPanel> 
+                                                <c:wiz_multi width="100%"
+                                                             rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='reference'}"
+                                                             required="{!f.required}" FieldId="{!f}" multiple="false"
+                                                             queryFields="Name"
+                                                             querytable="{!IF(f=='OwnerId','User',$ObjectType.Document_Profile__c.Fields[f].referenceTo[0])}"
+                                                             initvalues="{value: '{!JSENCODE(documentProfile[f])}', label:'{!JSENCODE(documentProfile[$ObjectType.Document_Profile__c.Fields[f].relationshipName].Name)}'}"
+                                                             disabled="{!AND(OR(readOnly,NOT($ObjectType.Document_Profile__c.Fields[f].updateable)),IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))}">
+                                                    
+                                                </c:wiz_multi>
+                                                
+                                                <c:wiz_select ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Profile__c"
+                                                              developername="{!f}" onChangeFunction="" width="100%"
+                                                              rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='picklist'}"
+                                                              FieldId="{!f}" FieldName="{!f}"
+                                                              initvalue="{!JSENCODE(documentProfile[f])}"
+                                                              unSelectedDisplayText="   " Required="{!f.required}"
+                                                              disabled="{!AND(OR(readOnly,NOT($ObjectType.Document_Profile__c.Fields[f].updateable)),IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))}"></c:wiz_select>
+                                                <apex:outputPanel rendered="{!AND($ObjectType.Document_Profile__c.Fields[f].type=='multipicklist')}">
+                                                   <c:wiz_multi_select disabled="{!AND(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable),readOnly),IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))}" FieldId="{!f}"  FieldName="{!f}" required="" initvalues="{!documentProfile[f]}" ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Profile__c"></c:wiz_multi_select>
+                                                </apex:outputPanel>
+                                            </c:wiz_field>
+                                            <apex:outputPanel rendered="{!f==IF(NOT(ISBLANK(Prefix)),Prefix+'__Impacted_Sites__c','Impacted_Sites__c')}">
+                                                <c:wiz_multi width="100%"
+                                                             required="{!f.required}" FieldId="{!f}" multiple="true"
+                                                             queryFields="Name"
+                                                             querytable="Manufacturing_Site__c"
+                                                             initvalues="{value: '{!JSENCODE(documentProfile[f])}', label:'{!JSENCODE(documentProfile[$ObjectType.Document_Profile__c.Fields[f].relationshipName].Name)}'}"
+                                                             disabled="{!AND(OR(readOnly,NOT($ObjectType.Document_Profile__c.Fields[f].updateable)),IF(ISBLANK($CurrentPage.parameters.isedit),true,CONTAINS($CurrentPage.parameters.nonEditFlds,f)))}">
+                                                    
+                                                </c:wiz_multi>        
+                                                
+                                            </apex:outputPanel>
+                                            
+                                        </apex:repeat>
+                                        
+                                        <!---panel for  Document Settings data from document create--->                                               
+                                    </div>
+                                    
+                                    
+                                </div> 
+                            </div> 
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!----------Water mark Section -start-----------------
+            <div class="wiz-fields-wide col-md-12">
+                <div class="form-group"> 
+                    <div class="panel-group" role="tablist">
+                        <div class="form-group">  
+                            <div class="panel panel-default"> 
+                                <div class="panel-heading" role="tab" data-toggle="collapse" href="#Watermark_Section" aria-expanded="true" aria-controls="Watermark_Section"> 
+                                    <h4 class="panel-title"> 
+                                        <a class=""> <apex:outputText value="{!$Label.Watermark_Section}"></apex:outputText></a> 
+                                    </h4> 
+                                </div> 
+                                <div id="Watermark_Section" class="panel-collapse collapse " role="tabpanel" aria-labelledby="Watermark_Section" aria-expanded="true" style=""> 
+                                    <div class="panel-body">
+                                        <apex:repeat value="{!$ObjectType.Document_Profile__c.FieldSets.Watermark_Section}" var="f">
+                                            <apex:outputPanel rendered="{!f==JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__Header__c','Header__c'))}">
+                                                <h2>Watermark Position</h2>
+                                            </apex:outputPanel>  
+                                            <!--{!$ObjectType.Document_Profile__c.Fields[f].type=='boolean'}--
+                                            <c:wiz_field Wide="{!OR($ObjectType.Document_Profile__c.Fields[f].type=='textarea',$ObjectType.Document_Profile__c.Fields[f].type=='multipicklist',f==IF(NOT(ISBLANK(Prefix)),Prefix+'__Title__c','Title__c'))}"
+                                                         FieldLabel="{!if($ObjectType.Document_Profile__c.Fields[f].Label=='Owner ID','Owner',$ObjectType.Document_Profile__c.Fields[f].Label)}"
+                                                         required="{!f.required}" jsid="{!LEFT(f,LEN(f)-3)}"
+                                                         rendered="{!$ObjectType.Document_Profile__c.Fields[f].Accessible}">
+                                                <div class="clearfix"></div>
+                                                
+                                                <c:wiz_slider initvalue="{!documentProfile[f]}"
+                                                              FieldName="{!f}"
+                                                              FieldId="{!f}"
+                                                              onchangefunction="change" isEditable="{!readOnly}"
+                                                              isActive="{!IF(documentProfile[f]==false,'','active')}"
+                                                              rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='boolean'}">
+                                                    <apex:outputText rendered="{!f==JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__Header__c','Header__c'))}">
+                                                        <div class="watermark-ico top"></div>
+                                                    </apex:outputText>
+                                                    <apex:outputText rendered="{!f==JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__Footer__c','Footer__c'))}">
+                                                        <div class="watermark-ico bottom"></div>
+                                                    </apex:outputText>
+                                                    <apex:outputText rendered="{!f==JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__Left_vertically__c','Left_vertically__c'))}">
+                                                        <div class="watermark-ico left"></div>
+                                                    </apex:outputText>
+                                                    <apex:outputText rendered="{!f==JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__Right_vertically__c','Right_vertically__c'))}">
+                                                        <div class="watermark-ico right"></div>
+                                                    </apex:outputText>
+                                                </c:wiz_slider>
+                                                
+                                                <c:wiz_input rendered="{!OR($ObjectType.Document_Profile__c.Fields[f].type=='string',$ObjectType.Document_Profile__c.Fields[f].type=='double')}"
+                                                             fieldId="{!f}" fieldname="{!f}"
+                                                             type="{!if($ObjectType.Document_Profile__c.Fields[f].type=='double','number','text')}" maxlength="{!if($ObjectType.Document_Profile__c.Fields[f].type=='double',$ObjectType.Document_Profile__c.Fields[f].precision,$ObjectType.Document_Profile__c.Fields[f].length)}"
+                                                             initvalue="{!documentProfile[f]}" required="{!f.required}"
+                                                             disabled="{!OR(readOnly,NOT($ObjectType.Document_Profile__c.Fields[f].updateable))}"></c:wiz_input>
+                                                
+                                                
+                                                <c:wiz_richtext rendered="{!AND(NOT(readOnly),$ObjectType.Document_Profile__c.Fields[f].type=='textarea',$ObjectType.Document_Profile__c.Fields[f].htmlFormatted,NOT(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable))))}"
+                                                                FieldId="{!f}" FieldName="{!f}"
+                                                                initvalue="{!documentProfile[f]}" Required="{!f.required}" maxlength="4000"></c:wiz_richtext>
+                                                <apex:outputpanel rendered="{!AND(readOnly,$ObjectType.Document_Profile__c.Fields[f].type=='textarea',$ObjectType.Document_Profile__c.Fields[f].htmlFormatted,OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable)))}">
+                                                    <div class="alert alert-info">
+                                                        <apex:outputField value="{!documentProfile[f]}" />
+                                                    </div>
+                                                </apex:outputpanel>
+                                                
+                                                <c:wiz_textarea rendered="{!AND(NOT(readOnly),$ObjectType.Document_Profile__c.Fields[f].type=='textarea',f!=IF(NOT(ISBLANK(Prefix)),Prefix+'__Impacted_Sites__c','Impacted_Sites__c'),NOT($ObjectType.Document_Profile__c.Fields[f].htmlFormatted),NOT(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable))))}"
+                                                                ObjectName="{!$ObjectType.Document_Profile__c.name}"
+                                                                FieldId="{!f}" FieldName="{!f}"
+                                                                initvalue="{!documentProfile[f]}" Required="{!f.required}"></c:wiz_textarea>
+                                                <apex:outputpanel rendered="{!AND(readOnly,$ObjectType.Document_Profile__c.Fields[f].type=='textarea',NOT($ObjectType.Document_Profile__c.Fields[f].htmlFormatted),OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable)))}">
+                                                    <div class="alert alert-info">
+                                                        <apex:outputField value="{!documentProfile[f]}" />
+                                                    </div>
+                                                </apex:outputpanel>
+                                                <c:wiz_date rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='date'}"
+                                                            FieldId="{!f}" required="{!if(f.required,'','none')}none"
+                                                            FieldName="{!f}" initdate="{!documentProfile[f]}"
+                                                            updateable="{!NOT(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable),readOnly))}">
+                                                </c:wiz_date>           
+                                                <apex:outputPanel rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='date'}">
+                                                    <script>                            
+                                                    $(document).ready(function() {
+                                                        $("#{!f}").datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY" });
+                                                    });
+                                                    </script>
+                                                    
+                                                </apex:outputPanel> 
+                                                <c:wiz_multi width="100%"
+                                                             rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='reference'}"
+                                                             required="{!f.required}" FieldId="{!f}" multiple="false"
+                                                             queryFields="Name"
+                                                             querytable="{!IF(f=='OwnerId','User',$ObjectType.Document_Profile__c.Fields[f].referenceTo[0])}"
+                                                             initvalues="{value: '{!JSENCODE(documentProfile[f])}', label:'{!JSENCODE(documentProfile[$ObjectType.Document_Profile__c.Fields[f].relationshipName].Name)}'}"
+                                                             disabled="{!OR(readOnly,NOT($ObjectType.Document_Profile__c.Fields[f].updateable))}">
+                                                    
+                                                </c:wiz_multi>
+                                                <c:wiz_select ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Profile__c"
+                                                              developername="{!f}" onChangeFunction="" width="100%"
+                                                              rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='picklist'}"
+                                                              FieldId="{!f}" FieldName="{!f}"
+                                                              initvalue="{!documentProfile[f]}"
+                                                              unSelectedDisplayText="   " Required="{!f.required}"
+                                                              disabled="{!OR(readOnly,NOT($ObjectType.Document_Profile__c.Fields[f].updateable))}"></c:wiz_select>
+                                                <apex:outputPanel rendered="{!AND($ObjectType.Document_Profile__c.Fields[f].type=='multipicklist')}">
+                                                    
+                                                    <select id="{!f}" name="{!f}" class="form-control"
+                                                            multiple="multiple" style="width: 100%;"></select>
+                                                    
+                                                    
+                                                </apex:outputPanel>
+                                            </c:wiz_field>
+                                            <apex:outputPanel rendered="{!f==IF(NOT(ISBLANK(Prefix)),Prefix+'__Impacted_Sites__c','Impacted_Sites__c')}">
+                                                <c:wiz_multi width="100%"
+                                                             required="{!f.required}" FieldId="{!f}" multiple="true"
+                                                             queryFields="Name"
+                                                             querytable="Manufacturing_Site__c"
+                                                             initvalues="{value: '{!JSENCODE(documentProfile[f])}', label:'{!JSENCODE(documentProfile[$ObjectType.Document_Profile__c.Fields[f].relationshipName].Name)}'}"
+                                                             disabled="{!OR(readOnly,NOT($ObjectType.Document_Profile__c.Fields[f].updateable))}">
+                                                    
+                                                </c:wiz_multi>        
+                                                
+                                            </apex:outputPanel>
+                                            
+                                        </apex:repeat>
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!---------Water Mark Section----End--------------->
+        
+            
+            
+            <div class="wiz-fields-wide col-md-12">
+                <input type="hidden" id="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}ContentDocumentId__c" name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}ContentDocumentId__c"  value="{!documentProfile.ContentDocumentId__c}"></input>
+                <input type="hidden" id="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}ContentVersionId__c" name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}ContentVersionId__c"  value="{!documentProfile.ContentVersionId__c}"></input>
+                
+                <input type="hidden" id="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}SecondaryContentDocumentId__c" name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}SecondaryContentDocumentId__c"  value="{!documentProfile.SecondaryContentDocumentId__c}"></input>
+                <input type="hidden" id="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}SecondaryContentVersionId__c" name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}SecondaryContentVersionId__c"  value="{!documentProfile.SecondaryContentVersionId__c}"></input>
+                
+                <div class="form-group"> 
+                    <div class="panel-group" role="tablist">
+                        <div class="form-group">  
+                            <div class="panel panel-default"> 
+                                <div class="panel-heading" role="tab" data-toggle="collapse" href="#change_request" aria-expanded="true" aria-controls="change_request"> 
+                                    <h4 class="panel-title"> 
+                                        <a class=""><apex:outputText value="{!$Label.Content_Details}"></apex:outputText></a> 
+                                    </h4> 
+                                </div> 
+                                <div id="change_request" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="change_request" aria-expanded="true" style=""> 
+                                    <div class="panel-body">
+                                        <!---panel for  Content Details data from document create--->
+                                        
+                                        
+                                        <apex:repeat value="{!$ObjectType.Document_Profile__c.FieldSets.Document_Content}" var="f">
+                                            <!--{!$ObjectType.Document_Profile__c.Fields[f].type=='boolean'}-->
+                                            <c:wiz_field Wide="{!OR($ObjectType.Document_Profile__c.Fields[f].type=='textarea',$ObjectType.Document_Profile__c.Fields[f].type=='multipicklist',f==IF(NOT(ISBLANK(Prefix)),Prefix+'__Primary_File_Location__c','Primary_File_Location__c'))}"
+                                                         FieldLabel="{!if($ObjectType.Document_Profile__c.Fields[f].Label=='Owner ID','Owner',$ObjectType.Document_Profile__c.Fields[f].Label)}"
+                                                         required="{!f.required}" jsid="{!LEFT(f,LEN(f)-3)}"
+                                                         rendered="{!$ObjectType.Document_Profile__c.Fields[f].Accessible}">
+                                                <div class="clearfix"></div>
+                                                <c:wiz_slider initvalue="{!documentProfile[f]}"
+                                                              FieldName="{!f}"
+                                                              FieldId="{!f}" isEditable="{!readOnly}"
+                                                              onchangefunction="change"
+                                                              isActive="{!IF(documentProfile[f]==false,'','active')}"
+                                                              rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='boolean'}"></c:wiz_slider>
+                                                <c:wiz_input rendered="{!OR($ObjectType.Document_Profile__c.Fields[f].type=='string',$ObjectType.Document_Profile__c.Fields[f].type=='double')}"
+                                                             fieldId="{!f}" fieldname="{!f}"
+                                                             type="{!if($ObjectType.Document_Profile__c.Fields[f].type=='double','number','text')}" maxlength="{!if($ObjectType.Document_Profile__c.Fields[f].type=='double',$ObjectType.Document_Profile__c.Fields[f].precision,$ObjectType.Document_Profile__c.Fields[f].length)}"
+                                                             initvalue="{!documentProfile[f]}" required="{!f.required}"
+                                                             disabled="{!OR(readOnly,NOT($ObjectType.Document_Profile__c.Fields[f].updateable))}"></c:wiz_input>
+                                                
+                                                
+                                                <c:wiz_richtext rendered="{!AND(NOT(readOnly),$ObjectType.Document_Profile__c.Fields[f].type=='textarea',$ObjectType.Document_Profile__c.Fields[f].htmlFormatted,NOT(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable))))}"
+                                                                FieldId="{!f}" FieldName="{!f}"
+                                                                initvalue="{!documentProfile[f]}" Required="{!f.required}" maxlength="4000"></c:wiz_richtext>
+                                                <apex:outputpanel rendered="{!AND(readOnly,$ObjectType.Document_Profile__c.Fields[f].type=='textarea',$ObjectType.Document_Profile__c.Fields[f].htmlFormatted,OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable)))}">
+                                                    <div class="alert alert-info">
+                                                        <apex:outputField value="{!documentProfile[f]}" />
+                                                    </div>
+                                                </apex:outputpanel>
+                                                
+                                                <c:wiz_textarea rendered="{!AND(NOT(readOnly),$ObjectType.Document_Profile__c.Fields[f].type=='textarea',f!=IF(NOT(ISBLANK(Prefix)),Prefix+'__Impacted_Sites__c','Impacted_Sites__c'),NOT($ObjectType.Document_Profile__c.Fields[f].htmlFormatted),NOT(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable))))}"
+                                                                ObjectName="{!$ObjectType.Document_Profile__c.name}"
+                                                                FieldId="{!f}" FieldName="{!f}"
+                                                                initvalue="{!documentProfile[f]}" Required="{!f.required}"></c:wiz_textarea>
+                                                <apex:outputpanel rendered="{!AND(readOnly,$ObjectType.Document_Profile__c.Fields[f].type=='textarea',NOT($ObjectType.Document_Profile__c.Fields[f].htmlFormatted),OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable)))}">
+                                                    <div class="alert alert-info">
+                                                        <apex:outputField value="{!documentProfile[f]}" />
+                                                    </div>
+                                                </apex:outputpanel>
+                                                <c:wiz_date rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='date'}"
+                                                            FieldId="{!f}" required="{!if(f.required,'','none')}none"
+                                                            FieldName="{!f}" initdate="{!documentProfile[f]}"
+                                                            updateable="{!NOT(OR(NOT($ObjectType.Document_Profile__c.Fields[f].updateable),readOnly))}">
+                                                </c:wiz_date>           
+                                                <apex:outputPanel rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='date'}">
+                                                    <script>                            
+                                                    $(document).ready(function() {
+                                                        $("#{!f}").datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY" });
+                                                    });
+                                                    </script>
+                                                    
+                                                </apex:outputPanel> 
+                                                <c:wiz_multi width="100%"
+                                                             rendered="{!$ObjectType.Document_Profile__c.Fields[f].type=='reference'}"
+                                                             required="{!f.required}" FieldId="{!f}" multiple="false"
+                                                             queryFields="Name"
+                                                             querytable="{!IF(f=='OwnerId','User',$ObjectType.Document_Profile__c.Fields[f].referenceTo[0])}"
+                                                             initvalues="{value: '{!JSENCODE(documentProfile[f])}', label:'{!JSENCODE(documentProfile[$ObjectType.Document_Profile__c.Fields[f].relationshipName].Name)}'}"
+                                                             disabled="{!OR(readOnly,NOT($ObjectType.Document_Profile__c.Fields[f].updateable))}">
+                                                    
+                                                </c:wiz_multi>
+                                                <c:wiz_select ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Profile__c"
+                                                              developername="{!f}" onChangeFunction="" width="100%"
+                                                              rendered="{!AND($ObjectType.Document_Profile__c.Fields[f].type=='picklist',f!=IF(NOT(ISBLANK(Prefix)),Prefix+'__Secondary_Format__c','Secondary_Format__c'))}"
+                                                              FieldId="{!f}" FieldName="{!f}"
+                                                              initvalue="{!documentProfile[f]}"
+                                                              unSelectedDisplayText="   " Required="{!f.required}"
+                                                              disabled="{!OR(readOnly,NOT($ObjectType.Document_Profile__c.Fields[f].updateable))}"></c:wiz_select>
+                                                <apex:outputPanel rendered="{!AND($ObjectType.Document_Profile__c.Fields[f].type=='multipicklist')}">
+                                                    
+                                                    <select id="{!f}" name="{!f}" class="form-control"
+                                                            multiple="multiple" style="width: 100%;"></select>
+                                                    
+                                                    
+                                                </apex:outputPanel>
+                                                <c:wiz_RadioSet rendered="{!f==IF(NOT(ISBLANK(Prefix)),Prefix+'__Secondary_Format__c','Secondary_Format__c')}"
+                                                                FieldName="{!f}" 
+                                                                ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Profile__c"
+                                                                initvalue="Product" 
+                                                                disabled="{!readOnly}"
+                                                                />                                                                                                       
+                                            </c:wiz_field>
+                                                <apex:outputPanel rendered="{!f==IF(NOT(ISBLANK(Prefix)),Prefix+'__Primary_File_Name__c','Primary_File_Name__c')}">
+                                                    <div class="wiz-fields col-md-6 col-sm-6 col-xs-12">
+                                                        <div class="form-group">
+                                                            <label for="" style="display:block">&nbsp;</label>
+                                                            <apex:outputPanel layout="none" rendered="{!AND(NOT(readOnly),ISBLANK(DocumentProfile.ContentVersionId__c),NOT(ISBLANK(docTempateId)),NOT(ISNULL(docTempateId)))}">
+                                                              <a class="btn btn-primary" style="{!IF(AND(ISBLANK(DocumentProfile.ContentVersionId__c),NOT(ISBLANK(docTempateId)),NOT(ISNULL(docTempateId))),'','display:none')}" id="templateBtn" href="{!URLFOR($Action.Attachment.Download,docTempateId)}">Template</a>
+                                                            </apex:outputPanel>
+                                                            <apex:outputPanel layout="none" rendered="{!NOT(readOnly)}">
+                                                            <input type="button"  class="btn btn-primary" style="{!IF(ISBLANK(DocumentProfile.ContentVersionId__c),'','display:none')}" id="checkInBtn" onclick="$('#doc').trigger('click')" value="Check In"></input>
+                                                            </apex:outputPanel>
+                                                            <apex:outputPanel layout="none" rendered="{!AND(NOT(readOnly),NOT(ISBLANK(DocumentProfile.ContentVersionId__c)))}">
+                                                                <a class="btn btn-primary" style="{!IF(ISBLANK(DocumentProfile.ContentVersionId__c),'display:none','')}" id="checkOutBtn" onclick="$('#checkOutBtn').hide();$('#viewBtn').hide();$('#printBtn').hide();$('#checkInBtn').show();if({!AND(NOT(ISBLANK(docTempateId)),NOT(ISNULL(docTempateId)))})$('#templateBtn').show()" href="https://c.{!JSENCODE($Setup.QC_settings__c.Instance_Name__c)}.content.force.com/sfc/servlet.shepherd/version/download/{!DocumentProfile.ContentVersionId__c}?asPdf=false&operationContext=CHATTER">Check Out</a>
+                                                            </apex:outputPanel>
+                                                            
+                                                        </div>
+                                                      </div>
+                                                    <div class="clearfix"></div>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!f==IF(NOT(ISBLANK(Prefix)),Prefix+'__Secondary_File_Name__c','Secondary_File_Name__c')}">
+                                                    
+                                                    <div class="wiz-fields col-md-6 col-sm-6 col-xs-12">
+                                                        <div class="form-group">
+                                                            <label for="" style="display:block">&nbsp;</label>
+                                                            <apex:outputPanel layout="none" rendered="{!NOT(readOnly)}">
+                                                            <input type="button" class="btn btn-primary" id="secCheckInBtn" value="Check In" onClick="$('#viewBtn').hide();$('#printBtn').hide();$('#secDoc').trigger('click')"></input>
+                                                            </apex:outputPanel>
+                                                         </div>
+                                                    </div>
+                                                    <div class="clearfix"></div>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!f==IF(NOT(ISBLANK(Prefix)),Prefix+'__Impacted_Sites__c','Impacted_Sites__c')}">
+                                                    <c:wiz_multi width="100%"
+                                                                 required="{!f.required}" FieldId="{!f}" multiple="true"
+                                                                 queryFields="Name"
+                                                                 querytable="Manufacturing_Site__c"
+                                                                 initvalues="{value: '{!JSENCODE(documentProfile[f])}', label:'{!JSENCODE(documentProfile[$ObjectType.Document_Profile__c.Fields[f].relationshipName].Name)}'}"
+                                                                 disabled="{!OR(readOnly,NOT($ObjectType.Document_Profile__c.Fields[f].updateable))}">
+                                                        
+                                                    </c:wiz_multi>        
+                                                    
+                                                </apex:outputPanel>
+                                        </apex:repeat>
+                                        
+                                        <div class="clearfix"></div>
+                                        <div class="h_devider"></div>
+                                        <div class="clearfix"></div>
+                                        <div class="wiz-fields-wide">
+                                            <div class="form-group">
+                                                <input type="button" class="btn btn-warning" data-toggle="modal" data-target="#doc_access_history" value="Document Access History"></input>
+                                                <input type="button" class="btn btn-warning" data-toggle="modal" data-target="#doc_history" value="Document History"></input>
+                                                <apex:outputPanel rendered="{!NOT(ISBLANK(DocumentProfile.ContentVersionId__c))}">
+                                                    <div style="float:right">
+                                                       <apex:outputPanel rendered="{!$Setup.QC_settings__c.Enable_Document_Print__c}">
+                                                        <a class="btn btn-primary"  id="printBtn"  href="https://c.{!JSENCODE($Setup.QC_settings__c.Instance_Name__c)}.content.force.com/sfc/servlet.shepherd/version/download/{!IF(ISBLANK(DocumentProfile.SecondaryContentVersionId__c),DocumentProfile.ContentVersionId__c,DocumentProfile.SecondaryContentVersionId__c)}?asPdf=true&operationContext=CHATTER">Print Document</a>
+                                                       </apex:outputPanel> 
+                                                        <a id="viewBtn" class="btn btn-primary" data-toggle="modal"  onClick="OpenDoc('{!IF(ISBLANK(DocumentProfile.SecondaryContentVersionId__c),DocumentProfile.ContentVersionId__c,DocumentProfile.SecondaryContentVersionId__c)}','{!IF(ISBLANK(DocumentProfile.Secondary_File_Name__c),DocumentProfile.Primary_File_Name__c,DocumentProfile.Secondary_File_Name__c)}')">View Document</a>
+                                                    </div>
+                                                </apex:outputPanel>              
+                                                            
+                                            </div>
+                                        </div>
+
+                                        
+                                        <!---panel for  Content Details data from document create--->                                                                                            
+                                        
+                                    </div>
+                                </div> 
+                            </div>
+                               
+                        </div>
+                        
+                    </div>
+                       
+                
+               </div>
+
+            </div>
+                         </c:wiz_form>
+            <input type="file" style="display:none" id="doc" name="files"/>
+            <input type="file" style="display:none" id="secDoc" name="secFiles"/>
+                                        
+            <div id="primaryFileView" class="modal fade" role="dialog">
+                 <div class="modal-dialog">
+                    
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title" id="fileViewTitle"></h4>
+                          </div>
+                          <div class="modal-body">
+                            <div style="position: relative; overflow: hidden; width: auto; height: 450px;" class="slimScrollDiv">
+                                
+                                    <div  class="centerContent" id="fileViewDiv"></div>
+                                
+                            </div>
+                         
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                          </div>
+                        </div>
+                  </div>
+             </div> 
+             
+             
+  <!-- Modal Document Access History -->
+<div class="modal fade" id="doc_access_history" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Document Access History</h4>
+      </div>
+      <div class="modal-body" style="overflow:auto; min-height: 100px; max-height: 300px ">
+        <table id="contentVersionTable" class="table table-bordered">
+            <thead>
+                          <tr>
+                            <th>Title</th>
+                            <th>Uploaded By</th>
+                            <th>Uploaded On</th> 
+                            <th>Version</th>
+                          </tr>
+                        </thead>
+                                          
+                        
+                        <tbody id="contentVersionList">
+                           <apex:repeat value="{!contentVersions}" var="cntVer">
+                               <tr>
+                                   <td><a id="downloadLink" href="https://c.na34.content.force.com/sfc/servlet.shepherd/version/download/{!cntVer.Id}?asPdf=false&operationContext=CHATTER">{!cntVer.Title}</a></td>
+                                   <td>{!cntVer.Owner.Name}</td>
+                                   <td><apex:outputField value="{!cntVer.CreatedDate}"></apex:outputField></td>
+                                   <td>{!cntVer.VersionNumber}</td>
+                              </tr>
+                           </apex:repeat>
+                        </tbody>
+ 
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<div class="modal fade" id="progressModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Check In </h4>
+      </div>
+      <div class="modal-body"  style="min-height:100px;max-height:300px ">
+        <div style=""  class="progress progress-striped active">
+                        <div class="progress-bar" id="checkInProgress" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">
+                            <span style="align:center"  class="progress-value">Checking In....</span>
+                        </div>
+        </div>   
+        <div id="statusMsg">
+              Check-In Is In Progress
+        </div>  
+      </div>
+      <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+        
+        
+    </div>
+    
+    <script type="text/javascript">
+    //==================by balu start
+    
+		$( "#Collaboration_Review__c_slider" ).click(function() {
+		
+			if($( "#Collaboration_Review__c_slider" ).hasClass( "active" )){
+				$( "#DocumentDetailsSubmit" ).addClass("hidden");
+			}else{
+				$( "#DocumentDetailsSubmit" ).removeClass("hidden");
+			}
+		});
+    //==================by balu end
+    
+    $( document ).ready(function() {
+    
+
+    
+        var months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        var isDigSigNd='<apex:outputtext value="{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}" />';
+                
+                
+        var todayDate=new Date();
+        
+        //=======Effective Date
+        $("#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Effective_Date__c").on("dp.change", function (selected) {
+            console.log(' Effective_Date__c '+selected.date);
+           var minDate=new Date('{!documentProfile.CreatedDate}');
+           minDate.setDate(minDate.getDate()-1);
+           $(this).data("DateTimePicker").minDate(minDate);
+            
+            
+            var expAfter=$("#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Expire_After__c").val();
+            //expAfter=(!expAfter || isNaN(expAfter) || expAfter<0 )?0:expAfter;
+           
+            console.log('');
+            if(expAfter && !isNaN(expAfter) && expAfter>=0){
+              if(selected.date){
+	            var selectedDate=selected.date?new Date(selected.date):new Date();
+	            var effDt=new Date(selectedDate);
+	            var effDtTxt=effDt.getDate()+' '+months[effDt.getMonth()]+' '+effDt.getFullYear();
+	            var expDate=new Date(effDt.getTime()+(parseInt(expAfter)*24*60*60*1000))
+	            var expDatetxt=expDate.getDate()+' '+months[expDate.getMonth()]+' '+expDate.getFullYear();
+	            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Expiration_Date__c').data({date: expDate}).datetimepicker('update').children("input").val(expDatetxt);
+	            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Expiration_Date__c_hidden').val(expDate.getFullYear()+'-'+(expDate.getMonth()+1)+'-'+expDate.getDate());
+	            
+	            var erInAdv=$("#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Effectiveness_Review_In_Advance__c").val();
+	            if(erInAdv && !isNaN(erInAdv) && erInAdv>=0 ){
+		            var erDt=new Date(expDate.getTime()-(parseInt(erInAdv)*24*60*60*1000))
+		            var erDtTxt=erDt.getDate()+' '+months[erDt.getMonth()]+' '+erDt.getFullYear();
+		            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Effectiveness_Review_Date__c').data({date: erDt}).datetimepicker('update').children("input").val(erDtTxt);
+		            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Effectiveness_Review_Date__c_hidden').val(erDt.getFullYear()+'-'+(erDt.getMonth()+1)+'-'+erDt.getDate());
+		        }
+		        
+		        var gpFrRel=$("#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Grace_Period_for_Release__c").val();
+	            if(gpFrRel && !isNaN(gpFrRel) && gpFrRel>0 ){
+		            var prRlDt=new Date(selectedDate.getTime()-(parseInt(gpFrRel)*24*60*60*1000))
+		            var prRlDtTxt=prRlDt.getDate()+' '+months[prRlDt.getMonth()]+' '+prRlDt.getFullYear();
+		            console.log(' prRlDt  '+prRlDt.getTime());
+		            console.log(' todayDate  '+todayDate.getTime());
+		            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Pre_Release_Duration_Date__c').data({date: prRlDt}).datetimepicker('update').children("input").val(prRlDtTxt);
+		            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Pre_Release_Duration_Date__c_hidden').val(prRlDt.getFullYear()+'-'+(prRlDt.getMonth()+1)+'-'+prRlDt.getDate());
+		            
+		        }
+		        
+		        
+		        var retDr=$("#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Retention_Duration__c").val();
+	            if(retDr && !isNaN(retDr) && retDr>=0 ){
+	               var dateOfPurge=new Date(expDate.getTime()+(parseInt(retDr)*24*60*60*1000))
+	               var dateOfPurgeTxt=dateOfPurge.getDate()+' '+months[dateOfPurge.getMonth()]+' '+dateOfPurge.getFullYear();
+	               $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Date_of_Purge__c').data({date: dateOfPurge}).datetimepicker('update').children("input").val(dateOfPurgeTxt);
+	               $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Date_of_Purge__c_hidden').val(dateOfPurge.getFullYear()+'-'+(dateOfPurge.getMonth()+1)+'-'+dateOfPurge.getDate());
+	            }
+	                        
+	            
+				
+              }			
+		    }
+			
+            
+        });
+         
+                   
+        
+        //====Expiration date
+        $('#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Expiration_Date__c').on('dp.change', function(selected){
+          console.log('Expiration_Date__c ');
+          console.log('document Creation Date   ');
+          var minDate=new Date('{!documentProfile.CreatedDate}');
+           minDate.setDate(minDate.getDate()-1);
+           $(this).data("DateTimePicker").minDate(minDate);
+          if(selected.date){
+            var expDt=new Date(selected.date);
+            var erDate=$('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Effectiveness_Review_Date__c_hidden').val();
+            var effDt=$('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Effective_Date__c_hidden').val();
+            if(effDt){
+	            var timeDiff = Math.abs(expDt.getTime()-new Date(effDt).getTime());
+	            $('#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Expire_After__c').val(Math.ceil(timeDiff / (1000 * 3600 * 24)));
+	            
+            }
+            var erInAdv=$("#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Effectiveness_Review_In_Advance__c").val();
+            if(erInAdv && !isNaN(erInAdv) && erInAdv>=0 ){
+	            var erDate=new Date(expDt.getTime()-(parseInt(erInAdv)*24*60*60*1000));
+	            var erDatetxt=erDate.getDate()+' '+months[erDate.getMonth()]+' '+erDate.getFullYear();
+	            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Effectiveness_Review_Date__c').data({date: erDate}).datetimepicker('update').children("input").val(erDatetxt);
+	            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Effectiveness_Review_Date__c_hidden').val(erDate.getFullYear()+'-'+(erDate.getMonth()+1)+'-'+erDate.getDate());
+            }
+            
+            var rtDr=$("#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Retention_Duration__c").val();
+            if(rtDr && !isNaN(rtDr) && rtDr>=0 ){
+	            var prgDt=new Date(expDt.getTime()+(parseInt(rtDr)*24*60*60*1000));
+	            var prgDtTxt=prgDt.getDate()+' '+months[prgDt.getMonth()]+' '+prgDt.getFullYear();
+	            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Date_of_Purge__c').data({date: prgDt}).datetimepicker('update').children("input").val(prgDtTxt);
+	            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Date_of_Purge__c_hidden').val(prgDt.getFullYear()+'-'+(prgDt.getMonth()+1)+'-'+prgDt.getDate());
+            }
+         } 
+            
+        });
+        
+        $('#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Effectiveness_Review_Date__c').on('dp.change', function(selected){
+            console.log('Effectiveness_Review_Date__c ');
+            var minDate=new Date('{!documentProfile.CreatedDate}');
+           minDate.setDate(minDate.getDate()-1);
+           $(this).data("DateTimePicker").minDate(minDate);
+            var effDt=$("#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Effective_Date__c_hidden").val();
+            effDt=effDt?new Date(effDt):todayDate;
+            var expDt=$('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Expiration_Date__c_hidden').val();
+            if(expDt){
+               $(this).data("DateTimePicker").maxDate(new Date(expDt));
+            }
+            if(selected.date){
+              if(expDt){          
+	            var selectedDate=selected.date;
+	            var erDt=new Date(selectedDate);
+	            var timeDiff = Math.abs(new Date(expDt).getTime()-erDt.getTime());
+	            console.log('  timeDiff   '+timeDiff);
+	            $('#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Effectiveness_Review_In_Advance__c').val(Math.ceil(timeDiff / (1000 * 3600 * 24)));
+	         }
+           }
+            
+        
+        });
+        
+        
+        $('#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Pre_Release_Duration_Date__c').on('dp.change', function(selected){
+             console.log('Pre_Release_Duration_Date__c   ');
+             todayDate.setHours(0,0,0,0);
+             var minDate=new Date('{!documentProfile.CreatedDate}');
+           minDate.setDate(minDate.getDate()-1);
+           $(this).data("DateTimePicker").minDate(minDate);
+             var effDt=$("#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Effective_Date__c_hidden").val();
+             if(selected.date){
+	             if(effDt){
+	                 $(this).data("DateTimePicker").maxDate(new Date(effDt));
+	                 var relDate=new Date(selected.date);
+		             var timeDiff=Math.abs(new Date(effDt).getTime()-relDate.getTime());
+		             $('#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Grace_Period_for_Release__c').val(Math.ceil(timeDiff / (1000 * 3600 * 24)));
+	            }
+            }
+        });  
+        
+        $('#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Date_of_Purge__c').on('dp.change', function(selected){
+            console.log('Date_of_Purge__c   ');
+            var minDate=new Date('{!documentProfile.CreatedDate}');
+           minDate.setDate(minDate.getDate()-1);
+           $(this).data("DateTimePicker").minDate(minDate);
+            if(selected.date){
+            var selectedDate=selected.date;
+            var expDt=$('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Expiration_Date__c_hidden').val();
+            if(expDt){
+	            var prgDt=new Date(selectedDate);
+	            var timeDiff = Math.abs(prgDt.getTime()-new Date(expDt).getTime());
+	            console.log('  timeDiff   '+timeDiff);
+	            $("#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Retention_Duration__c").val(Math.ceil(timeDiff / (1000 * 3600 * 24)));
+            }
+           }
+       });    
+         
+        
+        $('#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Expire_After__c').change(function(){
+           console.log('Expire_After__c  ');
+           var expAfter=this.value;
+           if(expAfter && !isNaN(expAfter) && expAfter>=0 ){
+            var effDt=$("#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Effective_Date__c_hidden").val();
+            if(effDt){
+	            var expDt=new Date(new Date(effDt).getTime()+(parseInt(expAfter)*24*60*60*1000));
+	            var expDatetxt=expDt.getDate()+' '+months[expDt.getMonth()]+' '+expDt.getFullYear();
+	            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Expiration_Date__c').data({date: expDt}).datetimepicker('update').children("input").val(expDatetxt);
+	            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Expiration_Date__c_hidden').val(expDt.getFullYear()+'-'+(expDt.getMonth()+1)+'-'+expDt.getDate());  
+            }
+            
+            var erInAdv=$("#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Effectiveness_Review_In_Advance__c").val();
+            if(erInAdv && !isNaN(erInAdv) && erInAdv>=0 ){
+	            var erDt=new Date(expDt.getTime()-(parseInt(erInAdv)*24*60*60*1000))
+	            var erDtTxt=erDt.getDate()+' '+months[erDt.getMonth()]+' '+erDt.getFullYear();
+	            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Effectiveness_Review_Date__c').data({date: erDt}).datetimepicker('update').children("input").val(erDtTxt);
+	            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Effectiveness_Review_Date__c_hidden').val(erDt.getFullYear()+'-'+(erDt.getMonth()+1)+'-'+erDt.getDate());
+            }
+            var retDr=$("#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Retention_Duration__c").val();
+            if(retDr && !isNaN(retDr) && retDr>=0 ){
+               var dateOfPurge=new Date(expDt.getTime()+(parseInt(retDr)*24*60*60*1000))
+               var dateOfPurgeTxt=dateOfPurge.getDate()+' '+months[dateOfPurge.getMonth()]+' '+dateOfPurge.getFullYear();
+               $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Date_of_Purge__c').data({date: dateOfPurge}).datetimepicker('update').children("input").val(dateOfPurgeTxt);
+               $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Date_of_Purge__c_hidden').val(dateOfPurge.getFullYear()+'-'+(dateOfPurge.getMonth()+1)+'-'+dateOfPurge.getDate());
+            }
+            
+		 }	
+                                                                 
+            
+                                                                            
+        });
+        
+        $('#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Retention_Duration__c').change(function(){
+            console.log('Retention_Duration__c   ');
+            var retDr=this.value;
+            if(retDr && !isNaN(retDr) && retDr>=0 ){
+	            var expDt=$('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Expiration_Date__c_hidden').val();
+	            if(expDt){
+		            var prgDt=new Date(new Date(expDt).getTime()+(parseInt(retDr)*24*60*60*1000));
+		            var prgDatetxt=prgDt.getDate()+' '+months[prgDt.getMonth()]+' '+prgDt.getFullYear();
+		            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Date_of_Purge__c').data({date: prgDt}).datetimepicker('update').children("input").val(prgDatetxt);
+		            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Date_of_Purge__c_hidden').val(prgDt.getFullYear()+'-'+(prgDt.getMonth()+1)+'-'+prgDt.getDate()); 
+	           }
+            }
+       });
+       
+       
+       
+       
+       
+       $('#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Grace_Period_for_Release__c').change(function(){
+            console.log('Grace_Period_for_Release__c   ');
+            var grPrdFrRls=this.value;
+            if(grPrdFrRls && !isNaN(grPrdFrRls) && grPrdFrRls>0 ){
+                var effDt=$("#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Effective_Date__c_hidden").val();
+                if(effDt){
+		            var relDt=new Date(new Date(effDt).getTime()-(parseInt(grPrdFrRls)*24*60*60*1000));
+		            var relDttxt=relDt.getDate()+' '+months[relDt.getMonth()]+' '+relDt.getFullYear();
+		            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Pre_Release_Duration_Date__c').data({date: relDt}).datetimepicker('update').children("input").val(relDttxt);
+		            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Pre_Release_Duration_Date__c_hidden').val(relDt.getFullYear()+'-'+(relDt.getMonth()+1)+'-'+relDt.getDate());
+	           }
+                                                                 
+            }
+       });
+        
+        
+        
+        
+        $('#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Effectiveness_Review_In_Advance__c').change(function(){
+          console.log('Effectiveness_Review_In_Advance__c  ');
+          var effRvInAd=this.value;
+          if(effRvInAd && !isNaN(effRvInAd) && effRvInAd>=0 ){
+            var expDt=$('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Expiration_Date__c_hidden').val();
+            if(expDt){
+            var erDt=new Date(new Date(expDt).getTime()-(parseInt(effRvInAd)*24*60*60*1000));
+            var erDrTxt=erDt.getDate()+' '+months[erDt.getMonth()]+' '+erDt.getFullYear();
+            var effDt=$('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Effective_Date__c_hidden').val();
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Effectiveness_Review_Date__c').data({date: erDt}).datetimepicker('update').children("input").val(erDrTxt);
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Effectiveness_Review_Date__c_hidden').val(erDt.getFullYear()+'-'+(erDt.getMonth()+1)+'-'+erDt.getDate());
+           }
+         }
+       });
+        
+      
+                
+        //Auto populate from doc type
+        
+            //if('{!DocumentProfile.createdDate}'=='{!DocumentProfile.LastmodifiedDate}'){                
+        if(<apex:outputtext value="{!AND(DocumentProfile.Submit__c=='',DocumentProfile.Document_Type__c!=null)}"/>){   
+        var DocumentCategories=$('#Categories__c').val();
+        console.log('DocumentCategories if');
+        
+        var DocumentCategoriesstr='';
+        $("#Categories__c option").each(function(index,value)
+		{
+		console.log(value);
+		DocumentCategoriesstr+=value+'@';
+		});
+        console.log(DocumentCategoriesstr);
+	    console.log('DocumentCategories if');
+	                
+	       populateDocTypeDetails();
+	       
+        }
+        
+        
+        $("#doc").on('change',function(){
+             uploadDoc($("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}ContentDocumentId__c").val());
+        });
+       
+        $("#secDoc").on('change',function(){
+             uploadDoc($("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}SecondaryContentDocumentId__c").val(),true);
+        });
+        
+    });
+    
+    /*-----------------save doc--------------start----*/
+    function submitDocDetails(){
+        if(DocumentDetailsSubmitvar){
+        $('#DocDetailsSubmit').val('Submit');
+        }
+        validate(null,digitalSig,'DocProfile');
+    }
+    var approvalrequiredFordetails='<apex:outputtext value="{!documentProfile.Approval_Required__c}"/>';
+    function showValidateMsg(){
+    	if(DocumentDetailsSubmitvar&&approvalrequiredFordetails=='false'){
+			$('#DetailsPromptDialogSubmit').modal('show');
+		}else{
+			submitDocumentDetailProfile();
+		}
+		   	
+    }
+    function allowsubmit(){
+    $('#DetailsPromptDialogSubmit').modal('hide');
+    $('#CurrentApprovalSequenceNumber').attr('name', '{!IF(NOT(ISBLANK(Prefix)),Prefix+'__CurrentApprovalSequenceNumber__c','CurrentApprovalSequenceNumber__c')}');
+      submitDocumentDetailProfile();
+    }
+	function rejectsubmit(){
+	$('#DocDetailsSubmit').val('Save');
+	$('#CurrentApprovalSequenceNumber').attr('name', 'name');
+	DocumentDetailsSubmitvar=false;
+	$('#DetailsPromptDialogSubmit').modal('hide');
+	}
+    function digitalSig(){
+        var impactedsites=$('#Applicable_Regulations__c').val();
+        var isDigSigNd='<apex:outputtext value="{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}" />';
+
+         submitDocDetailsform();
+    }
+    
+    
+    function submitDocDetailsform(){
+        var docProfileCreatedDate=new Date('{!documentProfile.CreatedDate}').setHours(0,0,0,0);
+        var effDate= $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Effective_Date__c_hidden').val();
+        var expDate=$('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Expiration_Date__c_hidden').val();
+        var erDate=$('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Effectiveness_Review_Date__c_hidden').val();
+        var prRlDate=$('#{!JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__',''))}Pre_Release_Duration_Date__c_hidden').val();
+        var prgDate=$('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Date_of_Purge__c_hidden').val();
+        
+       // console.log('submitDocDetailsform todayDate  ' +todayDate.getTime());
+       
+       if(effDate){
+           effDate=new Date(effDate).setHours(0,0,0,0);
+       }
+       
+       if(expDate){
+          expDate=new Date(expDate).setHours(0,0,0,0);
+       }
+       
+       if(erDate){
+         erDate=new Date(erDate).setHours(0,0,0,0);
+       }
+       
+       if(prRlDate){
+         prRlDate=new Date(prRlDate).setHours(0,0,0,0);
+       }
+       
+       if(prgDate){
+         prgDate=new Date(prgDate).setHours(0,0,0,0);
+       }
+       
+        console.log(' effDate '+effDate+'  expDate '+expDate+'  erDate '+erDate+'  prRlDate '+prRlDate+'  prgDate  '+prgDate);
+        
+        
+        if(effDate && (effDate<docProfileCreatedDate)){
+           showDialog('1','Effective Date Cannot Be Past Date');
+           return false;
+        }
+        
+        if(erDate && (effDate > erDate)){
+             showDialog('1','Effective Date Cannot Be More Than Effectiveness Review Date');
+             return false;
+        }
+        
+        if(expDate && (effDate > expDate)){
+             showDialog('1','Effective Date Cannot Be More Than Expiration Date');
+             return false;
+        }
+        
+        if(prgDate && (effDate > prgDate)){
+             showDialog('1','Effective Date Cannot Be More Than Than Purge Date');
+             return false;
+        }
+        
+        if(erDate){
+          if(erDate<docProfileCreatedDate){
+           showDialog('1','Effectiveness Review Date Cannot Be Past Date');
+           return false;
+          }
+        
+          if(expDate && (erDate >expDate)){
+             showDialog('1','Effectiveness Review Date Cannot Be More Than Expiration Date');
+             return false;
+           }
+           
+           if(prgDate && (erDate >prgDate)){
+             showDialog('1','Effectiveness Review Date Cannot Be More Than Than Purge Date');
+             return false;
+          }
+        }
+        
+        if(expDate){
+        
+           if(expDate<docProfileCreatedDate){
+             showDialog('1','Expiration Date Cannot Be Past Date');
+             return false;
+           }
+           
+           if(prgDate && (expDate > prgDate)){
+             showDialog('1','Expiration Date Cannot Be More Than Purge Date');
+             return false;
+           }
+        }
+        
+        if(prRlDate){
+        
+           if(prRlDate<docProfileCreatedDate){
+             showDialog('1','Pre release  Date Cannot Be Past Date');
+             return false;
+           }
+           
+           if(effDate && (prRlDate > effDate)){
+             showDialog('1','Pre release Date Cannot Be More Than Effective Date');
+             return false;
+           }
+           
+           if(erDate && (prRlDate> erDate)){
+             showDialog('1','Pre Release Date Cannot Be More Than Effectiveness Review Date');
+             return false;
+           }
+           
+           if(expDate && (prRlDate > expDate)){
+             showDialog('1','Pre Release Date Cannot Be More Than Expiration Date');
+             return false;
+           }
+           
+           if(prgDate && (prRlDate >prgDate)){
+             showDialog('1','Pre Release Date Cannot Be More Than Purging Date');
+             return false;
+           }
+           
+           
+           
+        }
+        
+        
+        
+        
+           
+        
+        
+        if(prgDate){
+            if(prgDate<docProfileCreatedDate){
+             showDialog('1','Purge Date Cannot Be Past Date');
+             return false;
+           }
+             
+        }
+
+        var Namespaceprefix='<apex:outputText value="{!JSENCODE($Setup.Dev_Only__c.Namespace_Prefix__c)}" />';
+        Namespaceprefix=Namespaceprefix?Namespaceprefix+'__':'';
+        var DigitalSignatureNeeded='<apex:outputText value="{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}"/>';    
+        showValidateMsg();
+    }
+
+	function submitDocumentDetailProfile(){
+	
+	if(DocumentDetailsSubmitvar&&approvalrequiredFordetails=='true'){
+        
+	$('#CurrentApprovalSequenceNumber').attr('name', '{!IF(NOT(ISBLANK(Prefix)),Prefix+'__CurrentApprovalSequenceNumber__c','CurrentApprovalSequenceNumber__c')}');
+	}
+	if(DocumentDetailsSubmitvar&&approvalrequiredFordetails=='true'){
+	$('#DocDetailsSubmit').val('Save');
+    }
+        if(!$('.dont-allow-multiple-clicks').attr('disabled')){
+            $('.dont-allow-multiple-clicks').attr('disabled', true);
+            $('#DocProfile').submit();
+        }    
+    }
+    function postSubmitDocumentDetails(){
+        
+        if(DocumentDetailsSubmitvar&&approvalrequiredFordetails=='true'){            
+            genSubmitApprovalRequest('{!JSENCODE($CurrentPage.parameters.id)}');
+        }else{
+            window.location.href='apex/DocumentProfile?id={!$CurrentPage.parameters.id}&pg=doc_prof';
+        }
+    }
+    /*====recentlt updated  by balu approval start*/
+    var isSubmit=false;
+    function submitDocumentProfileApproval(){
+
+        if(document.getElementById("tableId_chk").checked)
+        {
+            if(isSubmit){
+                DocsaveApprovalData('{!documentProfile.id}',true);
+            }else{
+                alert('else');
+                DocsaveApprovalData('{!documentProfile.id}',false);
+            }
+        }else{
+            delApprovers();
+        }
+    } 
+    function delApprovers(){
+        Visualforce.remoting.Manager.invokeAction(
+          // @RemoteAction
+          '{!$RemoteAction.Component_Handler.DelApprovalData}','{!documentProfile.id}','Document_Profile__c',
+          // Callback
+          function(result, event){
+              if(result==true){
+                console.log('Inside result'+result);                  
+                console.log(result);                  
+              window.location.reload();
+              }
+          });
+    }
+    /*====recentlt updated  by balu approval start*/
+    /*-----------------save doc---------------end----*/            
+        function onchangedocumentprofilelookup(arg1){
+        if(arg1.id=="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__Document_Type__c','Document_Type__c')}"){
+        populateDocTypeDetails(arg1);
+        }
+        
+    }
+    function populateDocTypeDetails(arg1){
+        var DocumentCategoriesstr='';
+        $("#Categories__c option").each(function(index,value)
+		{
+		console.log(value);
+		DocumentCategoriesstr+=value+'@';
+		});
+        console.log(DocumentCategoriesstr);
+	    console.log('DocumentCategories re if');
+    //console.log(DocumentCategories.length());
+        if(arg1==null){
+            var arg1={};            
+            arg1.value='{!documentProfile.Document_Type__c}';
+        }
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.Component_Handler.getRecord}',arg1.value,function(result, event){ 
+            console.log('DocumentDetails.getRecord    ');
+            console.log(result);
+            if(result){
+                for (key in result) {
+                    console.log(typeof result[''+key]+ key);
+                    if((typeof result[''+key])=='boolean'){
+                        if(result[''+key]==true){
+                           // $('#'+key+'_slider').addClass('active');
+                           // $('#'+key).val(true);
+                           $('#'+key+'_slider').trigger( "click" );
+                        }else{
+                           // $('#'+key+'_slider').removeClass('active');
+                           // $('#'+key).val(false);                            
+                        }
+                        
+                    }else if((typeof result[''+key])=='number'){
+                        $('#'+key).val(new Date(result[key]));
+                        if(key.includes('Date')){
+                            var months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+                            //var newDate=(!ExpireAfter)?new Date():new Date(EffectiveDate.getTime()+(parseInt(ExpireAfter)*24*60*60*1000));
+                            var newDate=new Date(result[key]);
+                            var newDatetxt=newDate.getDate()+' '+months[newDate.getMonth()]+' '+newDate.getFullYear();                            
+                            $('#'+key).data({date: newDate}).datetimepicker('update').children("input").val(newDatetxt);
+                            $('#'+key+'_hidden').val(newDate);    
+                            console.log('inside id key name is date');    
+                        }else{
+                            if(key!='Id'&&key!='OwnerId')
+                            $('#'+key).val(result[key]);
+                            if(key=='Start_Effectiveness_Review_In_Advance__c'){
+                            $('#Effectiveness_Review_In_Advance__c').val(result[key]);
+                            }
+                        }
+                    } else {
+                        if(key!='Id'&&key!='OwnerId'&&key!='{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Title__c')
+                       
+                        $('#'+key).val(result[key]);
+
+                    }
+                    if((typeof result[''+key])=='object'){
+                        console.log('console.log  relationship');                        
+                        if(key.endsWith("__r")||key.endsWith("__R")){
+                            var relationship=key.substring(0,key.length-1)+"r";
+                            var relationshipAPI=key.substring(0,key.length-1)+"c";
+                            console.log(relationshipAPI);
+                            console.log('relationshipAPI');
+                            $('#'+relationshipAPI).html('<option selected="selected" value="' + result[key].Id + '">' + escapeHtml(result[key].Name) + '</option>').trigger('change');
+                        }
+                    }else if(key!='Id'&&key!='OwnerId'&&key!='Title__c'){
+                     $('#'+key).html('<option selected="selected" value="' + result[key] + '">' + escapeHtml(result[key]) + '</option>').trigger('change');    
+                    }
+
+                    if(key=='{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Applicable_Regulations__c'||key=='{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Categories__c'){                    
+                    var picklistjs=result[key];                    
+                    var picklistval=picklistjs.split(";")
+                    Object.size = function(obj) {
+					    var size = 0, key;
+					    for (key in obj) {
+					        if (obj.hasOwnProperty(key)) size++;
+					    }
+					    return size;
+					};
+					
+					// Get the size of an object
+					var size = Object.size(picklistval);
+					console.log(size);
+					
+					var selectedhtml;
+					var Picklistvalues='';
+					 for(i=0;i<size;i++){			               
+                     	Picklistvalues+='@'+picklistval[i]+'@'; 
+                     }
+                     console.log(MultiPicklist_{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Profile__c_{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Categories__c);
+                     for(var MPkey in MultiPicklist_{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Profile__c_{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Categories__c) {                     
+                     if(!(Picklistvalues.includes('@'+MPkey+'@'))){			               
+                     	selectedhtml+='<option value="' + MPkey + '">' + escapeHtml(MPkey) + '</option>';                     	
+                     	}else{
+                     	selectedhtml+='<option selected="selected" value="' + MPkey + '">' + escapeHtml(MPkey) + '</option>';
+                     	}
+                     	
+                     }
+                     
+                     $('#'+key).html(selectedhtml).trigger('change');
+                    }
+                    //recent update by balu
+                }
+            }
+        });
+        //$('#datafromDocumentType')
+        
+    }
+
+function uploadDoc(docId,isSec){
+            $("#progressModal").modal('show');
+            console.log('uploadDoc  docId '+docId);
+            var files =isSec?$("#secDoc").prop("files"):$("#doc").prop("files");
+            var file =files[0];
+            var filePath=isSec?$("#secDoc").val():$('#doc').val();
+            //console.log(file)
+            //console.log('file path  '+$('#doc').val());
+            var server='<apex:outputText value="{!JSENCODE($Setup.Dev_Only__c.Namespace_Prefix__c)}" />';
+            var apiVersion='<apex:outputText value="{!JSENCODE($Setup.Dev_Only__c.API_Version__c)}" />';
+            var instance='<apex:outputText value="{!JSENCODE($Setup.QC_settings__c.Instance_Name__c)}" />';
+            var fileReader = new FileReader();
+            fileReader.onload = function(e) {
+                 content = window.btoa(this.result);  //Base 64 encode the file before sending it
+                 jQuery.ajax({
+                    type: "POST",
+                    url: "https://"+instance+".salesforce.com/services/data/v"+apiVersion+"/sobjects/ContentVersion/",
+                    contentType:"application/json; charset=utf-8",
+                    headers: { 
+                        "Authorization" : "Bearer "+getSessionId()
+                    },
+                    data    : JSON.stringify({'ContentDocumentId':docId,'VersionData':content,'Title':file.name,'PathOnClient':filePath,'ReasonForChange':'Change'})
+                }).success(function(contentVersion) {
+                    console.log('contentVersion  ');
+                    console.log(contentVersion);
+                    if(isSec){
+                       $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}SecondaryContentVersionId__c").val(contentVersion.id);
+                       $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Secondary_File_Name__c").val(file.name);
+                    }
+                    else{
+                       $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}SecondaryContentVersionId__c").val('');
+                       $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Secondary_File_Name__c").val('');
+                       $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}ContentVersionId__c").val(contentVersion.id);
+                       $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Primary_File_Name__c").val(file.name);
+                       console.log('primary file length  '+$("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Primary_File_Name__c").length);
+                    }
+                    if(!docId){
+                        Visualforce.remoting.Manager.invokeAction(
+                                     // @RemoteAction
+                                     '{!$RemoteAction.Component_Handler.populateContentVersions}',contentVersion.id,
+                                     // Callback
+                                     function(result, event){
+                                        console.log('Component_Handler populateContentVersions result   '+result);
+                                        console.log(result);
+                                        if(result && result.length>0){
+                                              var latestRecord=result[0];
+                                              console.log(' content Id  '+latestRecord.ContentDocumentId);
+                                              if(isSec){
+                                                 $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}SecondaryContentDocumentId__c").val(latestRecord.ContentDocumentId);
+                                              }
+                                              else{
+                                                 $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}ContentDocumentId__c").val(latestRecord.ContentDocumentId);
+                                              }
+                                              $('#checkInProgress').css('width','100%').attr('aria-valuenow',100);
+                                              $('#statusMsg').text('Checked In Successfully ');
+                                              $("#progressModal").modal('hide');
+                                        }
+                                     },
+                                     // Don't know, couldn't find docs
+                                     {escape: true}
+                          );
+                    }
+                    else{
+                      $('#checkInProgress').css('width','100%').attr('aria-valuenow',100);
+                      $('#statusMsg').text('Checked In Successfully ');
+                      $("#progressModal").modal('hide');
+                       
+                    }
+                    
+                }).fail(function(err){
+                     $('#myModalLabel').text('An Error Occured');
+                     console.log('failed');
+                     console.log(err);
+                });  
+            
+             }
+             fileReader.onerror = function(e) {
+                $('#statusMsg').text('An Error Occured');
+                console.log("There was an error reading the file.  Please try again.");
+             }
+             fileReader.onabort = function(e) {
+                $('#statusMsg').text('An Error Occured');
+                $('#progressModal').modal('hide');
+                console.log("There was an abort reading the file.  Please try again.");
+             }
+             fileReader.readAsBinaryString(file);  //Read the body of the file
+         }
+             
+ function OpenDoc(docId,title){
+        $("#fileViewTitle").text(title);
+        var htmlString = '<div style="height:100%;width:100%" id="dpvPreviewWrapper"><div class="chatterFileViewerPanel" style="height:100%;width:100%" id="chatterFileViewerPanel"><embed src="/_swf/196007/sfc/flex/DocViewer.swf" flashvars="shepherd_prefix=/sfc/servlet.shepherd&amp;v="+docId+"&amp;mode=chatterfilepreview&amp;in_tests=false" width="100%" height="500px" align="middle" id="renditionLarge" quality="high" bgcolor="#f3f3f3" name="renditionLarge" allowscriptaccess="sameDomain" allowfullscreen="true" pluginspage="http://www.adobe.com/go/getflashplayer" wmode="opaque" type="application/x-shockwave-flash"></div></div>';
+        $("#fileViewDiv").html(htmlString);
+        PrepareFlexComponent(docId);
+        $('#primaryFileView').modal('show');
+ }
+
+function PrepareFlexComponent(docId){
+
+        insertFlexComponent('/_swf/196007/sfc/flex/DocViewer', 'shepherd_prefix=/sfc/servlet.shepherd&v='+docId+'&mode=chatterfilepreview&in_tests=false', '100%', '450px', '#f3f3f3', 'chatterFileViewerPanel', 'renditionLarge', false, { adobeFlashVersionLbl : 'You must enable or download Adobe Flash Player version 9.0.115 or later to use this feature.', downloadAdobeLbl : 'Download Adobe Flash Player', downloadAdobeLinkLbl : 'Click the link below to download the Adobe Flash Player:', closeDialogLbl : 'Cancel'}); 
+   
+        
+ }
+    </script>    
+    <c:wiz_alert alertId="alertForDocProfile"/>
+    <div class="modal fade" role="DetailsPromptDialogSubmit" aria-labelledby="DetailsPromptDialogSubmit" id="DetailsPromptDialogSubmit">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content message-window">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" >Document Details</h4>
+        </div>
+        <div class="modal-body" style="height: 80px; font-size: 18px;">
+          <div class="container-fluid">
+            <p class="text-center">
+                Do you want to start the document process ?
+            </p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" onclick="rejectsubmit()" data-dismiss="modal">No</button>
+          <button type="button" class="btn btn-primary" onclick="allowsubmit()" >Yes</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+    <c:wiz_validator onValid="" ignorehidden=""></c:wiz_validator>
+
+</apex:component>

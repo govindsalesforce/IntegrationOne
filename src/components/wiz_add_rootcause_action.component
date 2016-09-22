@@ -1,0 +1,228 @@
+<apex:component controller="Component_Handler" extensions="QC_custom_settings" >
+    <apex:attribute name="Root_Cause" type="General_Sub_Task__c" description="Root Cause child" />
+    <apex:attribute name="genTask" assignTo="{!investigation}" type="General_Task__c" description=""/>
+        
+    <script>
+    
+    function resetrootcauseform() {
+        clearerrors();
+        $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Product__c').val(null).trigger('change');
+        $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Process__c').val(null).trigger('change');
+        $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Against__c').val(null).trigger('change'); 
+        $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c').val(null).trigger('change'); 
+        $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect_Description__c').val(null).trigger('change'); 
+        $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Cause_Code__c').val(null).trigger('change');
+        $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Cause_Code_Description__c').val(null).trigger('change');
+
+    }
+    function createrootcause() {
+        resetrootcauseform();
+        console.log("open rootcause model");
+        $('#prodinfo').show();
+        $('#newncp').modal('show');
+        
+    }
+     
+    function editrootcause(RecordId){
+        // alert("RecordId:::"+RecordId);
+        resetrootcauseform();
+        //alert("fron rootcause edit");
+         Visualforce.remoting.Manager.invokeAction(
+            '{!$RemoteAction.Component_Handler.getRootCause}',RecordId,function(result, event){
+                console.log(result);
+                if(result){
+                    //alert(result.Defect__c);
+                  $('#Id').val(RecordId);  
+                    //$('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Against__c').html(result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Against__c).trigger('change');
+                  $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Against__c').val(escapeHTML(result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Against__c));
+                  $("#rs{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Against__c").find('label').each(function(){$(this).removeClass('active');});
+                  var indx=escapeHTML(result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Against__c)=='Product'?0:1
+                  var lbl=$("#rs{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Against__c").find('label')[indx];
+                  $(lbl).addClass('active');
+                  $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Against__c option[value='"+escapeHTML(result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Against__c)+"']").attr("selected",true);
+                  console.log(result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Against__c=='Product');
+                  if(escapeHTML(result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Against__c)=='Product'){
+                     $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Product__c').html('<option selected="selected" value="' + escapeHTML(result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Product__c) + '">' + escapeHTML(result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Product__r.Name) + '</option>').trigger('change');
+                  }   
+                  else{
+                    console.log(result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Against__c=='Process'); 
+                    //$('#select_Process').addClass('active')
+                    $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Process__c').html('<option selected="selected" value="' + escapeHTML(result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Process__c) + '">' + escapeHTML(result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Process__r.Name) + '</option>').trigger('change');
+                  }
+                  showRootcauseField(true,result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Against__c);
+                   $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c').html('<option selected="selected" value="' + escapeHTML(result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c) + '">' + escapeHTML(result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__r.Name) + '</option>').trigger('change');
+               
+               
+                $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Cause_Code__c').html('<option selected="selected" value="' + escapeHTML(result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Cause_Code__c) + '">' + escapeHTML(result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Cause_Code__r.Name) + '</option>').trigger('change');  
+
+               $(tinymce.get('{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect_Description__c').getBody()).html(escapeHTML(result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect_Description__c));
+              $(tinyMCE.get('{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Cause_Code_Description__c').getBody()).html(escapeHTML(result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Cause_Code_Description__c));
+    
+                console.log(result.{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Against__c);
+                $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect_Description__c').removeAttr( "Required" );
+                $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Cause_Code_Description__c').removeAttr( "Required" );
+                $('#prodinfo').show();
+                $('#newncp').modal('show');
+                }else{
+                   // alert("error!!!");
+                }
+                
+    
+    
+                });
+    }
+   
+             
+             function submitRootCauseActionform(){
+                 //alert('inside submitRootCauseActionform');
+             if(!$('.dont-allow-multiple-clicks').attr('disabled')){
+             $('.dont-allow-multiple-clicks').attr('disabled', true);
+                    console.log('prodform inside wiz_add_product');
+                    tinyMCE.triggerSave();
+                 //alert("general task {!genTask.id}");
+                    $('#rootcauseform').submit();
+                
+                 
+            }
+        }
+    
+    
+    </script>
+   <!-- <apex:attribute name="NC" type="Non_Conformance__c" required="true" description="Non-Conformance" />-->
+    
+    <div class="modal fade" id="newncp" role="dialog" aria-labelledby="newncp">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="newncp">Add Root Cause Info</h4>
+                </div>
+                
+                <div class="modal-body">
+                    
+                    <div class="row"><!-- row start -->
+                        <div class="wiz-form-holder">
+                            <c:wiz_form formclass="rootcauseform validate" formid="rootcauseform" submitpage="stringify_sobject" recordid="" postsavejs="location.reload();"> 
+                                   <input type="hidden" name="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}General_Task__c" value="{!genTask.Id}"/>
+                                	<input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}general_sub_task__c"/> 
+                                   <input type="hidden" name="Id" id="Id" /> 
+                                   <input type="hidden" name="RecordTypeId"  id="rcRecordTypeId"  value="{!$Setup.QC_settings__c.Root_Cause_RecordTypeId__c}" />
+                                   <script type="text/javascript">
+                                       var rcRecTypeId='<apex:outputText value="{!JSENCODE($Setup.QC_settings__c.Root_Cause_RecordTypeId__c)}"/>';
+                                       console.log('rcRecTypeId    '+rcRecTypeId);
+                                       $('#rcRecordTypeId').val(rcRecTypeId);
+                                       console.log(" $('#rcRecordTypeId').val() "+$('#rcRecordTypeId').val());
+                                   </script>
+                                <c:wiz_field Wide="true" FieldLabel="{!$ObjectType.General_Sub_Task__c.Fields.Against__c.Label}" required="true" jsid="Against" rendered="{!$OBjectType.General_Sub_Task__c.Fields.Against__c.Accessible}"> 
+                                    <c:wiz_RadioSet onchangefunction="showRootcauseField" 
+                                                    FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Against__c" 
+                                                    ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}General_Sub_Task__c"
+                                                    initvalue="Product" 
+                                                    />
+                                </c:wiz_field>
+                                
+                                 <!--process/product-->
+                                <c:wiz_field FieldLabel="{!$ObjectType.General_Sub_Task__c.Fields.Product__c.label}" required="false" jsid="select_Product" rendered="{!$ObjectType.General_Sub_Task__c.Fields.Product__c.accessible}">
+                                    <c:wiz_multi disabled="{!OR(false, NOT($ObjectType.General_Sub_Task__c.Fields.Against__c.updateable))}" required="false" width="100%" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Product__c" multiple="false" queryFields="Name" querytable="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Product__c" 
+                                                 initvalues=""
+                                                 onchange="
+                                                           $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c').val(null).trigger('change');
+                                                           
+                                                           if($('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Product__c').val() == ''){
+                                                           $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c').data('id', '');
+                                                           
+                                                           $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c').prop('disabled', true);
+                                                           }
+                                                           else{
+                                                           console.log($('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Product__c').val());
+                                                           $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c').prop('disabled', false);
+                                                           $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c').data('id', $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Product__c').val());
+                                                           }    
+                                                           "/>
+                                    
+                                </c:wiz_field>
+                               
+                                
+                               <!-- Process -->
+                                <c:wiz_field FieldLabel="{!$ObjectType.General_Sub_Task__c.Fields.Process__c.Label}" required="false" jsid="select_Process" rendered="{!$ObjectType.General_Sub_Task__c.Fields.Process__c.Accessible}">
+                                    <c:wiz_multi disabled="{!OR(false, NOT($ObjectType.General_Sub_Task__c.Fields.Against__c.updateable))}" required="false" width="100%" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Process__c" multiple="false" queryFields="Name" querytable="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Process__c"
+                                                 initValues=""
+                                                 onchange="
+                                                           $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c').val(null).trigger('change');
+                                                           
+                                                           if($('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Process__c').val() == ''){
+                                                           $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c').data('id', '');
+                                                           
+                                                           $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c').prop('disabled', true);
+                                                           }
+                                                           else{
+                                                           console.log($('#QPMS__Product__c').val());
+                                                           $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c').prop('disabled', false);
+                                                           $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c').data('id', $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Process__c').val());
+                                                           }  
+                                                           "/>
+                                    
+                                </c:wiz_field> 
+                                 <c:wiz_field FieldLabel="{!$ObjectType.General_Sub_Task__c.Fields.Defect__c.label}" required="true" jsid="select_defect" rendered="{!$ObjectType.General_Sub_Task__c.Fields.Defect__c.Accessible}">
+                                    <c:wiz_multi disabled="{!OR(NOT($ObjectType.General_Sub_Task__c.Fields.Defect__c.Updateable), false)}" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c" width="100%" FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c" multiple="false" queryFields="Name" type="defc" querytable="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c" initValues=""
+                                                 onchange="getDefectDescription(); $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Cause_Code__c').val(null).trigger('change');
+                                                           
+                                                           if($('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c').val() == ''){
+                                                           $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Cause_Code__c').data('id', '');
+                                                           
+                                                           $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Cause_Code__c').prop('disabled', true);
+                                                           }
+                                                           else{
+                                                           
+                                                           $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Cause_Code__c').prop('disabled', false);
+                                                           $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Cause_Code__c').data('id', $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c').val());
+                                                           }"
+                                                 />
+                                </c:wiz_field>
+                              <!-- <c:wiz_field rendered="{!$ObjectType.General_Sub_Task__c.Fields.Defect_Description__c.accessible}" FieldLabel="{!$ObjectType.General_Sub_Task__c.Fields.Defect_Description__c.label}" required="true" jsid="defectdescription" wide="true">
+                                    <c:wiz_richtext readonly="{!OR(false, NOT($ObjectType.General_Sub_Task__c.Fields.Defect_Description__c.updateable))}" Required="true" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect_Description__c" initvalue="{!Root_Cause.Defect_Description__c}"/>
+                                </c:wiz_field>                  
+                            -->
+                                
+
+
+<c:wiz_field rendered="{!$ObjectType.General_Sub_Task__c.Fields.Defect_Description__c.accessible}" FieldLabel="{!$ObjectType.General_Sub_Task__c.Fields.Defect_Description__c.label}" required="true" jsid="defectdescription" wide="true">
+ <c:wiz_richtext rendered="true" Required="true" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect_Description__c" initvalue="{!Root_Cause.Defect_Description__c}" maxlength="6000"/>
+<apex:outputpanel rendered="false">
+    <div class="alert alert-info" > <apex:outputField value="{!Root_Cause.Defect_Description__c}" /> </div>
+</apex:outputpanel>
+</c:wiz_field>
+                    
+               
+                                <c:wiz_field Wide="true" FieldLabel="{!$ObjectType.General_Sub_Task__c.Fields.Cause_Code__c.label}" required="true"  jsid="cause" rendered="{!$ObjectType.General_Sub_Task__c.Fields.Cause_Code__c.Accessible}">                                             
+                                    <c:wiz_multi disabled="{!OR(NOT($ObjectType.General_Sub_Task__c.Fields.Cause_Code__c.Updateable), false)}" type="defcsoql" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Cause_Code__c" width="100%" FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Cause_Code__c" multiple="false" queryFields="Name" querytable="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Cause__c"
+                                                 initValues="{label: '{!$ObjectType.General_Sub_Task__c.Fields.Cause_Code__c.label}',
+                                                            value: '{!Root_Cause.Cause_Code__c}'}" onChange="getCauseDescription();"/>      
+                                </c:wiz_field>      
+                        
+                              <c:wiz_field Wide="true" rendered="{!$ObjectType.General_Sub_Task__c.Fields.Cause_Code_Description__c.accessible}" FieldLabel="{!$ObjectType.General_Sub_Task__c.Fields.Cause_Code_Description__c.label}" required="true" jsid="causedescription" wide="true">
+                                   <c:wiz_richtext readonly="{!OR(false, NOT($ObjectType.General_Sub_Task__c.Fields.Cause_Code_Description__c.updateable))}" Required="true" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Cause_Code_Description__c" initvalue="{!Root_Cause.Cause_Code_Description__c}" maxlength="6000"/>
+                               </c:wiz_field>
+                                           
+   
+                            </c:wiz_form>   
+                        </div>
+                    </div> <!-- Row Ends -->
+                    
+                    
+                </div>
+                <div class="clearfix"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal"><span class="fa fa-close"></span>Cancel</button>
+                    <button type="button" onclick="validate('null',submitRootCauseActionform,'rootcauseform');" class="btn btn-primary dont-allow-multiple-clicks">Ok</button>
+                </div>
+                
+                
+                
+                
+            </div>
+        </div>
+    </div>
+   <c:wiz_validator onvalid="submitRootCauseActionform();"/>
+   
+</apex:component>

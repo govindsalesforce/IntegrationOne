@@ -1,0 +1,87 @@
+<apex:component controller="Component_Handler">
+<!-- Signature Dialog -->
+<apex:attribute name="modalid" default="signature" type="String" description="Modal Id"/>
+<apex:attribute name="returl" default="/home/home.jsp" description="where to go on approved signature" type="string"/>
+<apex:attribute name="onSuccess" type="string" required="true" description="On Success JavaScript"/>
+<script>
+  function doVerify(){
+    var uname=$("#uname").val();
+    if(!uname){
+      alert('Please enter username');
+      return false;
+    }
+    if(uname!= '{!$User.Username}'){
+       alert('Invalid Username')
+       return false;
+    }
+    var pw=$('#pw').val();
+    if(!pw){
+      alert('Please enter password');
+      return false;
+    }
+     
+      //v1.1 start
+     Visualforce.remoting.Manager.invokeAction(
+                            // @RemoteAction
+                            '{!$RemoteAction.Component_Handler.doVerify}',$('#pw').val(),function(result, event){
+                                                                                            if(event.status){
+                                                                                                if(result){
+                                                                                                    <apex:outputtext value="{!onSuccess}"/>
+                                                                                                }
+                                                                                                    else{
+                                                                                                        alert('Unable to verify password!');
+                                                                                                    }
+                                                                                                }
+                                                                                                else{ 
+                                                                                                    alert('Unable to verify password!');
+                                                                                                }
+                                                                                                
+                                                                                           });
+    //v1.1 end
+  
+  }
+</script>
+  <div class="modal fade" id="{!modalid}" tabindex="-1" role="dialog" aria-labelledby="{!modalid}label">
+  
+  
+    <div class="modal-dialog modal-lg" role="document">
+         <div class="modal-content">
+           <div class="modal-header">
+             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+               <h4 class="modal-title" id="{!modalid}label">Digital Signature</h4>
+           </div>
+           <div class="modal-body">
+                <!--     screen content -->
+                <div class="col-md-6">                                                                                <div class="form-group">
+                  <label for="exampleInputEmail1"><span class="mandatory">*</span> User Name:</label>
+                  <br/>
+                  <input class="form-control" type="text" id="uname" />
+                    </div>
+                </div>
+                                                                            
+                <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="exampleInputEmail1"><span class="mandatory">*</span> Password:</label>
+                      <input class="form-control" type="password" id="pw" />
+                    </div>
+                </div>                        
+                <div class="col-md-12">
+                <!--
+                    <div class="form-group">
+                      <label for="exampleInputEmail1"><span class="mandatory">*</span>Description:</label>
+                      <textarea class="form-control" rows="5" ></textarea>
+                    </div>
+                    -->
+                </div>
+                <!--     screen content -->
+              </div>
+              <div class="clearfix"></div>
+                    <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <a onclick="doVerify();" class="btn btn-primary dont-allow-multiple-clicks">Ok</a>
+                    </div>
+                 </div>
+              </div>
+          </div>            
+<!--    Signature Dialog        -->
+</apex:component>

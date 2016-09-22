@@ -1,0 +1,235 @@
+<apex:component controller="FileAttachmentController" extensions="Component_Handler">
+<apex:attribute name="record_id" type="String" required="true" description="holds non confirmance id"></apex:attribute>
+<apex:attribute name="disable" type="boolean" required="false" default="false" description="disable or not"></apex:attribute>
+<apex:attribute name="showAddButtonLink" type="Boolean" required="true" description="Whether or not to show 'Add' button/link" assignTo="{!showAddButton}"></apex:attribute>
+    <div class="tab-pane attachment-list" id="attachment_list" style="display:none">
+                
+                  <apex:form id="frm">
+                      
+                      <apex:actionFunction action="{!DummyDoNothingFunction}" name="echo" oncomplete="afterRerender();" reRender="resultPanel,countForAttachment,auditTrail" />                      
+                      <apex:pageBlock id="resultPanel">
+                          <apex:repeat value="{!attachmentsForParent}" var="step">
+                              <h2>Attachments For  {!step}</h2>
+                              <apex:pageblockTable value="{!attachmentsForParent[step]}" var="attach" styleclass="table table-hover">
+                                  <apex:column rendered="true" >
+                                      <apex:image url="{!IF(attach.ContentType=='application/pdf',URLFOR($Resource.bt_static,'/static/images/pdf-32_32.png'),
+                                                          IF(attach.ContentType=='application/vnd.openxmlformats-officedocument.wordprocessingml.document',URLFOR($Resource.bt_static,'/static/images/docx_win-32_32.png'),
+                                                          IF(OR(attach.ContentType=='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',attach.ContentType=='application/vnd.ms-excel'),URLFOR($Resource.bt_static,'/static/images/xlsx_win-32_32.png'),
+                                                          IF(OR(attach.ContentType=='application/vnd.openxmlformats-officedocument.presentationml.presentation',attach.ContentType=='application/vnd.ms-powerpoint'),URLFOR($Resource.bt_static,'/static/images/pptx_win-32_32.png'),
+                                                          URLFOR($Resource.bt_static,'/static/images/settings-32_32.png')))))}" width="32" height="32"/>
+                                  </apex:column>
+                                  <apex:column >
+                                      <a  data-toggle="tooltip" title="{!JSENCODE(LEFT(attach.description,LEN(attach.description)-LEN('@'+step)))}" href="{!URLFOR($Action.Attachment.Download,attach.id)}">{!JSENCODE(IF(LEN(attach.name)>40,LEFT(attach.name,40)+'...',attach.name))}</a>
+                                  </apex:column>
+                                  <apex:column >
+                                         <!--  <apex:outputLink styleClass="glyphicon glyphicon-remove" value="javascript:if (window.confirm('Are you sure?')) DelAttach('{!attach.id}');" rendered="{!showaddAttachments}"></apex:outputLink> -->
+                                         <!-- <a href="#" data-toggle="modal" data-target="#fileEdit">Edit</a> -->
+                                      <apex:outputPanel rendered="{!showaddAttachments}">
+                                          <a href="#" onclick="showEditAttachmentModal('{!JSENCODE(attach.Id)}','{!JSENCODE(IF(LEN(attach.name)>40,LEFT(attach.name,40)+'...',attach.name))}','{!JSENCODE(LEFT(attach.description,LEN(attach.description)-LEN('@'+step)))}','{!JSENCODE(step)}')" class="glyphicon glyphicon-pencil"></a>
+                                      </apex:outputPanel>                                      
+                                      </apex:column>
+                              </apex:pageblockTable>
+                         </apex:repeat>
+                      </apex:pageBlock>
+                  </apex:form>
+                  
+                  <!--  Edit Dialog   -->
+          <div class="modal fade" id="fileEdit" tabindex="-1" role="dialog" aria-labelledby="">
+              <div class="modal-dialog modal-md" role="document">
+                  <div class="modal-content">
+                      <div class="modal-header">
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                          <h4 class="modal-title" id="myModalLabel">Edit File</h4>
+                      </div>
+                      <div class="modal-body">
+           
+                          <!--   screen content -->
+               
+                 <div class="col-md-12">
+                    <!-- <h2>File List</h2>
+                     -->
+                     <div style="min-height: 200px; max-height: 400px; overflow:auto">
+
+                      <ul class="list-group">
+                        <li class="list-group-item bg-danger">
+                            <input type="hidden" id="editFileId"/>
+                            <input type="hidden" id="editFileStep"/>
+                            <span class="mandatory">*</span> <label id="editFileName"></label><br/>
+                            <input type="text" class="form-control" id="editFileDescription" maxlength="120" oninput="maxlengthvalidation(this)"/>
+                            <div id="exampleInputEmail_error" class="help-block with-errors"></div>
+                        </li>
+                      </ul>
+                     
+                    </div>
+                    
+                    <apex:outputPanel layout="none" rendered="{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}">
+                    <div class="col-md-6">                                                                                
+                        <div class="form-group">
+                            <label for="UserName"><span class="mandatory">*</span> User Name:</label>
+                            <br/>
+                            <input class="form-control" type="text" id="unameFrEditAtt" />
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="exampleInputEmail1"><span class="mandatory">*</span> Password:</label>
+                            <input class="form-control" type="password" id="pwdFrEditAtt" />
+                        </div>
+                    </div>
+                   </apex:outputPanel>
+                   <div id="fileedit_error"  style="color:red" class="help-block with-errors">
+                    
+                   </div>
+                 
+                </div>
+             
+                          <!--   screen content -->
+                            <div class="clearfix"></div>
+           </div>
+                    
+                      <div class="modal-footer">
+                          <button type="button" id="Attachmentdelete" style="float:left" class="btn btn-danger" onclick="verifyEditData()">Delete</button>
+                          <button type="button" id="AttachmentCancle" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                          <button type="button" id="Attachmentsave" class="btn btn-primary" onclick="verifyEditData(true)">Save</button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+        <!--  Edit Dialog   -->
+                  
+
+<script type="text/javascript">
+
+function showEditAttachmentModal(attachId,attachName,attachDesc,step){
+    console.log('showEditAttachmentModal attachId '+attachId+'   attachName   '+attachName+' attachDesc  '+attachDesc);
+    $("#unameFrEditAtt").val('');
+    $("#pwdFrEditAtt").val('');
+    $("#editFileId").val(attachId);
+    $("#editFileStep").val(step);
+    $("#editFileName").text(attachName);
+    $("#editFileDescription").val(attachDesc);
+    $("#fileedit_error").text('');
+    $("#fileEdit").modal('show');
+}
+
+function verifyEditData(isEdit){
+          var attachId= $("#editFileId").val(),attachName=$("#editFileName").text(),attachDesc=$("#editFileDescription").val();
+      
+      if(!attachDesc && isEdit){
+           $("#fileedit_error").text('Description Is Required');
+           return false;
+      }
+      if({!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}){
+                   var uname=$("#unameFrEditAtt").val();
+                   if(!uname){
+                     $("#fileedit_error").text('Please enter your username.');
+                     return false;
+                   }
+                   if(uname!= '{!$User.Username}'){
+                      $("#fileedit_error").text('Username entered is Invalid or Incorrect. Please try again.')
+                      return false;
+                   }
+                   var pwd=$("#pwdFrEditAtt").val();
+                   if(!pwd){
+                       $("#fileedit_error").text('Please enter your secure password.')
+                       return false;
+                   }
+                   Visualforce.remoting.Manager.invokeAction(
+                   // @RemoteAction
+                   '{!$RemoteAction.Component_Handler.doVerify}',pwd,function(result, event){
+                       if(event.status){
+                           if(result){
+                            $('#Attachmentsave').attr('disabled', true);
+					        $('#AttachmentCancle').attr('disabled', true);
+					        $('#Attachmentdelete').attr('disabled', true);
+                            if(isEdit){
+                              console.log('$("#editFileStep").val()   '+$("#editFileStep").val());
+                              updateAttachment(attachId,attachName,attachDesc+'@'+$("#editFileStep").val())
+                            }
+                            else{
+                              DelAttach(attachId);
+                            }
+                           }
+                           else{
+                             $("#fileedit_error").text('Password entered is incorrect. Please try again.');
+                           }
+                       }
+                       else{
+                            $("#fileedit_error").text('Password entered is incorrect. Please try again.');
+                       }
+                       
+                   });
+                  
+      }
+      else{
+        $('#Attachmentsave').attr('disabled', true);
+        $('#AttachmentCancle').attr('disabled', true);
+        $('#Attachmentdelete').attr('disabled', true);
+        if(isEdit){
+           console.log('$("#editFileStep").val()   '+$("#editFileStep").val());
+           updateAttachment(attachId,attachName,attachDesc+'@'+$("#editFileStep").val());
+        }
+         else{
+           DelAttach(attachId);
+         }
+      }
+      
+ }
+
+ function updateAttachment(attachId,attachName,attachDesc){
+          Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.FileAttachmentController.updateAttachment}',attachId,attachName,attachDesc,
+                                // Callback
+                                function(result, event){
+                                    console.log('updateAttachment   result  '+result);
+                                    if (result==0) {
+                                      console.log('Updated Successfully');
+                                        echo();
+                                        //window.location.href = '/apex/'+$("#page").val()+'?id={!record_id}&gtid='+$('#gtid').val();
+                                        
+                                     } else {
+                                      alert('An Error Occured');   
+                                    }
+                                },
+                                
+                                // Don't know, couldn't find docs
+                                {escape: true}
+                        );
+}
+
+function DelAttach(attachId)
+                    {
+                        Visualforce.remoting.Manager.invokeAction(
+                            // @RemoteAction
+                            '{!$RemoteAction.FileAttachmentController.getAttachmentCountForParent}',
+                            
+                            // Parameters
+                            '{!record_id}',
+                            attachId,
+                            
+                            // Callback
+                            function(result, event){
+                                if (event.status) {
+                                    $('#attachTabCnt').text(
+                                        result
+                                    );
+                                    echo();
+                                    //window.location.href = '/apex/'+$("#page").val()+'?id={!record_id}&gtid='+$('#gtid').val();                         
+                                } else {
+                                    $('#attachTabCnt').text(
+                                        '?'
+                                    );
+                                    console.log('QPMS_ERROR: Getting attachment count returned -->' + event.message);
+                                }
+                            },
+                            
+                            // Don't know, couldn't find docs
+                            {escape: true}
+                        );
+                    }
+                    
+</script>
+                </div>
+                
+                
+                </apex:component>

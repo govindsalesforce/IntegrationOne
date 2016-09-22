@@ -1,0 +1,310 @@
+<apex:component controller="NonConformance" extensions="Component_Handler,QC_custom_settings">
+<apex:attribute name="NC" type="Non_Conformance__c" required="true" description="Non-Conformance" />
+ <apex:attribute name="taskseq" type="string" description="generic task sequence"/>
+       <div class="modal fade" id="addtask"  role="dialog" aria-labelledby="myModalLabel" >
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" onClick="clearGenTasks();"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Add Task</h4><!--conttask-{!isContTaskPresent}, invtask-{!isInvTaskPresent},disptask- {!isDispTaskPresent},impltask-{!isImplTaskPresent}-->
+                </div>
+                <div class="modal-body">
+                    <div class="col-md-12 col-sm-12">
+                       <div class="form-group text-right">
+                         <button type="button" id='creategentask' class="btn btn-primary " onClick="genTask_add_genAdhocTask($('.dialogTask'),'genDiv')">Add Adhoc Task</button>
+                       </div>
+                       <div class="col-md-12" style="height: 500px; overflow: auto;"> 
+                        <div class="dialogTask" id="dialogTask">
+                         <c:wiz_addadhoctask currentpagetaskseq="{!taskseq}" divfrom="dialogTask" divId="genDiv"  seqFieldId="genTaskseq" userFieldId="genTaskusr" allowDaysFieldId="genTaskAllowed_Days__c" dueDateFieldId="genTaskDue_Date__c" taskTitle="genTasktitle" typeOfUser="NC_Task_Owner"/>
+                          </div> 
+                         <div class="workflowtasks" id="workflowtasks">
+                       <apex:outputPanel rendered="{!isContTaskPresent}">
+                       <c:wiz_task isAddTaskSequence="true" leastSeq="{!taskseq}" task="gencontainment" taskTitle="Containment" seqFieldId="gencont{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c" seqInitValue="{!IF(ISBLANK(contTask.Sequence_Position__c),10,contTask.Sequence_Position__c)}" userFieldId="gencontUser" userInitValue="{value:'{!contTask.OwnerId}', label:'{!contTask.Owner.Name}'}" allowDaysFieldId="gencont{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c" allowDaysInitValue="{!contTask.Allowed_Days__c}" dueDateFieldId="gencont{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c" dueDateInitValue="{!contTask.Due_Date__c}"  ncCrDt="{!NC.CreatedDate}"  isTaskChecked="{!hasContTask}" disabled="{!OR(NonConformance.Workflow__c,NonConformance.Closed__c)}" typeoftaskowner="NC_Task_Owner">   </c:wiz_task>
+                       </apex:outputPanel> 
+                       <apex:outputPanel rendered="{!isDispTaskPresent}">
+                       <c:wiz_task isAddTaskSequence="true" leastSeq="{!taskseq}" task="gendisposition" taskTitle="Disposition" seqFieldId="gendisp{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c" seqInitValue="{!IF(ISBLANK(dispTask.Sequence_Position__c),20,dispTask.Sequence_Position__c)}" userFieldId="gendispUser" userInitValue="{value:'{!dispTask.OwnerId}', label:'{!dispTask.Owner.Name}'}" allowDaysFieldId="gendisp{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c" allowDaysInitValue="{!dispTask.Allowed_Days__c}" dueDateFieldId="gendisp{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c" dueDateInitValue="{!dispTask.Due_Date__c}" ncCrDt="{!NC.CreatedDate}"  isTaskChecked="{!hasDispTask}" disabled="{!OR(NonConformance.Workflow__c,NonConformance.Closed__c)}" typeoftaskowner="NC_Task_Owner">  </c:wiz_task>
+                       </apex:outputPanel>
+                       <apex:outputPanel rendered="{!isInvTaskPresent}">
+                       <c:wiz_task isAddTaskSequence="true" leastSeq="{!taskseq}" task="geninvestigation" taskTitle="Investigation" seqFieldId="geninv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c" seqInitValue="{!IF(ISBLANK(invTask.Sequence_Position__c),30,invTask.Sequence_Position__c)}" userFieldId="geninvUser" userInitValue="{value:'{!invTask.OwnerId}', label:'{!invTask.Owner.Name}'}" allowDaysFieldId="geninv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c" allowDaysInitValue="{!invTask.Allowed_Days__c}" dueDateFieldId="geninv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c"  dueDateInitValue="{!invTask.Due_Date__c}" ncCrDt="{!NC.CreatedDate}" isTaskChecked="{!hasInvTask}" disabled="{!OR(NonConformance.Workflow__c,NonConformance.Closed__c)}" typeoftaskowner="NC_Task_Owner"> </c:wiz_task>
+                       </apex:outputPanel>
+                       <apex:outputPanel rendered="{!isImplTaskPresent}">
+                       <c:wiz_task isAddTaskSequence="true" leastSeq="{!taskseq}" task="genimplementation" taskTitle="Implementation" seqFieldId="genimpl{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c" seqInitValue="{!IF(ISBLANK(implTask.Sequence_Position__c),40,implTask.Sequence_Position__c)}" userFieldId="genimplUser" userInitValue="{value:'{!implTask.OwnerId}', label:'{!implTask.Owner.Name}'}" allowDaysFieldId="genimpl{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c" allowDaysInitValue="{!implTask.Allowed_Days__c}" dueDateFieldId="genimpl{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c"  dueDateInitValue="{!implTask.Due_Date__c}" ncCrDt="{!NC.CreatedDate}" isTaskChecked="{!hasImplTask}" disabled="{!OR(NonConformance.Workflow__c,NonConformance.Closed__c)}" typeoftaskowner="NC_Task_Owner"> </c:wiz_task>
+                       </apex:outputPanel>
+                           
+                          </div>
+                        </div>
+                   <apex:outputPanel layout="none" rendered="{!DigitalSignatureNeeded}">
+                    <div class="col-md-6">                                                                                
+                        <div class="form-group">
+                            <label for="UserName"><span class="mandatory">*</span> User Name:</label>
+                            <br/>
+                            <input class="form-control" type="text" id="uname_gentask" />
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="exampleInputEmail1"><span class="mandatory">*</span> Password:</label>
+                            <input class="form-control" type="password" id="pwd_gentask" />
+                        </div>
+                    </div>
+                   </apex:outputPanel> 
+                    </div>
+                    <div class="clearfix"></div>
+                    <div class="modal-footer">
+                        <button type="button" id="resetBtn_gentask" class="btn btn-default" data-dismiss="modal" onClick="clearGenTasks();">Cancel</button>
+                         <button id="adhocSave" type="button" class="btn btn-primary" onClick="verifygentaskData()">Submit</button>
+                    </div>
+                </div>    
+            </div>
+        </div>
+    </div>
+    
+   <script>
+    var genimpelseq = [];
+   $(document).ready(function() {
+    genTask_add_genAdhocTask($('.dialogTask'),'genDiv');
+    
+    });
+  
+   
+    console.log("from add gen task doc ready");   
+    console.log(genimpelseq);
+    
+    function verifygentaskData(){
+        $('#adhocSave').attr('disabled', true);
+        $('#resetBtn_gentask').attr('disabled',true);
+        $('#creategentask').attr('disabled',true);
+         if({!DigitalSignatureNeeded}){
+          console.log('digital signature needed');
+             var uname=$("#uname_gentask").val();
+              if(!uname){
+                 alert('Please enter username');
+                 $('#adhocSave').attr('disabled', false);
+                 $('#resetBtn_gentask').attr('disabled',false);
+                  $('#creategentask').attr('disabled',false);
+                 return false;
+               }
+             if(uname!= '{!$User.Username}'){
+                  alert('Invalid Username')
+                 $('#adhocSave').attr('disabled', false);
+                  $('#resetBtn_gentask').attr('disabled',false);
+                  $('#creategentask').attr('disabled',false);
+                  return false;
+               }
+             var pwd=$("#pwd_gentask").val();
+              if(!pwd){
+                   alert('Please enter password..')
+                   $('#adhocSave').attr('disabled', false);
+                   $('#resetBtn_gentask').attr('disabled',false);
+                   $('#creategentask').attr('disabled',false);
+                   return false;
+               }
+             Visualforce.remoting.Manager.invokeAction(
+                   // @RemoteAction
+                   '{!$RemoteAction.Component_Handler.doVerify}',pwd,function(result, event){
+                        if(event.status){
+                         createAllAdhocTasks();
+                        }
+                   },
+                 {escape: true}
+             );
+             
+         }else{
+              
+              createAllAdhocTasks();
+             $('#adhocSave').attr('disabled', false);
+             $('#resetBtn_gentask').attr('disabled',false);
+             $('#creategentask').attr('disabled',false);
+             }
+        }
+    function clearGenTasks(){
+        var len = $('.dialogTask .genDiv_task').length;
+        console.log(len);
+        for(var i=len;i>0;i--){
+           $('.dialogTask #tsk_'+i).parent().remove();
+            }
+         $('#adhocSave').removeAttr("disabled");
+         $('#resetBtn_gentask').removeAttr("disabled");
+         $('#creategentask').removeAttr("disabled");
+         $('#uname_gentask').val('');
+         $('#pwd_gentask').val('');
+         genTask_resetgenform();
+    }
+    //CUSTOM VALIDATION FOR WORKFLOW TASKS
+    function isvalidateContainmentUser(){
+        if($("#gencontUser").val()=='Select ....'|| $("#gencontUser").val() == null || $("#gencontUser").val() ==''){
+            $('#gencontUser_error').html( "<p><font color='red'>This field is required</font></p>");
+            return false;
+            }else{
+                return true
+                }
+       
+        }
+    
+    function isvalidateDispositionUser(){
+    if($("#gendispUser").val()=='Select ....'|| $("#gendispUser").val() == null || $("#gendispUser").val() ==''){
+            
+            $('#gendispUser_error').html( "<p><font color='red'>This field is required</font></p>");
+            return false;
+            }else{
+                return true
+                }
+        }
+    function isvalidateInvestigationUser(){
+    if($("#geninvUser").val()=='Select ....'|| $("#geninvUser").val() == null || $("#geninvUser").val() ==''){
+            
+            $('#geninvUser_error').html( "<p><font color='red'>This field is required</font></p>");
+            return false;
+            }else{
+                return true
+                }
+        }
+    function isvalidateImplementationUser(){
+        if($("#genimplUser").val()=='Select ....'|| $("#genimplUser").val() == null || $("#genimplUser").val() ==''){
+            
+            $('#genimplUser_error').html( "<p><font color='red'>This field is required</font></p>");
+            return false;
+            }else{
+                return true
+                }
+        }
+    function isvalidateContainmentAlwdys(){
+      if($("#gencont{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c").val()==null || $("#gencont{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c").val() == ' ' ||$("#gencont{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c").val()==0){
+       $('#gencontAllowed_Days__c_error').html( "<p><font color='red'>This field is required</font></p>");
+          return false;
+        }else{
+                return true
+                }
+    }
+     function isvalidateDispositionAlwdys(){
+         if($("#gendisp{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c").val() == null || $("#gendisp{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c").val() ==' ' || $("#gendisp{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c").val() == 0){
+          $('#gendispAllowed_Days__c_error').html( "<p><font color='red'>This field is required</font></p>");
+             return false
+         }else{
+                return true
+                } 
+         }
+    function isvalidateInvestigationAlwdys(){
+        if($("#geninv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c").val() == null || $("#geninv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c").val()==' '||$("#geninv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c").val() == 0){
+            $('#geninvAllowed_Days__c_error').html( "<p><font color='red'>This field is required</font></p>");
+            return false;
+            }else{
+                return true
+                }
+        }
+    function isvalidateImplementationAlwdys(){
+        if($("#genimpl{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c").val() == null || $("#genimpl{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c").val() == ' ' ||$("#genimpl{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c").val()==0){
+          $('#genimplAllowed_Days__c_error').html( "<p><font color='red'>This field is required</font></p>");
+            return false
+             }else{
+                return true
+                }
+        }
+    
+    //CUSTOM VALIDATION END
+    function resetWorkflowTasks(){
+        $('#gencontUser_error').empty();
+        $('#gendispUser_error').empty();
+        $('#geninvUser_error').empty();
+        $('#genimplUser_error').empty();
+        $('#gencontAllowed_Days__c_error').empty();
+        $('#gendispAllowed_Days__c_error').empty();
+        $('#geninvAllowed_Days__c_error').empty();
+        $('#genimplAllowed_Days__c_error').empty();
+        }
+    function createAllAdhocTasks(){
+        var tasks={},dueDates=[],adhocTasks=[],contDueDate,dispDueDate,invDueDate,implDueDate;
+        var hasvaluesInCon=true;
+        var hasValuesInDisp=true;
+        var hasValuesInInv=true;
+        var hasValuesInImpl=true;
+        var hasAdhoctasks=false;
+        // alert('hello');
+        adhocTasks = genTask_dialogTask_getAllAdhoctasks();
+        console.log('adhoc tasks from addgen task--'+adhocTasks.length);
+        console.log('check for adhoc NO tasks--'+($('.dialogTask #genDiv_cont').length==1 && adhocTasks.length ==0 ));
+         console.log('check for if adhoc tasks--'+($('.dialogTask #genDiv_cont').length>1 && adhocTasks.length > 0));
+         if(($('.dialogTask #genDiv_cont').length==1 && adhocTasks.length ==0 )){
+            hasAdhoctasks =true;
+        }else if(($('.dialogTask #genDiv_cont').length>1 && adhocTasks.length > 0)){
+            hasAdhoctasks =true; 
+        }
+        
+        console.log(adhocTasks);
+        resetWorkflowTasks();
+         console.log('$("#gencontainment").checked   '+$("#gencontainment").is(':checked'));
+        //alert('isvalid-->'+isValid);//flag to check validation from add dadhoctack component
+        if(!isValid){
+             $('#adhocSave').removeAttr("disabled");
+             $('#resetBtn_gentask').removeAttr("disabled");
+             $('#creategentask').removeAttr("disabled");
+            }
+         if($("#gencontainment").is(':checked')){
+             console.log('isvalidateContainmentUser -'+isvalidateContainmentUser()+' isvalidateContainmentAlwdys -  '+isvalidateContainmentAlwdys()+' result  -'+(isvalidateContainmentUser() && isvalidateContainmentAlwdys()));
+              if((isvalidateContainmentUser() && isvalidateContainmentAlwdys())){
+             console.log('inside if');
+                         contDueDate=new Date($("#gencont{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_GRDATE").val());
+                         console.log('contDueDate-->'+contDueDate);
+                         tasks['Containment']=[$("#gencont{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c").val(),$("#gencontUser").val(),$("#gencont{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c").val(),(contDueDate.getMonth()+1)+"/"+contDueDate.getDate()+"/"+contDueDate.getFullYear()];
+                         dueDates.push(contDueDate);
+                    }else{
+                      hasvaluesInCon =false;
+                        }
+         }
+        if($("#gendisposition").is(':checked')){
+           console.log('isvalidateDispositionUser -'+isvalidateDispositionUser()+' isvalidateDispositionAlwdys -  '+isvalidateDispositionAlwdys()+' result  -'+(isvalidateDispositionUser() && isvalidateDispositionAlwdys()));     
+            if((isvalidateDispositionUser() && isvalidateDispositionAlwdys())){
+                         dispDueDate=new Date($("#gendisp{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_GRDATE").val());
+                         tasks['Disposition']=[$("#gendisp{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c").val(),$("#gendispUser").val(),$("#gendisp{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c").val(),(dispDueDate.getMonth()+1)+"/"+dispDueDate.getDate()+"/"+dispDueDate.getFullYear()]
+                         dueDates.push(dispDueDate);
+                  }else{
+                      hasValuesInInv =false;
+                        } 
+        }
+        if($("#geninvestigation").is(':checked')){
+             console.log('isvalidateInvestigationUser -'+isvalidateInvestigationUser()+' isvalidateInvestigationAlwdys -  '+isvalidateInvestigationAlwdys()+' result  -'+(isvalidateInvestigationUser() && isvalidateInvestigationAlwdys()));   
+            if((isvalidateInvestigationUser() && isvalidateInvestigationAlwdys())){
+                         invDueDate=new Date($("#geninv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_GRDATE").val());
+                         tasks['Investigation']=[$("#geninv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c").val(),$("#geninvUser").val(),$("#geninv{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c").val(),(invDueDate.getMonth()+1)+"/"+invDueDate.getDate()+"/"+invDueDate.getFullYear()]
+                         dueDates.push(invDueDate);    
+                  }else{
+                      hasValuesInImpl =false;
+                        } 
+        }
+        if($("#genimplementation").is(':checked')){
+            console.log('isvalidateImplementationUser -'+isvalidateImplementationUser()+' isvalidateImplementationAlwdys -  '+isvalidateImplementationAlwdys()+' result  -'+(isvalidateImplementationUser() && isvalidateImplementationAlwdys()));  
+            if((isvalidateImplementationUser() && isvalidateImplementationAlwdys())){
+                         implDueDate=new Date($("#genimpl{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_GRDATE").val());
+                         tasks['Implementation']=[$("#genimpl{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Sequence__c").val(),$("#genimplUser").val(),$("#genimpl{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c").val(),(implDueDate.getMonth()+1)+"/"+implDueDate.getDate()+"/"+implDueDate.getFullYear()]
+                         dueDates.push(implDueDate);
+                    }else{
+                      hasvaluesInCon =false;
+                        } 
+        }
+        console.log(hasvaluesInCon && hasValuesInDisp && hasValuesInInv && hasValuesInImpl && hasAdhoctasks + 'result -'+(hasvaluesInCon && hasValuesInDisp && hasValuesInInv && hasValuesInImpl && hasAdhoctasks));
+        if((hasvaluesInCon && hasValuesInDisp && hasValuesInInv && hasValuesInImpl && hasAdhoctasks)) {
+        console.log(tasks);
+        Visualforce.remoting.Manager.invokeAction(
+                                    // @RemoteAction
+                                    '{!$RemoteAction.NonConformance.createNCTasks}',
+                                    
+                                     adhocTasks,tasks,'{!NC.Id}',true,false,true,
+                                    
+                                    // Callback
+                                    function(result, event){
+                                        console.log('createTasks   result  '+result);
+                                      location.reload();  
+                                    },
+                                    // Don't know, couldn't find docs
+                                    {escape: true}
+                                );
+                     
+            
+        }
+        else{
+        console.log('fields Missing');
+        }
+    }//function end
+    </script>
+</apex:component>

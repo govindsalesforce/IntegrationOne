@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <encodingKey>ISO-8859-1</encodingKey>
+    <letterhead>Qualityze_Inc</letterhead>
+    <name>ChangeTaskOwnerApproval</name>
+    <style>freeForm</style>
+    <subject>Approval Request for Owner Change of {!General_Task__c.RecordType}</subject>
+    <textOnly>Hello,
+
+
+
+You have been assigned as an approver for changing the task owner of the {!General_Task__c.RecordType} of NCR record {!General_Task__c.Non_Conformance__c}.
+
+
+The new owner of the task is {!General_Task__c.ProposedTaskOwnerName__c}.
+
+
+Please log in to the Qualityze application and complete the approval process.
+
+
+Please contact {!General_Task__c.NonConformanceName__c} if you have any questions about this assignment and/or non-conformance record.
+
+
+Thank you.
+
+
+
+Click here for details</textOnly>
+    <type>html</type>
+</EmailTemplate>

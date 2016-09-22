@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Disposition Product</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Disposition Products</value>
+    </caseValues>
+    <fields>
+        <label><!-- Defect Quantity --></label>
+        <name>Defect_Quantity__c</name>
+    </fields>
+    <fields>
+        <label><!-- Dispose Quantity --></label>
+        <name>Dispose_Quantity__c</name>
+    </fields>
+    <fields>
+        <label><!-- General Sub Task --></label>
+        <name>General_Sub_Task__c</name>
+        <relationshipLabel><!-- Disposition Products --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- NC ProductId --></label>
+        <name>NC_ProductId__c</name>
+    </fields>
+    <fields>
+        <label><!-- NC_Product --></label>
+        <name>NC_Product__c</name>
+    </fields>
+    <fields>
+        <label><!-- Non-Conformance --></label>
+        <name>Non_Conformance__c</name>
+    </fields>
+    <fields>
+        <label><!-- Pending Quantity --></label>
+        <name>Pending_Quantity__c</name>
+    </fields>
+    <fields>
+        <label><!-- Product Batch --></label>
+        <name>Product_Batch__c</name>
+    </fields>
+    <layouts>
+        <layout>Disposition Product Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <startsWith>Consonant</startsWith>
+</CustomObjectTranslation>

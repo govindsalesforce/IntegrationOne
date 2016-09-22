@@ -1,0 +1,108 @@
+<!--
+v1.1   Qualityze Inc(ST)       02-sEP-2016     Chengs for Steps(ChangeManagement)
+--->
+<apex:component controller="Component_Handler">
+<script type="text/javascript">
+  $(function () {
+        $('[data-toggle="popover"]').popover({html:true})
+  })
+  
+  function genTaskMenu(event){
+				var target = $(event.target);
+				var offset = target.offset();
+
+				console.log(offset.left + " - - " + offset.top);
+
+				// $("#gen_task_dropdown").css({
+				// 	'position': 'absolute',
+				// 	'top': ,
+				// 	'left': offset.left
+				// });
+			}
+
+  
+  
+</script>
+<apex:attribute name="step" type="integer" required="true" description="Step Number" assignto="{!step_number}"/>
+<apex:attribute name="object" type="sObject" required="true" description="Record object corresponding to select object type" assignto="{!generic_object}"/>
+<apex:attribute name="tasks" type="String[]" required="false" description="Created tasks" assignto="{!createdTasks}"/>
+<apex:attribute name="adhocTaskDetails" type="String[]" required="false" description="Created Adhoc Tasks" assignto="{!adhocTasks}"/>
+<apex:attribute name="requestedFieldHolder" type="String" required="false" description="NOT USED! You may use this field to query requested fields."/>
+<div class="row">
+  <div class="col-md-10">
+  
+	<div class="wiz-steps-holder">
+	  	<div class="wiz-steps wiz-step-cells" id="wiz-steps">
+				<ul id="icon-holder" style="position:relative">
+					  <apex:repeat value="{!Steps}" var="currentStep">
+						<li style="{!IF(module=='NC','width:100px','width:110px')}">
+							<div class="step-back {!currentStep.active_class}">
+							    <!-- <span data-toggle="tooltip" data-placement="bottom" title="" class="status-marker green" data-original-title="Investigation Started"></span> -->
+							    <span data-toggle="tooltip" data-placement="bottom" data-original-title="{!JSENCODE(currentStep.tooltip)}" title="" class="status-marker {!currentStep.statusMark}"></span>
+							    
+								<a href="{!JSENCODE(currentStep.href_url)}"><div class="{!JSENCODE(currentStep.inside_text)}"></div></a>
+							</div>
+							<div class="wiz-label">{!JSENCODE(currentStep.label_text)}</div>
+                            
+					   </li> 
+                          
+					 </apex:repeat>	
+					 <apex:outputPanel rendered="{!AND(NOT(ISBLANK(adhocTaskContent)),adhocTaskSize>0)}">
+						 <li style="{!IF(module=='NC','width:100px','width:110px')}" id="wiz_gene" data-container="body" data-toggle="popover" data-placement="bottom" data-content="{!adhocTaskContent}">
+										<div class="step-back {!genericTaskActiveClass}">
+											<a href="#">
+												<div class="ico-gen-task"></div>
+											</a>
+											
+										</div>
+										<div class="wiz-label text-center" >Adhoc ({!adhocTaskSize})
+										
+										</div>
+						 </li>
+					 </apex:outputPanel>
+					 
+                    <apex:outputPanel rendered="{!if(module!='ChangeManagement',true,false)}">
+					 <li style="{!IF(module=='NC','width:100px','width:110px')}">
+                        <div class="step-back {!referenceStep.active_class}">
+                            
+                            <span data-toggle="tooltip" data-placement="bottom" data-original-title="{!JSENCODE(referenceStep.tooltip)}" title="" class="status-marker {!referenceStep.statusMark}"></span>
+                            <a href="{!JSENCODE(referenceStep.href_url)}"><div class="{!JSENCODE(referenceStep.inside_text)}"></div></a>
+                        </div>
+                        <div class="wiz-label">{!JSENCODE(referenceStep.label_text)}</div>
+                    </li>
+                    </apex:outputPanel>
+                    
+					 <apex:outputPanel rendered="{!NOT(ISNULL(closureStep))}">
+						 <li style="{!IF(module=='NC','width:100px','width:110px')}">
+								<div class="step-back {!closureStep.active_class}">
+								    <!-- <span data-toggle="tooltip" data-placement="bottom" title="" class="status-marker green" data-original-title="Investigation Started"></span> -->
+								    <span data-toggle="tooltip" data-placement="bottom" data-original-title="{!JSENCODE(closureStep.tooltip)}" title="" class="status-marker {!closureStep.statusMark}"></span>
+								    
+									<a href="{!closureStep.href_url}"><div class="{!JSENCODE(closureStep.inside_text)}"></div></a>
+								</div>
+								<div class="wiz-label">{!JSENCODE(closureStep.label_text)}</div>
+						 </li>
+					 </apex:outputPanel> 
+			   </ul>
+		 </div>
+	</div> 
+	</div>
+	<div class="col-md-2 text-right right-to-wiz">
+	    <div class="btn-group" >
+	             <apex:outputPanel layout="none" rendered="{!module=='NC'}">
+	              <button type="button" onclick="window.location.href='{!JSENCODE(detailsLink)}'" class="btn btn-primary"><i class="fa fa-file-text-o"></i> NC Details</button>
+	            </apex:outputPanel>
+	            <apex:outputPanel layout="none" rendered="{!module=='CAPA'}">
+	              <button type="button" onclick="window.location.href='{!JSENCODE(detailsLink)}'" class="btn btn-primary"><i class="fa fa-file-text-o"></i> CAPA Details</button>
+	            </apex:outputPanel>
+            	<!--v1.1 start-->
+                <apex:outputPanel layout="none" rendered="{!module=='ChangeManagement'}">
+	              <button type="button" onclick="window.location.href='{!JSENCODE(detailsLink)}'" class="btn btn-primary"><i class="fa fa-file-text-o"></i> CR Details</button>
+	            </apex:outputPanel>
+                <!---v1.1. end -->
+            	
+	     </div>
+	</div>
+ 
+</div>
+</apex:component>

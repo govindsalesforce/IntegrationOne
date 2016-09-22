@@ -1,0 +1,2 @@
+<apex:page standardController="General_Task__c" extensions="GeneralTaskController"  action="{!nullValue(redir.url, urlFor($Action.General_Task__c.Edit, General_Task__c.id, null, true))}">
+</apex:page>

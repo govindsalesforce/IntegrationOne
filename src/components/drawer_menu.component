@@ -1,0 +1,72 @@
+<!--
+v1.0   Qualityze Inc()                                   Initial Version.
+
+v1.1   Qualityze Inc(TS)          25-AUG-2016               Doc lists
+
+-->
+
+
+<apex:component >
+      <apex:variable var="isNCEnabled" value="{!AND($Setup.QC_settings__c.Enable_NC__c,$ObjectType.Non_Conformance__c.updateable)}"/>   
+      
+      <apex:variable var="isCAPAEnabled" value="{!AND($Setup.QC_settings__c.Enable_CAPA__c,$ObjectType.CAPA__c.updateable)}"/>
+      <apex:variable var="isDOCEnabled" value="{!AND($Setup.QC_settings__c.Enable_DOC__c,$ObjectType.Document_Profile__c.updateable,$ObjectType.Change_Management__c.updateable,$ObjectType.Document_Type__c.updateable)}"/>
+  <!-- Drawer Menu -->
+      <div class="drawer-menu" id="drawer-menu">
+        <ul class="nav nav-pills nav-stacked">
+          <li><a href="/apex/qlt_dashboard" target="_blank"><span class="glyphicon glyphicon-dashboard"></span>Dashboard</a></li>
+          
+          <apex:outputPanel layout="none" rendered="{!isNCEnabled}">
+          <li>
+            <a href=""><span class="glyphicon glyphicon-tags"></span>NC Management</a>
+            <ul class="nav sub-nav">
+              <li><a href="/apex/NonConformance?pg=nc_init" target="_blank">Create new NC</a></li>
+              <li><a href="/apex/nc_list?list=NC" target="_blank">Open NC List</a></li>
+              <li><a href="/00O/o" target="_blank">NC Reports</a></li> 
+            </ul>
+          </li>
+          </apex:outputPanel>
+          
+          <apex:outputPanel layout="none" rendered="{!isCAPAEnabled}">
+          <li>
+            <a href=""><span class="glyphicon glyphicon-tags"></span>CAPA Management</a>
+            <ul class="nav sub-nav">
+              <li><a href="/apex/CAPA?retURL=%2Fa0a%2Fo&save_new=1&sfdc.override=1" target="_blank">Create new CAPA</a></li>
+              <li><a href="/apex/nc_list?list=CAPA" target="_blank">Open CAPA List</a></li>
+              <li><a href="/00O/o" target="_blank">CAPA Reports</a></li>              
+            </ul>
+          </li>  
+          </apex:outputPanel>
+          <!-- v1.1 starts-->  
+          <apex:outputPanel layout="none" rendered="{!isDOCEnabled}">
+          <li>
+            <a href=""><span class="glyphicon glyphicon-tags"></span>Change Management</a>
+            <ul class="nav sub-nav">
+              <li><a href="/apex/ChangeManagement?retURL=%2Fa0a%2Fo&save_new=1&sfdc.override=1" target="_blank">Create new Change Request</a></li>
+              <li><a href="/apex/nc_list?list=CM" target="_blank">Open Change Request List</a></li>
+              <!-- <li><a href="/00O/o" target="_blank">Change Request Reports</a></li>-->              
+            </ul>
+          </li> 
+            
+           <li>
+            <a href=""><span class="glyphicon glyphicon-tags"></span>Document</a>
+            <ul class="nav sub-nav">
+              <li><a href="/apex/DocumentProfile?retURL=%2Fa0a%2Fo&save_new=1&sfdc.override=1" target="_blank">Create new Document</a></li>
+              <li><a href="/apex/nc_list?list=DP" target="_blank">Open Document List</a></li>
+              <!-- <li><a href="/00O/o" target="_blank">Document Reports</a></li> -->              
+            </ul>
+          </li> 
+            
+            <li>
+            <a href=""><span class="glyphicon glyphicon-tags"></span>Document Type</a>
+            <ul class="nav sub-nav">
+              <li><a href="/apex/DocumentType?retURL=%2Fa0a%2Fo&save_new=1&sfdc.override=1" target="_blank">Create new Document Type</a></li>
+              <li><a href="/apex/nc_list?list=DT" target="_blank">Open Document Type List</a></li>
+              <!--  <li><a href="/00O/o" target="_blank">Document Type Reports</a></li> -->              
+            </ul>
+          </li>
+          </apex:outputPanel>
+          <!-- v1.1 end--> 
+        </ul>
+      </div>
+</apex:component>

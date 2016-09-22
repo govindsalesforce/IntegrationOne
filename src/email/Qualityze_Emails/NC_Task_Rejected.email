@@ -1,0 +1,6 @@
+Dear {!NC_Task__c.Sign_Off_By__c},
+
+Your Containment is rejected.
+
+Please check:
+{!NC_Task__c.Link}

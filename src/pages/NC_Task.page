@@ -1,0 +1,1697 @@
+<apex:page standardcontroller="Non_Conformance__c" extensions="Approvalclass,GeneralTaskController,NonConformance,FileAttachmentController,QC_custom_settings" sidebar="false" showHeader="false" standardStylesheets="false" docType="html-5.0" >
+    <script type="text/javascript">
+      $( document ).ready(function() {
+          setTimeout(show(), 1000);
+      });
+      
+      function show(){
+         $("#loading").hide();
+         $("#overlay").hide();
+      }
+    </script>
+    <div id="overlay" style="background-color: rgba(0, 0, 0, 0.15);z-index: 999;position: absolute;left: 0;top: 0;width: 100%;height: 200%;"></div>
+    <div id="loading" style="height: 64px;width: 64px;align:center; position: absolute;margin: -100px 0 0 -200px;top: 80%;left: 50%;z-index:1000">
+       <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i> <span class="sr-only">Loading...</span>
+       
+    </div>
+    <apex:variable value="{!0}" var="internaltaskid"/>
+    <apex:variable value="{!0}" var="nextid"/>
+    <apex:variable value="{!0}" var="counter"/>
+    <apex:variable value="{!0}" var="tempTask"/>
+    <c:wiz_alert alertId="WizAlert"/>
+    <apex:outputPanel rendered="{!$CurrentPage.parameters.type=='Disposition'}">
+    <!--    <c:wiz_alert alertId="dispositionAlert"/>-->
+     <script>
+    
+        function cancelPopup()
+        {
+           var YESButtonInRedirectModalOnClick = function () {
+               window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';
+           };
+           var NOButtonInRedirectModalOnClick = function () {
+               
+           };
+           $('#redirectDialog .btn-primary').bind( "click", YESButtonInRedirectModalOnClick);
+           $('#redirectDialog .btn-default').bind( "click", NOButtonInRedirectModalOnClick);
+           
+           // Show the redirect dialog
+           $('#redirectDialog').modal('show');
+           
+           // Remove the onClick event
+           $('#redirectDialog').on('hidden.bs.modal', function () {
+               $('#redirectDialog .btn-primary').unbind( "click", YESButtonInRedirectModalOnClick);
+               $('#redirectDialog .btn-default').unbind( "click", NOButtonInRedirectModalOnClick);
+           })
+        }
+                
+        function enableAll(){
+            var start = 0;
+            $("#dispositionSection>div").each(function(){
+                divId = 'dispo'+ (start++);
+                $("#"+divId+">div>div>h4 ").find('a').eq(2).removeAttr("disabled");
+            });
+            
+            $("#Save").show();
+            $("#Cancel").show();
+            $("#Submit").show();
+            $("#Recall").hide();
+            Visualforce.remoting.Manager.invokeAction(
+                // @RemoteAction
+                '{!$RemoteAction.GeneralTaskController.updateDispositionApprovalRequired}','{!gDispTask.Id}',$('#tableId_chk').is(':checked'),
+                function(result, event){
+                    if(event.status){
+                        window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';
+  
+                    }else{
+                      //  console.log("update approval required failed");
+                    }
+                }
+            );
+            
+        }    
+        var isApproversValid=false;
+        function afterValidate(){
+            isApproversValid=true;
+        }
+        function onSubmit(){
+            SubmitwithApproval=true;
+            completedFlag=true;
+            var isDigitalneeded = "<apex:outputtext value="{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}" />";
+            if(dispoValidation() && checkQuantity() && isDigitalneeded == 'true'){
+                $('#uname').val('');
+                $('#pw').val('');
+                $('.dont-allow-multiple-clicks').removeAttr('disabled');
+                $('#signature').modal('show');
+            }else if(dispoValidation() && checkQuantity() && isDigitalneeded == 'false'){
+                $('#Submit').attr('disabled', 'true');
+                saveDisposition();
+                $('#Submit').attr('disabled', 'false');
+            }else{
+                if(isApproversValid){
+                    showDialog('1','Not all Defective Products are disposed.');
+                }
+            } 
+        }
+        function dispoValidation(){
+            isApproversValid=false;
+            var isValid = true;
+            var start = 0;
+            var divId,tableRow,noOfRows,productList,productBatch,dispoQty,findDiv,dispAssignedTo,dispInst,dispCompBy,completioncomment,completedDate,DispositionType,showCompletionDetails,dueDate,checkYes,checkNo;
+            $("#dispositionSection>div").each(function(){
+                divId = 'dispo'+ (start++);
+                findDiv = $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div');
+                tableRow = $("#"+divId+">div").find('div').eq(1).find('div>div>div>table>tbody>tr');
+                DispositionType = tableRow.eq(0).find('td').eq(0).find('select option:selected').text();
+                noOfRows = $("#"+divId+">div").find('div').eq(1).find('div>div>div>table>tbody>tr').length;
+                $("div[id$='_error']").empty();
+                if(DispositionType == '--Select Disposition Type--' || DispositionType == ''){
+                    tableRow.eq(0).find('td').eq(0).find('div').append('This Field is Required').css('color','red');
+                    isValid = false;
+                }
+                dueDate = findDiv.eq(9+((noOfRows-2)*3)).find('input').val();
+                dispAssignedTo = findDiv.eq(7+((noOfRows-2)*3)).find('select option:selected').val();
+                dispInst = findDiv.eq(13+((noOfRows-2)*3)).find('textarea').val();
+                dispCompBy = findDiv.eq(19+((noOfRows-2)*3)).find('select option:selected').val();
+                completioncomment = findDiv.eq(25+((noOfRows-2)*3)).find('textarea').val();
+                completedDate = findDiv.eq(21+((noOfRows-2)*3)).find('input').val();
+                checkYes = findDiv.eq(16+((noOfRows-2)*3)).find('input').eq(0).attr('id');
+                checkNo = findDiv.eq(16+((noOfRows-2)*3)).find('input').eq(1).attr('id');
+                for(i=1;i<noOfRows;i++){
+                productList = tableRow.eq(i).find('td').eq(0).find('select option:selected').text();
+                productBatch = tableRow.eq(i).find('td').eq(1).find('select option:selected').text();
+                dispoQty = tableRow.eq(i).find('td').eq(2).find('input').val();
+                    if(productList == '--Select Product--' || productList == ''){
+                        tableRow.eq(i).find('td').eq(0).find('div').append('This Field is Required').css('color','red');
+                        isValid = false;
+                    } 
+                    if(productBatch == '--Select Batch--' || productBatch == ''){
+                        tableRow.eq(i).find('td').eq(1).find('div').append('This Field is Required').css('color','red');
+                        isValid = false;
+                    }    
+                    if(dispoQty == '' || dispoQty == null){
+                        tableRow.eq(i).find('td').eq(2).find('div').append('This Field is Required').css('color','red');
+                        isValid = false;
+                    }
+                }
+                
+                    showCompletionDetails = findDiv.eq(18+((noOfRows-2)*3)).is(":visible");
+                    if(dispAssignedTo == '' || dispAssignedTo == null ){
+                        findDiv.eq(7+((noOfRows-2)*3)).find('div').append('This Field is Required').css('color','red');
+                        isValid = false;
+                    }  
+                    if(dueDate == '' || dueDate == null){
+                        findDiv.eq(11+((noOfRows-2)*3)).append('This Field is Required').css('color','red');
+                        isValid = false;
+                    }
+                    if(dispInst == '' || dispInst == null){
+                        findDiv.eq(13+((noOfRows-2)*3)).find('div').append('This Field is Required').css('color','red');
+                        isValid = false;
+                    }
+                    if(!($("#"+checkYes).parent().hasClass('active') || $("#"+checkNo).parent().hasClass('active'))){
+                        findDiv.eq(17+((noOfRows-2)*3)).append('This Field is Required').css('color','red');    
+                        isValid = false;
+                    }    
+                    if(showCompletionDetails){
+                        if(dispCompBy == '' || dispCompBy ==null){
+                            findDiv.eq(19+((noOfRows-2)*3)).find('div').append('This Field is Required').css('color','red');
+                            isValid = false;
+                        }
+                        if(completioncomment == '' || completioncomment == null){
+                            findDiv.eq(25+((noOfRows-2)*3)).find('div').append('This Field is Required').css('color','red');
+                            isValid = false;
+                        }
+                        if(completedDate == '' || completedDate == null){
+                            findDiv.eq(23+((noOfRows-2)*3)).append('This Field is Required').css('color','red');
+                            isValid = false;
+                        }
+                    }   
+                
+                    validate(null,afterValidate,'Taskapproval');
+                    if(!isApproversValid){
+                        return false;
+                    }
+                return isValid;
+            });
+                    validate(null,afterValidate,'Taskapproval');
+                    if(!isApproversValid){                        
+                        return false;
+                    }
+            return isValid;
+                      
+        }
+        var SubmitwithApproval=false;
+        function saveDisposition(){
+             var start = 0;
+             var dispositionArray={},dispositionDetails={},productDetails=[],productsArray = {};
+             $("#dispositionSection>div").each(function(){
+                 var divId = 'dispo'+ (start++);
+                 var tableFirstRow = $("#"+divId+">div").find('div').eq(1).find('div>div>div>table>tbody>tr').eq(0).find('td');
+                 var div = $("#"+divId+">div").find('div').eq(1).find('div>div>div').find('div');
+                 var noOfRows = $("#"+divId+">div").find('div').eq(1).find('div>div>div>table>tbody>tr').length;
+                 var rowId = $("#"+divId+">div").find('div').eq(1).find('div>div>div>table>tbody>tr');
+                 
+                 var product;
+                 if($("#"+divId).length != 0){
+                    dispositionDetails['Id'] = $(this).attr('class');
+                    dispositionDetails['Disposition_Type__c'] = tableFirstRow.eq(0).find('select option:selected').val();
+                    dispositionDetails['Assigned_Disposition_Qty__c'] = tableFirstRow.eq(1).find('input').val();
+                    dispositionDetails['Assigned_User__c'] = div.eq(7+((noOfRows-2)*3)).find('select option:selected').val();
+                    dispositionDetails['Due_Date__c'] = div.eq(9+((noOfRows-2)*3)).find('input').val();
+                    dispositionDetails['Disposition_Instruction__c'] = escapeHtml(div.eq(13+((noOfRows-2)*3)).find('textarea').val());
+                    dispositionDetails['Complete__c'] = div.eq(16+((noOfRows-2)*3)).find('input[name='+divId+']:radio:checked').val();
+                    dispositionDetails['Completed_By__c'] = div.eq(19+((noOfRows-2)*3)).find('select option:selected').val();
+                    dispositionDetails['Completed_Date__c'] = div.eq(21+((noOfRows-2)*3)).find('input').val();
+                    dispositionDetails['Completion_Comment__c'] = div.eq(25+((noOfRows-2)*3)).find('textarea').val();
+                    dispositionDetails['Dispo'] = divId; 
+                    dispositionArray[divId] = dispositionDetails;
+                    for(i=1;i<noOfRows;i++){
+                        product={};
+                        product['Id']=rowId.eq(i).attr('class');
+                        product['NC_ProductId__c'] = rowId.eq(i).find('td').eq(0).find('select option:selected').val();
+                        product['NC_Product__c'] = rowId.eq(i).find('td').eq(0).find('select option:selected').text();
+                        product['Product_Batch__c'] = rowId.eq(i).find('td').eq(1).find('select option:selected').text();
+                        product['Defect_Quantity__c'] = rowId.eq(i).find('td').eq(1).find('select option:selected').val();
+                        product['Dispose_Quantity__c'] = rowId.eq(i).find('td').eq(2).find('input:first').val();
+                        product['Pending_Quantity__c'] = rowId.eq(i).find('td').eq(3).find('input').val();
+                        product['Dispo'] = divId;
+                        productDetails.push(product);
+                    } 
+                 }else{
+                   //  console.log("div not found");   
+                 }
+                 dispositionDetails = {};
+             });
+            for(var k=0;k<productDetails.length;k++){
+                productsArray['ProductDetails'+k] = productDetails[k];
+            }    
+            Visualforce.remoting.Manager.invokeAction(
+            	// @RemoteAction
+            	'{!$RemoteAction.GeneralTaskController.saveDisposition}','{!gDispTask.Id}',dispositionArray,productsArray,deletedRowIds,SubmitwithApproval,$('#tableId_chk').is(':checked'),
+                // Callback
+                function(result, event){
+                	if(result==0){
+                    	saveApprovalFromDigitalSignature();
+                    }else{
+                    	//console.log("fail to save data!!!!!!!!!");
+                    }    
+               }
+           );
+           
+             
+        }
+    </script>
+    </apex:outputPanel>
+    <apex:outputPanel rendered="{!$CurrentPage.parameters.type=='Implementation'}">
+     <!-- <c:wiz_alert alertId="implementationAlert"/>-->
+      <script>
+    var SubmitwithApproval=false;
+    var isCompletedActionplan = false; 
+    function saveActionPlan(taskid){
+        var start = 0,str = '',activeId,rcName;
+        var actionPlanDetails={};
+        $("#actionPlanSection>div").each(function(){
+            var divId = 'actionPlan'+ (start++);
+            var findDiv = $("#"+divId+">div").find('div').eq(1).find('div');
+            if($("#"+divId).length != 0){
+                actionPlanDetails['Id'] = $(this).attr('class');
+                actionPlanDetails['Title__c'] = findDiv.eq(0).find('div').eq(0).find('input').attr('id',divId+'input'+(start)).val();
+                actionPlanDetails['Description__c'] = escapeHtml(findDiv.eq(3).find('textarea').val());//attr('id',divId+'textarea'+(id_start)).
+                actionPlanDetails['Type__c'] = findDiv.eq(5).find('.active').find('input').attr('value');
+                //if(actionPlanDetails['Type__c'] == '' || actionPlanDetails['Type__c'] == undefined){
+                   // activeId = findDiv.eq(5).find('.active').attr('id');
+                   // actionPlanDetails['Type__c'] = findDiv.eq(5).find('#'+activeId).find('input').attr('value');
+                //}
+                actionPlanDetails['Assigned_User__c'] = findDiv.eq(8).find('select option:selected').val();
+                actionPlanDetails['Due_Date__c'] = findDiv.eq(10).find('input').val();
+                actionPlanDetails['Associated_Root_Causes__c'] = findDiv.eq(14).find('select option:selected').val();
+                str='';
+                rcName='';
+                findDiv.eq(14).find('select option:selected').each(function() {
+                  str +=$( this ).val() + ',';
+                  rcName+=$(this).text()+',';
+                });
+                actionPlanDetails['Associated_Root_Causes__c'] =str;
+                actionPlanDetails['Associated_Root_Cause_Name__c'] =rcName;
+                /*if(actionPlanDetails['Associated_Root_Causes__c'] == '' || actionPlanDetails['Associated_Root_Causes__c'] == undefined){
+                    //selectASRCId = findDiv.eq(14).find('.selected').attr('id');
+                    actionPlanDetails['Associated_Root_Causes__c'] = findDiv.eq(14).find('select').attr('value');
+                }*/
+                actionPlanDetails['Completed__c'] = findDiv.eq(16).find('.active').find('input').attr('value');
+                //if(actionPlanDetails['Completed__c'] == '' || actionPlanDetails['Completed__c'] == undefined){
+                    //activeId = findDiv.eq(16).find('.active').attr('id');
+                    //actionPlanDetails['Completed__c'] = findDiv.eq(16).find('#'+activeId).find('input').attr('value');
+                //}
+                actionPlanDetails['Completed_By__c'] = findDiv.eq(20).find('select option:selected').val();
+                actionPlanDetails['Completed_Date__c'] = findDiv.eq(22).find('input').val();
+                actionPlanDetails['Completion_Comments__c'] = findDiv.eq(26).find('textarea').val();
+                var appcheck = $('#tableId_chk').is(':checked');
+                //alert('SubmitwithApproval..'+SubmitwithApproval+'appcheck...'+appcheck);       
+                Visualforce.remoting.Manager.invokeAction(
+                    // @RemoteAction
+                    '{!$RemoteAction.GeneralTaskController.saveActionPlan}',taskid,actionPlanDetails,SubmitwithApproval,$('#tableId_chk').is(':checked'),
+                    // Callback
+                    function(result, event){
+                        if(result==0){
+                            //location.reload();
+                            saveApprovalFromDigitalSignature(taskid);
+                        }else{
+                          //  console.log("fail to save data!");
+                            window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';
+                        }    
+                    }
+                ); 
+                
+            }else{
+                //alert("div not found");   
+            }
+            actionPlanDetails = {};
+            
+        });   
+    }
+    
+    
+    
+    function cancelPopup()
+        {
+           /* var r = confirm('You will lose unsaved changes!');
+            if (r == true) {
+                x = "You pressed OK!";
+                // alert(x);
+                window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';
+            } else
+                x = "You pressed Cancel!";
+            */
+           var YESButtonInRedirectModalOnClick = function () {
+               window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';
+           };
+           var NOButtonInRedirectModalOnClick = function () {
+               
+           };
+           $('#redirectDialog .btn-primary').bind( "click", YESButtonInRedirectModalOnClick);
+           $('#redirectDialog .btn-default').bind( "click", NOButtonInRedirectModalOnClick);
+           
+           // Show the redirect dialog
+           $('#redirectDialog').modal('show');
+           
+           // Remove the onClick event
+           $('#redirectDialog').on('hidden.bs.modal', function () {
+               $('#redirectDialog .btn-primary').unbind( "click", YESButtonInRedirectModalOnClick);
+               $('#redirectDialog .btn-default').unbind( "click", NOButtonInRedirectModalOnClick);
+           }) 
+        }
+    </script>
+                           <script>
+                              
+                             function updateCurretnRecord(taskid,RecordType){
+                                
+                                        Visualforce.remoting.Manager.invokeAction(
+                                        // @RemoteAction
+                                        '{!$RemoteAction.GeneralTaskController.updateCurretnRecord}',taskid,RecordType,'dummy',function(result, event){                       
+                                                                                                        if(event.status){
+                                                                                                            window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';
+                                                                                                        }
+                                                                                                        else{
+                                                                                                            //alert(result);
+                                                                                                        }
+                                            
+                                            });
+                             } 
+                            
+                            function saveApprovalFromDigitalSignature(taskid){
+                                //alert('hai'+taskid);
+                                if(!SubmitwithApproval){
+                                    //alert("SubmitwithApproval "+SubmitwithApproval);
+                                    if($('#tableId_chk').is(':checked')){
+                                        //alert("inside checked when click save");
+                                        saveApprovalData(taskid,SubmitwithApproval);  
+                                    }else{
+                                        //alert("inside unchecked when click save");
+                                        updateApprovalRequired(taskid,$('#tableId_chk').is(':checked'));
+                                    }
+                                }else if(SubmitwithApproval){
+                                    //alert("SubmitwithApproval "+SubmitwithApproval);
+                                    if($('#tableId_chk').is(':checked')){
+                                        //alert("inside checked when click submit");
+                                        saveApprovalData(taskid,SubmitwithApproval);  
+                                    }
+                                    else{
+                                        //alert("before calling updateCurretnRecord");
+                                        updateCurretnRecord(taskid,'{!ImplTask.RecordType.Name}');
+                                    }
+                                    
+                                }    
+                                
+                                
+                                
+                            }
+                    
+                    function updateApprovalRequired(generalTaskId,flag){
+                        Visualforce.remoting.Manager.invokeAction(
+                            // @RemoteAction
+                            '{!$RemoteAction.GeneralTaskController.updateAPApprovalRequired}',generalTaskId,flag,
+                            function(result, event){
+                                if(event.status){
+                                   // console.log("success");
+                                    window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';
+                                }else{
+                                   // console.log("update approval required failed");
+                                }
+                            }
+                        );
+                     }
+                    
+                    function RecallforPendingActionPlan(taskid,status){
+                        Visualforce.remoting.Manager.invokeAction(
+                            // @RemoteAction
+                            '{!$RemoteAction.GeneralTaskController.RecallwithoutApproval}',taskid,status,function(result, event){
+                                if(event.status){
+                                    //alert('sucess');
+                                    window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';
+                                }
+                            });
+                        
+                    }
+                    
+                    var compVal;
+                        var isApproversValid=false;
+                        function afterValidate(){
+                            isApproversValid=true;
+                        }
+                        function onSubmit(){                                                                                    
+                            SubmitwithApproval=true;
+                            var IsDigitalSignatureNeeded='<apex:outputText value="{!($Setup.QC_settings__c.Is_Digital_Signature_Needed__c)}" />';
+                            if(actPlanValidation()&&IsDigitalSignatureNeeded=='true'){
+                                $('#uname').val('');
+                                $('#pw').val('');
+                                $('.dont-allow-multiple-clicks').removeAttr('disabled');
+                                $('#signature').modal('show');
+                            }else if(actPlanValidation()&&IsDigitalSignatureNeeded!='true'){
+                                if(!isCompletedActionplan){
+                                    $('.dont-allow-multiple-clicks').attr('disabled', 'true');
+                                    saveActionPlan('{!ImplTask}');
+                                    $('.dont-allow-multiple-clicks').attr('disabled', 'false');
+                                }else{
+                                    if(isApproversValid){
+                                        $('.dont-allow-multiple-clicks').attr('disabled', 'true');
+                                        completePendingActionPlan(completeActplanID);
+                                        $('.dont-allow-multiple-clicks').attr('disabled', 'false');
+                                    }
+                                }
+                            }
+                        }                        
+                    function actPlanValidation(){
+                        isApproversValid=false;
+                        var isValid = true;
+                        var start = 0;
+                        var divId,findDiv,actPlanCompletionComment,corrective,correction,preventive,actPlanAssignTo,actPlanCompletedBy,actPlanCompleted,actPlanCompletedDate,actPlanTitle,actPlanType,actPlanDescription,showCompletionDetails,actPlanDueDate,checkYes,checkNo,activeId;
+                        $("#actionPlanSection>div").each(function(){
+                        divId = 'actionPlan'+ (start++);
+                        findDiv = $("#"+divId+">div").find('div').eq(1).find('div');
+                        $("div[id$='_error']").empty();
+                        actPlanTitle = findDiv.eq(0).find('div').eq(0).find('input').attr('id',divId+'input'+(start)).val();
+                        if(actPlanTitle==null || actPlanTitle==''){
+                            isValid = false;
+                            findDiv.eq(0).find('div').eq(0).find('div').append('This Field is Required').css('color','red');
+                        }
+                        actPlanDescription = findDiv.eq(3).find('textarea').val();
+                        if(actPlanDescription==null || actPlanDescription==''){
+                            isValid = false;
+                            findDiv.eq(3).find('div').eq(0).append('This Field is Required').css('color','red');
+                        }
+                        correction = findDiv.eq(5).find('input').eq(0).attr('id');
+                        corrective = findDiv.eq(5).find('input').eq(1).attr('id');
+                        preventive = findDiv.eq(5).find('input').eq(2).attr('id');
+                            if(!($("#"+correction).parent().hasClass('active') || $("#"+corrective).parent().hasClass('active')  || $("#"+preventive).parent().hasClass('active'))){
+                                isValid = false;
+                                    findDiv.eq(7).append('This Field is Required').css('color','red');
+                             }
+                        actPlanAssignTo = findDiv.eq(8).find('select option:selected').val();
+                        if(actPlanAssignTo==null || actPlanAssignTo==''){
+                             isValid = false;
+                             findDiv.eq(8).find('div').eq(0).append('This Field is Required').css('color','red');
+                        }
+                            
+                        actPlanDueDate = findDiv.eq(10).find('input').val();
+                            if(actPlanDueDate==null || actPlanDueDate==''){
+                                isValid = false;
+                                findDiv.eq(10).append('This Field is Required').css('color','red');
+                             }
+                            
+                         checkYes = findDiv.eq(16).find('input').eq(0).attr('id');
+                         checkNo = findDiv.eq(16).find('input').eq(1).attr('id');
+                            if(!($("#"+checkYes).parent().hasClass('active') || $("#"+checkNo).parent().hasClass('active'))){
+                                    isValid = false;                               
+                                    findDiv.eq(18).append('This Field is Required').css('color','red');
+                               
+                            }
+                        actPlanCompletedBy = findDiv.eq(20).find('select option:selected').val();
+                        actPlanCompletedDate = findDiv.eq(22).find('input').val();
+                        actPlanCompletionComment = findDiv.eq(26).find('textarea').val();
+                        showCompletionDetails = findDiv.eq(19).is(":visible");   
+                            if(showCompletionDetails){
+                                if(actPlanCompletedBy ==null || actPlanCompletedBy =='' || actPlanCompletedBy =='Select User....'){
+                                    findDiv.eq(20).find('div').eq(0).append('This Field is Required').css('color','red'); 
+                                    isValid = false;
+                                }
+                                if(actPlanCompletionComment == '' || actPlanCompletionComment == null){
+                                    findDiv.eq(26).find('div').append('This Field is Required').css('color','red');
+                                    isValid = false;
+                                }
+                                if(actPlanCompletedDate == '' || actPlanCompletedDate == null){
+                                    findDiv.eq(22).append('This Field is Required').css('color','red');
+                                    isValid = false;
+                                }
+                            }
+                            validate(null,afterValidate,'Taskapproval');
+                            if(!isApproversValid){                        
+                                return false;
+                            }
+                            return isValid;
+                        });
+                        validate(null,afterValidate,'Taskapproval');
+                        if(!isApproversValid){                        
+                            return false;
+                        }
+                        return isValid;
+                    }
+                    
+                    </script>
+    </apex:outputPanel>
+      <apex:outputPanel rendered="{!$CurrentPage.parameters.type=='Investigation'}">  
+            <script>
+           // console.log('Investigation');
+            // function to get Cause Description
+            function getCauseDescription(){
+                
+                var causeId = $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Cause_Code__c').data('cId', $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Cause_Code__c').val());
+                
+                
+                    Visualforce.remoting.Manager.invokeAction(
+                    // @RemoteAction
+                    '{!$RemoteAction.GeneralTaskController.getCauseDetails}',causeId.val(),function(result, event){
+                        if(event.status){
+                            if(result){
+                                
+                                tinyMCE.get('Cause_Code_Description__c').setContent(result.Cause_Description__c);
+                                tinyMCE.triggerSave();
+                                
+                            }else{ 
+                             //   console.log('No cose code description!');
+                            }
+                        }   
+                    });
+            }
+            
+            // function to get Defect Description    
+            function getDefectDescription(){
+                
+                var defectId = $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c').data('dId', $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Defect__c').val());
+                
+                Visualforce.remoting.Manager.invokeAction(
+                    // @RemoteAction
+                    '{!$RemoteAction.GeneralTaskController.getDefectDetails}',defectId.val(),function(result, event){
+                        if(event.status){
+                            if(result){
+                                
+                                
+                                tinyMCE.get('Defect_Description__c').setContent(result.Defect_Description__c);
+                                tinyMCE.triggerSave();
+                                
+                            }else{ 
+                                //alert('Unable to fetch defect description code!');
+                            }
+                        }   
+                    });
+            }
+            function clearinverror(){
+                // alert('from clear errors');
+                isinvSumryEmpty= true;
+                isInvToolEmpty = true;
+                $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Investigation_Summary__c_error' ).empty();
+                $('#invTool_error').empty();
+            }
+            var isinvSumryEmpty= true;
+            var isInvToolEmpty = true;
+            function invSummaryValid(){
+                clearinverror();
+                // alert("from valid");
+                var invsumry = $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Investigation_Summary__c').val();
+                var invtoolval=$('#invTool').val();
+                // alert(invsumry +'  '+invsumry.trim().length);
+                if(!invsumry.trim()){
+                  //  console.log('inside inve summary valid')
+                    isinvSumryEmpty=false;
+                    $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Investigation_Summary__c_error' ).html( "<p><font color='red'>This field is required</font></p>");
+                }
+                /*if(!invtoolval){
+            isInvToolEmpty=false;
+            $('#invTool_error').html( "<p><font color='red'>This field is required</font></p>");
+           // console.log('Select Tool');
+         }*/
+    }
+            var ApprovalValid=false;
+            function ApproversValidate(){
+                ApprovalValid=true;
+            }
+            function updateInvestigationTask(gtid){
+               // console.log('from save submit');
+                //console.log(gtid+' '+SubmitwithApproval);        
+                
+                ApprovalValid=false;
+                validate(null,ApproversValidate,'Taskapproval');
+                invSummaryValid();
+                if(!isinvSumryEmpty || !isInvToolEmpty||!ApprovalValid){  //&& !saveRecordIfNoActionPlan
+                  //  console.log("Required summury field is missing");
+                    return false;
+                }
+                
+                //alert("from submit invest form");
+                // var gtaskId = gtid
+                var invSummary = $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Investigation_Summary__c').val();
+                var invTool = $('#invTool').val();
+                //alert("generaltask : " +gtid+'  summary : '+invSummary+'  invTool :'+  invTool+' isClose :'+isClose);
+                if($('#tableId_chk').is(':checked')){
+                    isClose=false;
+                }
+                Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.GeneralTaskController.updateInvestigationTask}',gtid,invSummary,invTool, $('#tableId_chk').is(':checked'),isClose,function(result, event){
+                    if(result){
+                        // alert("success.....");
+                        //to save approval data
+                        saveApprovalData(gtid,SubmitwithApproval);
+                        window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';
+                    }
+                    {escape: true}
+                });
+                
+                
+            }
+            </script>
+          <script>
+                function onInvestSubmit(){
+                    isClose =true;
+                    SubmitwithApproval=true;
+                    ApprovalValid=false;
+                    validate(null,ApproversValidate,'Taskapproval');
+                    invSummaryValid();
+                    if(!isinvSumryEmpty || !isInvToolEmpty||!ApprovalValid){
+                        return false;
+                    }
+                    
+                    var IsDigitalSignatureNeeded='<apex:outputText value="{!($Setup.QC_settings__c.Is_Digital_Signature_Needed__c)}" />';
+                    if(IsDigitalSignatureNeeded=='true'){
+                        $('#uname').val('');
+                        $('#pw').val('');
+                        $('.dont-allow-multiple-clicks').removeAttr('disabled');
+                        $('#investigation_digital_signature_modalid').modal('show');
+                    }else if(IsDigitalSignatureNeeded!='true'){ 
+                        updateInvestigationTask('{!genTask.Id}');
+                    }                
+                }
+                </script>    
+        </apex:outputPanel>
+    
+    <apex:composition template="qualityze_app_layout">              
+        <apex:define name="header_bar_component">
+            <c:header_bar ObjectType="{!$ObjectType.Non_Conformance__c}" ObjectTypeLinkTitle="Non Conformance"/>
+        </apex:define>
+        <apex:define name="theheader">
+                    <c:NC_Header taskseqence="{!leastSequence}" recordid="{!Non_Conformance__c.Id}"/>
+        </apex:define>
+        <apex:define name="wizsteps">
+            <c:wizard_steps step="{!ContainmentTaskStep}" adhocTaskDetails="{!adhocTaskDetails}" requestedFieldHolder="{!Non_Conformance__c.NC_Status__c},{!Non_Conformance__c.NC_Resolution_Code__c}" tasks="{!tasksWithSequences}"
+                            object="{!Non_Conformance__c}"/>
+        </apex:define>
+        <apex:define name="from-holder-title">
+            <apex:variable value="{!0}" var="count"/> 
+            <apex:repeat value="{!Non_Conformance__c.General_Tasks__r}" var="ContTask">
+                
+                <apex:outputPanel rendered="{!AND(ContTask.RecordType.Name=='Closure',$CurrentPage.parameters.type!='Closure')}">
+                    <script>                   
+                    $( document ).ready(function() {
+                        var clsouredate=new Date('{!DATETIMEVALUE(ContTask.Due_Date__c)}');
+                        var today = new Date();
+                        if(clsouredate.getTime() <= new Date().getTime() || clsouredate == today){
+                            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY" ,maxDate: clsouredate,minDate:clsouredate})
+                            .on('dp.change', function(e){     
+                            });
+                        }else{    
+                            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY" ,maxDate: clsouredate,minDate:new Date()})
+                            .on('dp.change', function(e){     
+                            });
+                        }    
+                    });
+                    </script>
+                </apex:outputPanel>    
+                <apex:outputPanel rendered="{!AND(ContTask.RecordType.Name==$CurrentPage.parameters.type,ContTask.id==$CurrentPage.parameters.gtid)}">
+                     <apex:variable value="{!internaltaskid+count}" var="internaltaskid"/>
+                    <apex:outputText value="{!ContTask.RecordType.Name} ({!ContTask.Status__c})" rendered="{!$CurrentPage.parameters.type!='AdhocTask'}"/>
+                     <apex:outputText value="{!ContTask.AdhocTask_Title__c} ({!ContTask.Status__c})" rendered="{!$CurrentPage.parameters.type='AdhocTask'}"/>
+                </apex:outputPanel>
+                
+                <apex:variable value="{!count+1}" var="count"/> 
+            </apex:repeat>    
+        </apex:define>      
+        <apex:define name="theform">
+            <input type="hidden" id="page" name="page" value="nc_{!LOWER($currentpage.parameters.type)}"/>
+            <input type="hidden" id="stepName" name="stepName" value="{!$CurrentPage.parameters.type}" />
+            <script>
+            //approval javascript function
+                            function ApprovePopupModal(){
+                    $('#ahrefjavascriptidForApprovalbutton_LI_decision').html('Approve');
+                    $('.LI_decision').show();
+                    $('#javascriptidForApprovalbutton_decision_wiz-fields-wide').show();  
+                    $('#javascriptidForApprovalbutton_header').html('Approve {!JSENCODE($CurrentPage.Parameters.type)} Approval');
+                    $('#javascriptidForApprovalbutton_Comment_Required').hide(); 
+                    $('.doVerifyUserNameButton').show();
+                    $('#ApprovaButtonIdNcContainment').show(); 
+                    $('#javascriptidForApprovalbutton__ApprovalRescomment').removeClass('javascriptidForApprovalbutton_required');
+                    $('#javascriptidForApprovalbutton').modal('show');
+                    $('#javascriptidForApprovalbutton_user_name').val('');
+                    $('#javascriptidForApprovalbutton_password').val('');       
+                    $('#javascriptidForApprovalbutton__ApprovalRescomment').val('');
+                    recall=false;
+                }  
+                function RecallPopupModal(){
+                    $('.LI_decision').hide();
+                    $('.doVerifyUserNameButton').hide(); 
+                    $('#ahrefjavascriptidForApprovalbutton_LI_decision').html('Recall');
+                    $('#javascriptidForApprovalbutton_decision_wiz-fields-wide').hide();  
+                    $('#javascriptidForApprovalbutton_header').html('Recall {!JSENCODE($CurrentPage.Parameters.type)} Approval');
+                    $('#javascriptidForApprovalbutton_Comment_Required').show(); 
+                    $('#javascriptidForApprovalbutton__ApprovalRescomment').addClass('javascriptidForApprovalbutton_required');   
+                    $('#javascriptidForApprovalbutton').modal('show');
+                    $('#javascriptidForApprovalbutton_user_name').val('');
+                    $('#javascriptidForApprovalbutton_password').val('');  
+                    $('#javascriptidForApprovalbutton__ApprovalRescomment').val('');                    
+                    recall=true;
+                }
+    
+    
+                function SubmitApprovalRequest(RecordId,UserId,listid,ApprovalReqcomment,FieldId,TochangeFieldName,newDueDate){
+                         Visualforce.remoting.Manager.invokeAction(
+                                    // @RemoteAction
+                                    '{!$RemoteAction.Approvalclass.submitApprovalRequest}',RecordId,UserId,listid,ApprovalReqcomment,FieldId,TochangeFieldName,newDueDate,function(result, event){
+                                                                                                    if(event.status){
+                                                                                                        //location.reload();
+                                                                                                        window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';
+                                                                                                    }
+                                        });
+
+                }
+
+                function ApprovalResponse(RecordId,ApprovalRescomment,approved,FieldId){
+                            Visualforce.remoting.Manager.invokeAction(
+                            // @RemoteAction
+                            '{!$RemoteAction.Approvalclass.submitApprovalResponse}',RecordId,ApprovalRescomment,approved,FieldId,function(result, event){
+                                                                                            if(event.status){
+                                                                                                //alert('sucess');
+                                                                                                //location.reload();
+                                                                                                window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';
+                                                                                            }
+                                });
+                }
+
+            <!------------------------------------------------->
+                $( document ).ready(function() {
+                 $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY"});
+                     $('.LI_decision').hide();
+                     $('.doVerifyUserNameButton').hide(); 
+                     $('#ApprovaButtonIdNcContainment').hide(); 
+                     var flag=false;
+                
+                    var taskId="{!JSENCODE($CurrentPage.parameters.gtid)}";
+                     Visualforce.remoting.Manager.invokeAction(
+                            // @RemoteAction
+                            '{!$RemoteAction.Approvalclass.getApprover}',taskId,function(result, event){
+                                if(result.length!=0){
+                                        if(result[0].hasOwnProperty('Workitems')){
+                                            
+                                            
+                                                    $.each(result[0].Workitems,function(i, record) {
+                                                        if(record.ActorId=='{!JSENCODE($User.id)}')
+                                                        {
+                                                        
+                                                            flag=true;
+                                                        }
+                                                        }); 
+                                                    if(flag){
+                                                        
+                                                        $('.LI_decision').show();
+                                                        $('.doVerifyUserNameButton').show();
+                                                        $('#ApprovaButtonIdNcContainment').show(); 
+                                                    }
+                                                 
+                                                    if(result[0].SubmittedById=='{!JSENCODE($User.id)}'){
+                                                        $('#javascriptidForApprovalbutton_decision_wiz-fields-wide').hide();  
+                                                        $('#javascriptidForApprovalbutton_Comment_Required').show(); 
+                                                        $('#javascriptidForApprovalbutton__ApprovalRescomment').addClass('javascriptidForApprovalbutton_required');   
+                                                        recall=true;
+                                                    
+                                                    }
+             
+                                                    }
+                                                 else{
+                                                        $('.LI_decision').hide();
+                                                        $('.doVerifyUserNameButton').hide();  
+                                                        $('#ApprovaButtonIdNcContainment').show();
+                                                        
+                                                     }  
+                                    
+                                        }
+                                    else{                                       
+                                        $('.LI_decision').hide();
+                                        $('.doVerifyUserNameButton').hide(); 
+                                        $('#ApprovaButtonIdNcContainment').hide();
+                                    }
+                                });
+                         });
+                <!---------------------------------------------------->
+            </script>
+            <apex:repeat value="{!Non_Conformance__c.General_Tasks__r}" var="ContTask">
+                <apex:outputPanel rendered="{!Non_Conformance__c.General_Tasks__r[internaltaskid].Sequence_Position__c<ContTask.Sequence_Position__c}">
+                    <apex:outputPanel rendered="{!counter==0}">
+                        <apex:variable value="{!counter+1}" var="counter"/>
+                        <apex:variable value="{!ContTask.Sequence_Position__c}" var="tempTask"/>
+                        <apex:variable value="{!ContTask.id}" var="nextid"/>
+                    </apex:outputPanel>
+                    
+                    <apex:outputPanel rendered="{!ContTask.Sequence_Position__c<tempTask}">
+                        <apex:variable value="{!ContTask.Sequence_Position__c}" var="tempTask"/>
+                        <apex:variable value="{!ContTask.id}" var="nextid"/>
+                        <apex:variable value="{!counter+1}" var="counter"/>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+                
+                <apex:outputPanel rendered="{!AND(ContTask.RecordType.Name==$CurrentPage.parameters.type)}">
+                 
+                    <!---------CONTAINMENT---------------------------->
+                    <apex:outputpanel layout="none" rendered="{!AND(OR(ContTask.RecordType.Name=='Containment',ContTask.RecordType.Name=='AdhocTask'),ContTask.id==$CurrentPage.parameters.gtid)}"> 
+                        <script>
+                      
+                        var save=true;
+                        var nocontainmentAction=true;
+                        var IsDigitalSignatureNeeded='<apex:outputText value="{!($Setup.QC_settings__c.Is_Digital_Signature_Needed__c)}" />';
+                        $( document ).ready(function() {
+                           
+                            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY"});
+                        });
+                        
+                        function updateCurretnRecord(taskid,status){
+                            $('.dont-allow-multiple-clicks').attr('disabled', true);
+                            if(status!='Closed'){
+                                if($('#tableId_chk').is(':checked')){
+                                    status='OpenANDApprovalRequire';
+                                }
+                                else{
+                                    status='OpenANDApprovalNotRequire';
+                                }
+                            }
+                            //return;
+                            if(!$('#tableId_chk').is(':checked')){
+                                Visualforce.remoting.Manager.invokeAction(
+                                    // @RemoteAction
+                                    '{!$RemoteAction.GeneralTaskController.updateCurretnRecord}',taskid,'{!ContTask.RecordType.Name}',status,function(result, event){                       
+                                        if(event.status){
+                                            location.reload();   
+                                        }
+                                        else{
+                                            $('.dont-allow-multiple-clicks').attr('disabled', false);
+                                        }
+                                    });
+                            }
+                            else{                    
+                                saveApprovalData('{!ContTask.Id}',SubmitwithApproval);   
+                            }
+                            
+                        } 
+                        function saveApprovalFromDigitalSignature(){
+                            if(nocontainmentAction){
+                                submit();
+                            }
+                            else{
+                                validate(null,submitcontainActionformWempt,'containmentformwempt');                                                  
+                            }
+                            
+                            
+                        }
+                        
+                        function submit(){
+                            
+                            if($('#tableId_chk').is(':checked')){                                                                                                                                                   
+                                saveApprovalData('{!ContTask.Id}',SubmitwithApproval);   
+                            }
+                            else{
+                                updateCurretnRecord('{!ContTask.Id}',status);   
+                            }                 
+                        }                                        
+                        function submitonclick(){
+                            if(!$('#tableId_chk').is(':checked')){
+                                status='Closed';
+                            }
+                            save=false;
+                            if(nocontainmentAction){
+                                if(IsDigitalSignatureNeeded=='true'){            $('#uname').val('');           $('#pw').val('');           $('.dont-allow-multiple-clicks').removeAttr('disabled');              $('#containment_digital_signature_modalid').modal('show');        }else{            saveApprovalFromDigitalSignature();                                                                                                                                                            $('.dont-allow-multiple-clicks').attr('disabled', false);          $('.dont-allow-multiple-clicks').attr('disabled', true);        }
+                            }
+                            else{
+                                validate(null,submitDigitalsig,'containmentformwempt@Taskapproval');
+                            }
+                        }
+                        function saveOnclick(){
+                            status='Open';
+                            if(nocontainmentAction){
+                                submit();
+                            }
+                            else{
+                                validate(null,submitcontainActionformWempt,'containmentformwempt@Taskapproval');                                                  
+                            }                 
+                        }
+                        function submitDigitalsig(){
+                            if(IsDigitalSignatureNeeded=='true'){            $('#uname').val('');           $('#pw').val('');           $('.dont-allow-multiple-clicks').removeAttr('disabled');             $('#containment_digital_signature_modalid').modal('show');       }else{            saveApprovalFromDigitalSignature();                                                                                                                                                            $('.dont-allow-multiple-clicks').attr('disabled', false);          $('.dont-allow-multiple-clicks').attr('disabled', true);        }
+                        }
+                        function wemptyCApostJsForm(){
+                            if(!save){
+                                updateCurretnRecord('{!ContTask.id}',status);
+                            }else{
+                                submit();
+                            }
+                        }
+                        function ApprovalValidator(paramenter){
+                            if(nocontainmentAction){
+                                validate(null,paramenter,'Taskapproval');
+                            }
+                            else{
+                                paramenter();
+                            }
+                        }
+                        
+                        
+                        </script>
+                        <c:wiz_change_field typeofApprover="NC_Approval" fieldclass="col-md-6 col-sm-6 col-xs-12" GT="{!ContTask}" isLock="{!OR(ContTask.Status__c=='Pending Approval',ContTask.Status__c=='Closed',ContTask.Status__c=='Void',NOT(OR(NonConformance.OwnerId==$User.Id,ContTask.OwnerId==$User.Id,isApprover,$Profile.Name=='System Administrator')),NonConformance.NC_Status__c == 'Closed')}"  RecordId="{!ContTask.id}" TochangeFieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c" Required="true" FieldId="OwnerId" FieldName="Owner"   FieldValue="{!JSENCODE(ContTask.Owner.Name)}" ModalId="ContainmentFieldName" rendered="{!$ObjectType.General_Task__c.Fields.New_Owner__c.Accessible}">
+                            <c:wiz_form recordid="{!ContTask.Id}" formclass="OwnerId_NCTaskform validate" formid="OwnerId_NCTaskform" submitpage="stringify_sobject"  postsavejs="location.reload();">  
+                                <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}general_task__c"/> 
+                                <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.New_Owner__c.Label}"   required="true" jsid="change_owner" rendered="{!$ObjectType.General_Task__c.Fields.New_Owner__c.Accessible}">                            
+                                    <c:wiz_multi width="100%" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c" Required="true" initValues="{value:'{!JSENCODE(ContTask.New_Owner__c)}', label:'{!JSENCODE(ContTask.New_Owner__r.Name)}'}"  querytable="User" queryfields="Name" disabled="{!AND(if(ContTask.ChangeFieldApprovalStatus__c=='Pending',true,false),$ObjectType.General_Task__c.Fields.New_Owner__c.updateable)}" typeofuser="NC_Task_Owner" />                                
+                                </c:wiz_field>
+                            </c:wiz_form>
+                        </c:wiz_change_field> 
+                        <c:wiz_change_field typeofApprover="NC_Approval" fieldclass="col-md-6 col-sm-6 col-xs-12" GT="{!ContTask}" isLock="{!OR(ContTask.Status__c=='Pending Approval',ContTask.Status__c=='Closed',ContTask.Status__c=='Void',NOT(OR(NonConformance.OwnerId==$User.Id,ContTask.OwnerId==$User.Id,isApprover,$Profile.Name=='System Administrator')),NonConformance.NC_Status__c == 'Closed')}" RecordId="{!ContTask.id}" TochangeFieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c" Required="true" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c" FieldName="{!$ObjectType.General_Task__c.Fields.Due_Date__c.Label}" FieldType="date" FieldDateValue="{!ContTask.Due_Date__c}" ModalId="DueDateid" rendered="{!$ObjectType.General_Task__c.Fields.New_Due_Date__c.Accessible}">
+                            <c:wiz_form recordid="{!ContTask.Id}" formclass="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_NCTaskform validate" formid="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_NCTaskform" submitpage="stringify_sobject"  postsavejs="location.reload();">    
+                                <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}general_task__c"/> 
+                                <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.New_Due_Date__c.label}"  required="true" jsid="change_date" rendered="{!$ObjectType.General_Task__c.Fields.New_Due_Date__c.Accessible}">
+                                    <c:wiz_date placeholder="DD/MM/YYYY" maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())+100}" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c" initdate="{!ContTask.New_Due_Date__c}"  updateable="{!AND(if(ContTask.ChangeFieldApprovalStatus__c=='Pending',false,true),$ObjectType.General_Task__c.Fields.New_Due_Date__c.updateable)}" />
+                                </c:wiz_field>
+                            </c:wiz_form>
+                        </c:wiz_change_field>
+                      <!--  <c:submitforApproval approvalbuttonid="ApprovaButtonIdNcContainment" jsid="javascriptidForApprovalbutton" generalTask="{!ContTask}"></c:submitforApproval>-->
+                        <c:wiz_approvalbutton approvalbuttonid="ApprovaButtonIdNcContainment" jsid="javascriptidForApprovalbutton" RecordId="{!ContTask.Id}" ></c:wiz_approvalbutton>
+                    
+                    
+                    
+                    <div class="clearfix"></div>
+                    <div class="top-buttons text-right">
+                        <button id="create-containment-Action-button" class="btn btn-primary" onclick="createcontainAction();"><span class="fa fa-plus-square-o" ></span> Add {!if($CurrentPage.Parameters.type=='AdhocTask','Adhoc Task',$CurrentPage.Parameters.type)} Action</button>
+                    </div>                
+                    
+                    <script type="text/javascript">
+                    if("{!JSENCODE(if(OR(NonConformance.Closed__c,ContTask.status__c=='Closed',ContTask.Status__c=='Void',NOT(OR(NonConformance.OwnerId=$User.Id,ContTask.OwnerId==$User.Id,$Profile.Name=='System Administrator')),ContTask.status__c=='Pending Approval',ContTask.ChangeFieldApprovalStatus__c=='Pending'),'True','False'))}"=="True")
+                        $('#create-containment-Action-button').prop('disabled',true);
+                    
+                    </script>
+                    
+                    <div class="clearfix"></div>
+                    
+                    <div class="wiz-field col-md-12">  
+                        <!--  Accordian -->
+                        
+                        <c:wiz_added_containment_action postsavejs="wemptyCApostJsForm();" SubTakNameRecordLable="{!(if($CurrentPage.Parameters.type=='AdhocTask','AdhocTask Actions','Containment Actions'))}"  isLock="{!OR(ContTask.ChangeFieldApprovalStatus__c=='Pending',ContTask.Status__c=='Pending Approval',ContTask.Status__c=='Closed',ContTask.Status__c=='Void',NOT(OR(NonConformance.OwnerId=$User.Id,ContTask.OwnerId==$User.Id,$Profile.Name=='System Administrator')),Non_Conformance__c.NC_Status__c == 'Closed')}" typeofuser="NC_Task_Owner" RecordId="{!ContTask.id}"/>
+                        
+                        <c:wiz_add_containment_action NC="{!Non_Conformance__c}" SubTakNameRecordLable="{!if($CurrentPage.Parameters.type=='AdhocTask','AdhocTask Actions','Containment Actions')}" NCTaskId="{!ContTask.id}" rendered="{!NOT(OR(ContTask.ChangeFieldApprovalStatus__c=='Pending',ContTask.Status__c=='Pending Approval',ContTask.Status__c=='Closed',ContTask.Status__c=='Void',NOT(OR(NonConformance.OwnerId=$User.Id,ContTask.OwnerId==$User.Id,$Profile.Name=='System Administrator'))))}" typeofuser="NC_Task_Owner"/>  
+                        
+                        
+                        
+                        
+                    </div> 
+                    <!--CHILD OBJECTS CODE END-->
+                        </apex:outputpanel>
+                </apex:outputPanel>
+            <!---------END CONTAINMENT--------------->            
+            <!---------INVESTEGATION----------------->                
+            <apex:outputPanel rendered="{!AND($CurrentPage.parameters.type=='Investigation',ContTask.RecordType.Name=='Investigation')}">
+
+             <apex:outputpanel layout="none" rendered="true"> 
+           
+
+                    
+                   <c:wiz_change_field typeofApprover="NC_Approval" GT="{!genTask}" isLock="{!OR(genTask.Status__c=='Pending Approval',genTask.Status__c=='Closed',genTask.Status__c=='Void',NOT(OR(Non_Conformance__c.OwnerId=$User.Id,genTask.OwnerId==$User.Id,isApprover,$Profile.Name=='System Administrator')),Non_Conformance__c.NC_Status__c == 'Closed')}"  RecordId="{!genTask.id}" TochangeFieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c" Required="true" FieldId="OwnerId" FieldName="Owner"   FieldValue="{!JSENCODE(genTask.Owner.Name)}" ModalId="ContainmentFieldName" rendered="{!$ObjectType.General_Task__c.Fields.New_Owner__c.Accessible}">
+                      <c:wiz_form recordid="{!genTask.Id}" formclass="OwnerId_NCTaskform validate" formid="OwnerId_NCTaskform" submitpage="stringify_sobject"  postsavejs="window.location.href = '/{!JSENCODE($CurrentPage.parameters.id)}';"> 
+                          <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}general_task__c"/> 
+                        <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.New_Owner__c.Label}"   required="true" jsid="change_owner" rendered="{!$ObjectType.General_Task__c.Fields.New_Owner__c.Accessible}">                            
+                            <c:wiz_multi width="100%" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c" Required="true" initValues="{value:'{!JSENCODE(genTask.New_Owner__c)}', label:'{!JSENCODE(genTask.New_Owner__r.Name)}'}"  querytable="User" queryfields="Name" disabled="{!AND(if(genTask.ChangeFieldApprovalStatus__c=='Pending',true,false),$ObjectType.General_Task__c.Fields.New_Owner__c.updateable)}" typeofuser="NC_Task_Owner" />                                
+                         </c:wiz_field>
+                        </c:wiz_form>
+                   </c:wiz_change_field>
+
+                   <c:wiz_change_field typeofApprover="NC_Approval" GT="{!genTask}" isLock="{!OR(genTask.Status__c=='Pending Approval',genTask.Status__c=='Closed',genTask.Status__c=='Void',NOT(OR(Non_Conformance__c.OwnerId=$User.Id,genTask.OwnerId==$User.Id,isApprover,$Profile.Name=='System Administrator')),Non_Conformance__c.NC_Status__c == 'Closed')}" RecordId="{!genTask.id}" TochangeFieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c" Required="true" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c" FieldName="{!$ObjectType.General_Task__c.Fields.Due_Date__c.Label}" FieldType="date" FieldDateValue="{!genTask.Due_Date__c}" ModalId="DueDateid" rendered="{!$ObjectType.General_Task__c.Fields.New_Due_Date__c.Accessible}">
+                     <c:wiz_form recordid="{!genTask.Id}" formclass="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_NCTaskform validate" formid="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_NCTaskform" submitpage="stringify_sobject"  postsavejs="window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';">    
+                         <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}general_task__c"/> 
+                       <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.New_Due_Date__c.label}"  required="false" jsid="change_date" rendered="{!$ObjectType.General_Task__c.Fields.New_Due_Date__c.Accessible}">
+                             <c:wiz_date placeholder="DD/MM/YYYY" maxdateallowed="12/31/2018" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c" initdate="{!genTask.New_Due_Date__c}"  updateable="{!AND(if(genTask.ChangeFieldApprovalStatus__c=='Pending',false,true),$ObjectType.General_Task__c.Fields.New_Due_Date__c.updateable)}" />
+                         </c:wiz_field>
+                       </c:wiz_form><br/>
+                 </c:wiz_change_field>
+                  <div class="col-md-12 push-down"></div>
+                 <div class="">
+                 <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.Investigation_Summary__c.Label}" JSId="investSum" Required="true" Wide="true">
+                     <c:wiz_richtext rendered="{!NOT(OR(genTask.ChangeFieldApprovalStatus__c=='Pending',genTask.Status__c=='Pending Approval',genTask.Status__c=='Closed',genTask.Status__c=='Void',NOT(OR(genTask.OwnerId==$User.Id,Non_Conformance__c.OwnerId=$User.Id,$Profile.Name=='System Administrator'))))}" readonly="{!OR(genTask.ChangeFieldApprovalStatus__c=='Pending',genTask.Status__c=='Pending Approval',genTask.Status__c=='Closed',genTask.Status__c=='Void',NOT(OR(genTask.OwnerId==$User.Id,Non_Conformance__c.OwnerId=$User.Id,$Profile.Name=='System Administrator')))}" Required="true" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Investigation_Summary__c" initvalue="{!IF(NOT(ISBLANK(genTask.Investigation_Summary__c)),genTask.Investigation_Summary__c,' ')}" maxlength="12000"/>
+                     <apex:outputpanel rendered="{!OR(genTask.ChangeFieldApprovalStatus__c=='Pending',genTask.Status__c=='Pending Approval',genTask.Status__c=='Closed',genTask.Status__c=='Void',NOT(OR(genTask.OwnerId==$User.Id,Non_Conformance__c.OwnerId=$User.Id,$Profile.Name=='System Administrator')))}">
+                         <div class="alert alert-info" > <apex:outputField value="{!genTask.Investigation_Summary__c}" /> </div>
+                     </apex:outputpanel>
+                 </c:wiz_field>
+                 </div>
+                
+                <!--<c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.Investigation_Tools__c.Label}" JSId="investTool" Required="true">
+                    <c:wiz_select 
+                    FieldName="Investigation_Tools__c"
+                    ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}General_Task__c" 
+                    FieldId="invTool"  
+                    unSelectedDisplayText="select" 
+                    initvalue="{!IF(NOT(ISBLANK(genTask.Investigation_Tools__c)),genTask.Investigation_Tools__c,'select')}" 
+                    disabled="{!OR(genTask.ChangeFieldApprovalStatus__c=='Pending',genTask.Status__c=='Pending Approval',genTask.Status__c=='Closed',genTask.Status__c=='Void',NOT(OR(genTask.OwnerId==$User.Id,Non_Conformance__c.OwnerId=$User.Id,$Profile.Name=='System Administrator')))}"></c:wiz_select>
+                    
+                </c:wiz_field>-->
+                  <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.Investigation_Tools__c.Label}" JSId="investTool">
+                    <c:wiz_select width="100%" FieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Investigation_Tools__c" 
+                     FieldId="invTool" required="true"
+                     ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}General_Task__c" 
+                     developername="Investigation_Tools__c" 
+                     unSelectedDisplayText="Select Tool...."
+                     initvalue="{!genTask.Investigation_Tools__c}" 
+                     disabled="{!OR(genTask.ChangeFieldApprovalStatus__c=='Pending',genTask.Status__c=='Pending Approval',genTask.Status__c=='Closed',genTask.Status__c=='Void',NOT(OR(genTask.OwnerId==$User.Id,Non_Conformance__c.OwnerId=$User.Id,$Profile.Name=='System Administrator')))}">
+                 </c:wiz_select>
+                  </c:wiz_field>
+                
+                 <div class="col-md-6 push-down"></div>
+                 <div class="button-bar text-right">
+                     <apex:outputPanel rendered="{!NOT(OR(genTask.ChangeFieldApprovalStatus__c=='Pending',genTask.Status__c=='Pending Approval',genTask.Status__c=='Closed',genTask.Status__c=='Void',NOT(OR(genTask.OwnerId==$User.Id,Non_Conformance__c.OwnerId=$User.Id,$Profile.Name=='System Administrator'))))}">
+                         <button id="create-investigation-button" class="btn btn-primary" onclick="createrootcause();"><span class="fa fa-plus-square-o"></span> Add Root Cause</button>
+                     </apex:outputPanel>
+                 </div>  
+                      
+                 <c:wiz_approvalbutton approvalbuttonid="ApprovaButtonIdNcContainment" jsid="javascriptidForApprovalbutton" RecordId="{!genTask.Id}" ></c:wiz_approvalbutton>
+            
+                  </apex:outputpanel>
+                    
+                  
+            
+            
+             
+                    <c:wiz_add_rootcause_action genTask="{!genTask}" rendered="{!NOT(OR(genTask.ChangeFieldApprovalStatus__c=='Pending',genTask.Status__c=='Pending Approval',genTask.Status__c=='Closed',genTask.Status__c=='Void',NOT(OR(genTask.OwnerId==$User.Id,Non_Conformance__c.OwnerId=$User.Id,$Profile.Name=='System Administrator'))))}"/>
+              
+        
+            
+            <div class="clearfix"></div>
+            
+            <div class="wiz-field col-md-12">  
+                <!--  Accordian -->
+               
+                   
+                        <c:wiz_added_rootcause_action genTask="{!genTask}" isLock="{!OR(genTask.ChangeFieldApprovalStatus__c=='Pending',genTask.Status__c=='Pending Approval',genTask.Status__c=='Closed',genTask.Status__c=='Void',NOT(OR(genTask.OwnerId==$User.Id,Non_Conformance__c.OwnerId=$User.Id,$Profile.Name=='System Administrator')),Non_Conformance__c.NC_Status__c == 'Closed')}" editable="true" NC="{!Non_Conformance__c}" />
+                 
+               
+                
+</div>
+                            
+                </apex:outputPanel>
+                            <!---------END INVESTIGATION------------->
+            <!---------DISPOSITION------------------->
+                
+                <apex:outputPanel rendered="{!AND($CurrentPage.parameters.type=='Disposition',ContTask.RecordType.Name=='Disposition')}">
+                      <script>
+
+            function saveApprovalFromDigitalSignature(){
+                // when clicking save button 
+                if(!SubmitwithApproval){
+                    if($('#tableId_chk').is(':checked')){
+                        saveApprovalData('{!JSENCODE(gDispTask.Id)}',SubmitwithApproval);  
+                    }else{
+                        updateApprovalRequired('{!JSENCODE(gDispTask.Id)}',$('#tableId_chk').is(':checked'));
+                    }
+                }else if(SubmitwithApproval){
+                    if($('#tableId_chk').is(':checked')){
+                        saveApprovalData('{!JSENCODE(gDispTask.Id)}',SubmitwithApproval);  
+                    }
+                    else{
+                        checkDispositionCompletionStatus('{!JSENCODE(gDispTask.Id)}');
+                    }
+                    
+                }    
+            }
+            
+            function updateApprovalRequired(generalTaskId,flag){
+                
+                Visualforce.remoting.Manager.invokeAction(
+                // @RemoteAction
+                    '{!$RemoteAction.GeneralTaskController.updateDispositionApprovalRequired}',generalTaskId,flag,
+                    function(result, event){
+                        if(event.status){
+                            
+                            window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';
+                        }else{
+                          //  console.log("update approval required failed");
+                        }
+                    }
+                );
+            }
+            
+            function checkDispositionCompletionStatus(generalTaskId){
+                Visualforce.remoting.Manager.invokeAction(
+                // @RemoteAction
+                '{!$RemoteAction.GeneralTaskController.checkDispositionCompletionStatus}',generalTaskId,
+                    function(result, event){
+                        if(event.status){
+                            
+                            window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';
+                        }else{
+                           // console.log("found one or more pending disposition task");
+                        }
+                    }
+                );
+            }    
+            
+           </script>
+                
+            
+                <c:wiz_change_field typeofApprover="NC_Approval" GT="{!gDispTask}" isLock="{!OR(gDispTask.Status__c=='Disposition Pending Completion',gDispTask.Status__c=='Pending Approval',gDispTask.Status__c=='Closed',gDispTask.Status__c=='Void',NOT(OR(gDispTask.ownerid==$User.Id,isApprover,$Profile.Name=='System Administrator',NonConformance.OwnerId==$User.Id)),Non_Conformance__c.NC_Status__c == 'Closed')}"  RecordId="{!gDispTask.id}" TochangeFieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c" Required="true" FieldId="OwnerId" FieldName="Owner"   FieldValue="{!JSENCODE(gDispTask.Owner.Name)}" ModalId="ContainmentFieldName" rendered="{!$ObjectType.General_Task__c.Fields.New_Owner__c.Accessible}">
+                      <c:wiz_form recordid="{!gDispTask.Id}" formclass="OwnerId_NCTaskform validate" formid="OwnerId_NCTaskform" submitpage="stringify_sobject"  postsavejs="window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';">  
+                          <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}general_task__c"/> 
+                        <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.New_Owner__c.Label}"   required="true" jsid="change_owner" rendered="{!$ObjectType.General_Task__c.Fields.New_Owner__c.Accessible}">                            
+                            <c:wiz_multi FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c" width="100%" Required="true" initValues="{value:'{!JSENCODE(gDispTask.New_Owner__c)}', label:'{!JSENCODE(gDispTask.New_Owner__r.Name)}'}"  querytable="User" queryfields="Name" disabled="{!AND(if(gDispTask.ChangeFieldApprovalStatus__c=='Pending',true,false),$ObjectType.General_Task__c.Fields.New_Owner__c.updateable)}" typeofuser="NC_Task_Owner"/>                                
+                         </c:wiz_field>
+                        </c:wiz_form>
+                   </c:wiz_change_field>
+                 
+                   <c:wiz_change_field typeofApprover="NC_Approval" GT="{!gDispTask}" isLock="{!OR(gDispTask.Status__c=='Disposition Pending Completion',gDispTask.Status__c=='Pending Approval',gDispTask.Status__c=='Closed',gDispTask.Status__c=='Void',NOT(OR(gDispTask.ownerid==$User.Id,isApprover,$Profile.Name=='System Administrator',NonConformance.OwnerId==$User.Id)),Non_Conformance__c.NC_Status__c == 'Closed')}" RecordId="{!gDispTask.id}" TochangeFieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c" Required="true" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c" FieldName="{!$ObjectType.General_Task__c.Fields.Due_Date__c.Label}" FieldType="date" FieldDateValue="{!gDispTask.Due_Date__c}" ModalId="DueDateid" rendered="{!$ObjectType.General_Task__c.Fields.New_Due_Date__c.Accessible}">
+                     <c:wiz_form recordid="{!gDispTask.Id}" formclass="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_NCTaskform validate" formid="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_NCTaskform" submitpage="stringify_sobject"  postsavejs="window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';">    
+                         <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}general_task__c"/> 
+                       <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.New_Due_Date__c.label}"  required="true" jsid="change_date" rendered="{!$ObjectType.General_Task__c.Fields.New_Due_Date__c.Accessible}">
+                             <c:wiz_date placeholder="DD/MM/YYYY" maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())+100}" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c" initdate="{!gDispTask.New_Due_Date__c}"  updateable="{!AND(if(gDispTask.ChangeFieldApprovalStatus__c=='Pending',false,true),$ObjectType.General_Task__c.Fields.New_Due_Date__c.updateable)}" />
+                         </c:wiz_field>
+                       </c:wiz_form>
+                  </c:wiz_change_field>
+                
+                  <div class="clearfix"></div>
+             
+                    <div class="wiz-field " >  
+                        
+                        <c:wiz_add_disposition nc="{!Non_Conformance__c}" dispTask="{!ContTask}"  tableId="DispoTab"  divId="dispo" dispTypeId="DispType" totalDispQtyId="TotalDispQty" prodListId="prodList" prodBatchId="ProdBatch" dispQtyId="DispoQty" pendDispQtyId="PendDispo" assignedTo="AssignedTo" dueDate="DDate" dispoInst="DInst" dispoCompBy="DispoCompBy" dispoCompDate="DCompDate" dispoCompComm="DCompComm" completed="Completed" ncId="{!Non_Conformance__c.Id}"></c:wiz_add_disposition>
+                        <script>
+                            function checkQuantity(){
+                                return allProductsDefects.length==0;
+                            }    
+                        </script>
+                    </div>                 
+                    
+                
+                <div class="wiz-field">  
+                         <c:wiz_approvalbutton approvalbuttonid="ApprovaButtonIdNcClosure" jsid="javascriptidForApprovalbutton" RecordId="{!gDispTask.Id}" rendered="{!OR($User.Id==gDispTask.Approver__c,$User.Id==gDispTask.Approver_1__c,$User.Id==gDispTask.Approver_2__c,$User.Id==gDispTask.Approver_3__c,$User.Id==gDispTask.Approver_4__c,$User.Id==gDispTask.Approver_5__c,$User.Id==gDispTask.Approver_6__c,$User.Id==gDispTask.Approver_7__c,$User.Id==gDispTask.Approver_8__c,$User.Id==gDispTask.Approver_9__c,$User.Id==gDispTask.Initial_Submitter__c)}"/>
+                </div>       
+                </apex:outputPanel>
+            <!---------END DISPOSITION--------------->
+            <!---------IMPLEMENTATION---------------->
+                 <apex:outputPanel rendered="{!AND(ContTask.RecordType.Name=='Implementation',$CurrentPage.parameters.type=='Implementation')}">
+                    <apex:outputpanel layout="none" rendered="true"> 
+
+                            <c:wiz_change_field typeofApprover="NC_Approval" GT="{!ContTask}" isLock="{!OR(ContTask.Status__c=='Pending Approval',ContTask.Status__c=='Pending ActionPlan',ContTask.Status__c=='Closed',ContTask.Status__c=='Void',NOT(OR(NonConformance.OwnerId=$User.Id,ContTask.OwnerId==$User.Id,isApprover,$Profile.Name=='System Administrator')),Non_Conformance__c.NC_Status__c == 'Closed')}"  RecordId="{!ContTask.id}" TochangeFieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c" Required="true" FieldId="OwnerId" FieldName="Owner"   FieldValue="{!JSENCODE(ContTask.Owner.Name)}" ModalId="ImplementationFieldName" rendered="{!$ObjectType.General_Task__c.Fields.New_Owner__c.Accessible}">
+                                <c:wiz_form recordid="{!ContTask.Id}" formclass="OwnerId_NCTaskform validate" formid="OwnerId_NCTaskform" submitpage="stringify_sobject"  postsavejs="window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';">  
+                                    <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}general_task__c"/> 
+                                    <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.New_Owner__c.Label}"   required="true" jsid="change_owner" rendered="{!$ObjectType.General_Task__c.Fields.New_Owner__c.Accessible}">                            
+                                        <c:wiz_multi FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c" Required="true" initValues="{value:'{!JSENCODE(ContTask.New_Owner__c)}', label:'{!JSENCODE(ContTask.New_Owner__r.Name)}'}"  querytable="User" queryfields="Name" disabled="{!AND(if(ContTask.ChangeFieldApprovalStatus__c=='Pending',true,false),$ObjectType.General_Task__c.Fields.New_Owner__c.updateable)}" typeofuser="NC_Task_Owner" />                                
+                                    </c:wiz_field>
+                                </c:wiz_form>
+                            </c:wiz_change_field> 
+                            
+                            <c:wiz_change_field typeofApprover="NC_Approval" GT="{!ContTask}" isLock="{!OR(ContTask.Status__c=='Pending Approval',ContTask.Status__c=='Pending ActionPlan',ContTask.Status__c=='Closed',ContTask.Status__c=='Void',NOT(OR(NonConformance.OwnerId=$User.Id,ContTask.OwnerId==$User.Id,isApprover,$Profile.Name=='System Administrator')),Non_Conformance__c.NC_Status__c == 'Closed')}" RecordId="{!ContTask.id}" TochangeFieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c" Required="true" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c" FieldName="{!$ObjectType.General_Task__c.Fields.Due_Date__c.Label}" FieldType="date" FieldDateValue="{!ContTask.Due_Date__c}" ModalId="DueDateid" rendered="{!$ObjectType.General_Task__c.Fields.New_Due_Date__c.Accessible}">
+                                <c:wiz_form recordid="{!ContTask.Id}" formclass="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_NCTaskform validate" formid="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_NCTaskform" submitpage="stringify_sobject"  postsavejs="window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';">    
+                                    <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}general_task__c"/> 
+                                    <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.New_Due_Date__c.label}"  required="true" jsid="change_date" rendered="{!$ObjectType.General_Task__c.Fields.New_Due_Date__c.Accessible}">
+                                        <c:wiz_date placeholder="DD/MM/YYYY" maxdateallowed="12/31/2018" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c" initdate="{!ContTask.New_Due_Date__c}"  updateable="{!AND(if(ContTask.ChangeFieldApprovalStatus__c=='Pending',false,true),$ObjectType.General_Task__c.Fields.New_Due_Date__c.updateable)}" />
+                                    </c:wiz_field>
+                                </c:wiz_form>
+                            </c:wiz_change_field>
+                            <c:wiz_approvalbutton approvalbuttonid="ApprovaButtonIdNcContainment" jsid="javascriptidForApprovalbutton" RecordId="{!ContTask.Id}" ></c:wiz_approvalbutton>                                    
+                            
+
+                    </apex:outputpanel>
+                    
+                    <div class="wiz-field">  
+                        <c:wiz_add_actionplan divId="actionPlan" nc="{!Non_Conformance__c}" GTRecord="{!ContTask}" isLock="{!OR(ContTask.ChangeFieldApprovalStatus__c=='Pending',ContTask.Status__c=='Pending Approval',ContTask.Status__c=='Closed',ContTask.Status__c=='Void',NOT(OR(ContTask.OwnerId==$User.Id,NonConformance.OwnerId==$User.Id,$Profile.Name=='System Administrator')),Non_Conformance__c.NC_Status__c == 'Closed')}" assignedTo="assignedTo" apdueDate="apDate" actplanCompBy="apCompBy" actplanCompDate="apCompDate" actplanCompComm="apCompComm" completed="completed" Type="Type"></c:wiz_add_actionplan>
+                    </div>  
+                    
+                </apex:outputPanel>
+            <!---------END IMPLEMENTATION------------>  
+                <!--------------CLOSURE--------------->
+        <apex:outputPanel rendered="{!AND(ContTask.RecordType.Name=='Closure',$CurrentPage.Parameters.type=='Closure')}">
+          <c:wiz_validator onvalid="" ignorehidden="true"/> 
+             <apex:outputpanel layout="none" rendered="true"> 
+                <script>
+                   var ObjectiveEvidence=false;
+                   $( document ).ready(function() {
+                       
+                        $("#SubmitwithApprovalButtonafterSpan").html("{!JSENCODE(if(ContTask.Approval_Required__c!='Yes','Close','Start'))}")
+                       
+                     $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY"});
+                         });
+    
+ 
+ 
+    
+
+
+
+
+                function updateCurretnRecord(taskid,recordType,status){
+                      if(status!='Closed'){
+                        if($('#tableId_chk').is(':checked')){
+                        status='OpenANDApprovalRequire';
+                        }
+                        else{
+                        status='OpenANDApprovalNotRequire';
+                        }
+                    }
+                            Visualforce.remoting.Manager.invokeAction(
+                            // @RemoteAction
+                            '{!$RemoteAction.GeneralTaskController.updateCurretnRecord}',taskid,recordType,status,function(result, event){                       
+                                                                                            if(event.status){
+                                                                                                //alert('sucess');
+                                                                                                window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';
+                                                                                            }
+                                });
+                } 
+       var statusforsubmit='OpenANDApprovalNotRequire';
+                 function saveApprovalFromDigitalSignature(){
+                     validate(null,AfterValidate,'Taskapproval');
+                 }
+                 
+                 function AfterValidate(){
+                                      statusforsubmit='Closed';
+                     if($('#tableId_chk').is(':checked')){  
+                         if(ObjectiveEvidence){                             
+                             SubmitwithApproval=true;
+                             $('#Closureform').submit();
+                         }
+                         else{
+                         saveApprovalData('{!ContTask.Id}',SubmitwithApproval);   
+                         }
+                     }
+                     else{
+                         if(ObjectiveEvidence){  
+                             if(!$('#tableId_chk').is(':checked')){
+                                 $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Approval_Required__cabc').attr('name','{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Approval_Required__c');
+                             }
+                             $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Status__cabc').attr('name','{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Status__c');
+                             $('#Closureform').submit();
+                         }
+                         else{
+                         updateCurretnRecord('{!ContTask.Id}','{!ContTask.RecordType.Name}','Closed');   
+                         }
+                     }
+                 }
+                 function saveClosure(){                  
+                     validate(null,AfterValidatesaveClosure,'Taskapproval');
+                 }
+
+                 function AfterValidatesaveClosure(){
+                     if(!$('#tableId_chk').is(':checked')){
+                     $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Approval_Required__cabc').attr('name','{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Approval_Required__c');
+                     }
+                     if(ObjectiveEvidence){
+                         if(!($("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Objective_Evidence__c").val()==null||$("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Objective_Evidence__c").val()=='')){
+                             SubmitClosureform();
+                         }
+                         else{
+                             $( '#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Objective_Evidence__c_error' ).html( "<p><font color='red'>This Field is required</font></p>");
+                         }
+    
+                     }
+                     else{
+                         if(!$('#tableId_chk').is(':checked')){
+                             updateCurretnRecord('{!ContTask.Id}','{!ContTask.RecordType.Name}','OpenANDApprovalNotRequire');
+                         }
+                         else{
+                             saveApprovalData('{!ContTask.Id}',false);
+                         }
+                     }
+                 }
+                 </script>
+                    <c:wiz_change_field typeofApprover="NC_Approval" FieldClass="col-md-4" GT="{!ContTask}" isLock="{!OR(ContTask.Status__c=='Pending Approval',ContTask.Status__c=='Closed',ContTask.Status__c=='Void',NOT(OR(NonConformance.OwnerId=$User.Id,ContTask.OwnerId==$User.Id,isApprover,$Profile.Name=='System Administrator')),Non_Conformance__c.NC_Status__c == 'Closed')}"  RecordId="{!ContTask.id}" TochangeFieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c" Required="true" FieldId="OwnerId" FieldName="Owner" FieldValue="{!JSENCODE(ContTask.Owner.Name)}" ModalId="ContainmentFieldName" rendered="{!$ObjectType.General_Task__c.Fields.New_Owner__c.Accessible}">
+                      <c:wiz_form recordid="{!ContTask.Id}" formclass="OwnerId_NCTaskform validate" formid="OwnerId_NCTaskform" submitpage="stringify_sobject"  postsavejs="window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';">  
+                          <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}general_task__c"/> 
+                        <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.New_Owner__c.Label}"   required="true" jsid="change_owner" rendered="{!$ObjectType.General_Task__c.Fields.New_Owner__c.Accessible}">                            
+                            <c:wiz_multi FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Owner__c" width="100%" Required="true" initValues="{value:'{!JSENCODE(ContTask.New_Owner__c)}', label:'{!JSENCODE(ContTask.New_Owner__r.Name)}'}"  querytable="User" queryfields="Name" disabled="{!AND(if(ContTask.ChangeFieldApprovalStatus__c=='Pending',true,false),$ObjectType.General_Task__c.Fields.New_Owner__c.updateable)}" typeofuser="NC_Task_Owner"/>                                
+                         </c:wiz_field>
+                        </c:wiz_form>
+                   </c:wiz_change_field>
+                   <c:wiz_change_field FieldClass="col-md-4" GT="{!ContTask}" isLock="true"  RecordId="{!ContTask.id}"  Required="true" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Allowed_Days__c" FieldName="{!$ObjectType.General_Task__c.Fields.Allowed_Days__c.Label}"   FieldValue="{!ContTask.Allowed_Days__c}" ModalId="ContainmentFieldName" rendered="{!$ObjectType.General_Task__c.Fields.Allowed_Days__c.Accessible}"/>
+                   <c:wiz_change_field typeofApprover="NC_Approval" FieldClass="col-md-4" GT="{!ContTask}" isLock="{!OR(ContTask.Status__c=='Pending Approval',ContTask.Status__c=='Closed',ContTask.Status__c=='Void',NOT(OR(NonConformance.OwnerId=$User.Id,ContTask.OwnerId==$User.Id,isApprover,$Profile.Name=='System Administrator')),Non_Conformance__c.NC_Status__c == 'Closed')}" RecordId="{!ContTask.id}" TochangeFieldName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c" Required="true" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c" FieldName="{!$ObjectType.General_Task__c.Fields.Due_Date__c.Label}" FieldType="date" FieldDateValue="{!ContTask.Due_Date__c}" ModalId="DueDateid" rendered="{!$ObjectType.General_Task__c.Fields.New_Due_Date__c.Accessible}">
+                     <c:wiz_form recordid="{!ContTask.Id}" formclass="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_NCTaskform validate" formid="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Due_Date__c_NCTaskform" submitpage="stringify_sobject"  postsavejs="window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';">    
+                         <input type="hidden" name="sobj" value="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}general_task__c"/> 
+                       <c:wiz_field FieldLabel="{!$ObjectType.General_Task__c.Fields.New_Due_Date__c.label}"  required="true" jsid="change_date" rendered="{!$ObjectType.General_Task__c.Fields.New_Due_Date__c.Accessible}">
+                             <c:wiz_date placeholder="DD/MM/YYYY" maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())+100}" FieldId="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c" initdate="{!ContTask.New_Due_Date__c}"  updateable="{!AND(if(ContTask.ChangeFieldApprovalStatus__c=='Pending',false,true),$ObjectType.General_Task__c.Fields.New_Due_Date__c.updateable)}" />
+                         </c:wiz_field>
+                       </c:wiz_form>
+                  </c:wiz_change_field>
+                  <div class="clearfix"></div>
+                 <div class="wiz-fields-wide">
+                     
+                 </div>
+                 
+
+               <!--  <c:submitforApproval approvalbuttonid="ApprovaButtonIdNcClosure" jsid="javascriptidForApprovalbutton" generalTask="{!ContTask}" returnURL="window.location.href='/apex/nc_details?id='+'{!Non_Conformance__c.id}'"></c:submitforApproval>-->
+                 <c:wiz_approvalbutton approvalbuttonid="ApprovaButtonIdNcClosure" jsid="javascriptidForApprovalbutton" RecordId="{!ContTask.Id}" rendered="{!AND(OR(NonConformance.OwnerId=$User.Id,ContTask.OwnerId==$User.Id,$Profile.Name=='System Administrator',isApprover),Non_Conformance__c.NC_Status__c != 'Closed')}"/>
+            </apex:outputpanel>
+       
+              <div class="clearfix"></div>
+              
+                        </apex:outputPanel>                
+                <!-------------END CLOSURE-------------->
+            </apex:repeat>
+
+            
+                    <apex:variable value="{!0}" var="counter"/>
+                    <apex:repeat value="{!Non_Conformance__c.General_Tasks__r}" var="ContTask">
+                        <!--------------next button stert---------------->
+                        <apex:outputPanel rendered="{!ContTask.Sequence_Position__c==tempTask}">
+                            <apex:variable value="{!counter+1}" var="counter"/>
+                        </apex:outputPanel>
+                        <!--------------next button end------------------>
+                    <apex:outputPanel rendered="{!AND(ContTask.RecordType.Name==$CurrentPage.parameters.type,ContTask.id==$CurrentPage.parameters.gtid)}">
+                    <apex:outputPanel rendered="{!if(ContTask.ChangeFieldApprovalStatus__c=='Pending',false,true)}">
+                        <apex:outputPanel rendered="{!AND(OR($User.Id==ContTask.Approver__c,$User.Id==ContTask.Approver_1__c,$User.Id==ContTask.Approver_2__c,$User.Id==ContTask.Approver_3__c,$User.Id==ContTask.Approver_4__c,$User.Id==ContTask.Approver_5__c,$User.Id==ContTask.Approver_6__c,$User.Id==ContTask.Approver_7__c,$User.Id==ContTask.Approver_8__c,$User.Id==ContTask.Approver_9__c),ContTask.Status__c=='Pending Approval')}">                                           
+                            <div class="form-group col-md-12 id='Note_To_Approver__c' ">   
+                                <label >{!$ObjectType.General_Task__c.Fields.Note_To_Approver__c.Label}:
+                                </label>
+                                <!-- <textarea value="{!ContTask.Note_To_Approver__c}" disabled="disabled" class="form-control changeMe-setTextArea">{!ContTask.Note_To_Approver__c}</textarea>   -->
+                                <div class="alert alert-info"> <apex:outputField value="{!ContTask.Note_To_Approver__c}" /> </div>
+                            </div>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                    
+                    <c:wiz_form FormClass="Taskapproval validate" FormId="Taskapproval" RecordId="" submitPage="">
+                        
+                        <c:wiz_approval disabled="false" isLocked="{!OR(ContTask.Status__c=='Pending ActionPlan',ContTask.Status__c=='Disposition Pending Completion',ContTask.ChangeFieldApprovalStatus__c=='Pending',ContTask.Status__c=='Pending Approval',ContTask.Status__c=='Closed',ContTask.Status__c=='Void',NOT(OR(NonConformance.OwnerId=$User.Id,ContTask.OwnerId==$User.Id,$Profile.Name=='System Administrator')),Non_Conformance__c.NC_Status__c == 'Closed')}" allowDaysFieldId="allAllowed_Days__c" isSubmitForApproval="true" dueDateFieldId="allDue_Date__c"  taskId="{!ContTask.id}" seqFieldId="seqFieldId" tableId="tableId" crDate="{!ContTask.CreatedDate}" id="approvalid" isApproverNoteNeeded="true" userFieldId="userFieldId" rendered="{!NOT(AND(ContTask.Approval_Required__c!='Yes',OR(ContTask.Status__c=='Pending Approval',ContTask.ChangeFieldApprovalStatus__c=='Pending',ContTask.Status__c=='Closed',ContTask.Status__c=='Void',NOT(OR(NonConformance.OwnerId=$User.Id,ContTask.OwnerId==$User.Id,$Profile.Name=='System Administrator')))))}"  noteToApprover="{!ContTask.Note_To_Approver__c}" typeofapprover="NC_Approval" initjs="
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              if({!(ContTask.Approval_Required__c=='Yes')}){
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              $('#tableId_div').removeClass('hidden'); 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              $('#tableId_link').removeClass('hidden');$('#tableId_chk').attr('checked', true);                
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              $('#tableId_table').find('input,select').each(function(){
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              $(this).attr('disabled', false);   
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              });
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              } 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              else{
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              $('#tableId_div').addClass('hidden'); 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              $('#tableId_link').addClass('hidden');
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              $('#tableId_chk').attr('checked', false); 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              }"
+                                        /> 
+                    </c:wiz_form>
+                    <!-- added on 9th dec ----->
+                    <apex:outputPanel rendered="{!(ContTask.Approval_Required__c!='Yes') && OR(ContTask.Status__c=='Closed',ContTask.ChangeFieldApprovalStatus__c=='Pending',ContTask.Status__c=='Void',NOT(OR(NonConformance.OwnerId=$User.Id,ContTask.OwnerId==$User.Id,$Profile.Name=='System Administrator')),ContTask.Status__c=='Pending Approval')}" >
+                        <div class="col-md-12">
+                            <input  type="checkbox" value="Yes" disabled="true"/> Approval Required?
+                        </div>
+                    </apex:outputPanel> 
+                    <script>
+                    function cancelPopup(){
+                        /*var r = confirm("All the data will be lost");
+                            if (r == true) {
+                               //window.location = '/apex/nc_containment?id={!$CurrentPage.parameters.id}';
+                               window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';
+                            } else {
+                              //  console.log("You pressed Cancel!");
+                            }*/
+                        
+                        var YESButtonInRedirectModalOnClick = function () {
+                            window.location.href = '/{!JSENCODE($CurrentPage.parameters.gtid)}';
+                        };
+                        var NOButtonInRedirectModalOnClick = function () {
+                            
+                        };
+                        $('#redirectDialog .btn-primary').bind( "click", YESButtonInRedirectModalOnClick);
+                        $('#redirectDialog .btn-default').bind( "click", NOButtonInRedirectModalOnClick);
+                        
+                        // Show the redirect dialog
+                        $('#redirectDialog').modal('show');
+                        
+                        // Remove the onClick event
+                        $('#redirectDialog').on('hidden.bs.modal', function () {
+                            $('#redirectDialog .btn-primary').unbind( "click", YESButtonInRedirectModalOnClick);
+                            $('#redirectDialog .btn-default').unbind( "click", NOButtonInRedirectModalOnClick);
+                        })
+                    }
+                    
+                    
+                    
+                    
+                    </script>
+                    </apex:outputPanel>
+                           
+            </apex:repeat>
+        </apex:define>
+        <apex:define name="approvalHistory">
+                    <c:wiz_approvalHistory Parent="{!$CurrentPage.parameters.type}" TargetobjectId="{!$CurrentPage.parameters.gtid}"></c:wiz_approvalHistory>  
+        </apex:define>
+        <apex:define name="buttonbar">
+            <apex:repeat value="{!Non_Conformance__c.General_Tasks__r}" var="ContTask">
+                <apex:outputPanel rendered="{!AND(ContTask.id==$CurrentPage.parameters.gtid,OR($CurrentPage.parameters.type=='Containment',$CurrentPage.parameters.type=='AdhocTask'))}">
+                <apex:outputPanel rendered="{!ContTask.RecordType.Name==$CurrentPage.parameters.type}">
+                        <apex:outputpanel layout="none" rendered="{!AND(NOT(OR((ContTask.ChangeFieldApprovalStatus__c=='Pending'),(ContTask.Status__c=='Closed'),(ContTask.Status__c=='Void'))))}"> 
+                            
+                            <apex:outputpanel layout="none" rendered="{!AND(NOT(Non_Conformance__c.Closed__c),OR(NonConformance.OwnerId=$User.Id,ContTask.OwnerId==$User.Id,$Profile.Name=='System Administrator'), OR($ObjectType.Non_Conformance__c.Updateable, AND(ISBLANK(Non_Conformance__c.Id), $ObjectType.Non_Conformance__c.Createable)))}">
+                                <apex:outputPanel rendered="{!if(ContTask.Status__c=='Pending Approval',false,true)}">          
+                                    <button type="button" class="btn btn-default" onclick="cancelPopup();"><span class="fa fa-close"></span>Cancel</button>
+                                </apex:outputPanel>
+                            </apex:outputpanel>
+                            
+                            <apex:outputpanel layout="none" rendered="{!AND(NOT(Non_Conformance__c.Closed__c),NOT(ISBLANK(Non_Conformance__c.Id)))}">
+                                <apex:outputPanel rendered="{!AND((ContTask.ChangeFieldApprovalStatus__c!='Pending'),(ContTask.Status__c!='Pending Approval'),OR(NonConformance.OwnerId=$User.Id,ContTask.OwnerId==$User.Id,$Profile.Name=='System Administrator'))}">
+                                    <script>
+                                    var SubmitwithApproval=true;
+                                    </script>
+                                    <button type="submit" onclick="save=true;SubmitwithApproval=false;ApprovalValidator(saveOnclick);" class="btn btn-primary dont-allow-multiple-clicks" ><span class="fa fa-floppy-o"></span> Save</button>
+                                    <apex:outputPanel rendered="{!(ContTask.Status__c=='Open')}">
+                                        <button type="submit" id="SubmitwithApprovalButton" onclick="ApprovalValidator(submitonclick);" class="btn btn-success dont-allow-multiple-clicks" ><span class="fa fa-send"></span> Submit</button>
+                                    </apex:outputPanel>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!NOT(ContTask.ChangeFieldApprovalStatus__c=='Pending')}">
+                                    <apex:outputPanel rendered="{!ContTask.Status__c=='Pending Approval'}">     
+                                        <apex:outputPanel rendered="{!OR(isApprover)}">
+                                            <button type="submit"  id="ApprovaButtonIdNcContainment"  onclick="ApprovePopupModal();" class="btn btn-success  dont-allow-multiple-clicks" >
+                                                <span class='fa fa-thumbs-o-up'></span> Decision</button>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel rendered="{!OR($Profile.Name=='System Administrator',NonConformance.OwnerId=$User.Id,ContTask.Initial_Submitter__c==$User.Id,ContTask.OwnerId==$User.Id)}">
+                                            <button type="submit" id="RecallButtonIdNcContainment"  onclick="RecallPopupModal();" class="btn btn-primary  dont-allow-multiple-clicks " ><span class="fa fa-mail-reply-all"></span> Recall</button>     
+                                        </apex:outputPanel> 
+                                    </apex:outputPanel>    
+                                </apex:outputPanel> 
+                            </apex:outputpanel>
+                        </apex:outputpanel>  
+                        
+
+                    </apex:outputpanel>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!AND(ContTask.RecordType.Name=='Investigation',$CurrentPage.parameters.type=='Investigation')}" > 
+                   
+                    <apex:outputpanel layout="none" rendered="{!AND(NOT(OR((genTask.ChangeFieldApprovalStatus__c=='Pending'),(genTask.Status__c=='Closed'),(genTask.Status__c=='Void'))))}">
+                        <apex:outputPanel rendered="{!AND(if(genTask.ChangeFieldApprovalStatus__c=='Pending',false,true),if(genTask.Status__c=='Pending Approval',false,true),OR(genTask.OwnerId==$User.Id,Non_Conformance__c.OwnerId=$User.Id,$Profile.Name=='System Administrator'))}">
+                            <button type="button" class="btn btn-default" onclick="cancelPopup();"><span class="fa fa-close"></span> Cancel</button>
+                           
+                            <button type="button"  onclick="isClose =false;SubmitwithApproval=false;updateInvestigationTask('{!genTask.Id}');" class="btn btn-primary dont-allow-multiple-clicks"><span class="fa fa-floppy-o"></span> Save</button>                           
+                            <!--TODO--add "hidden" attribute for class in submit button-->
+                            <apex:outputPanel rendered="{!(genTask.Status__c=='Open')}">
+                                <button type="button" id="SubmitwithApprovalButton" onclick="onInvestSubmit();" class="btn btn-success dont-allow-multiple-clicks"><span class="fa fa-send"></span> Submit</button>
+                            </apex:outputPanel>
+                        </apex:outputPanel> 
+                       <apex:outputPanel rendered="{!if(genTask.Status__c=='Pending Approval',true,false)}">     
+                            
+                             <apex:outputPanel rendered="{!NOT(genTask.ChangeFieldApprovalStatus__c=='Pending')}">
+                                    <apex:outputPanel rendered="{!genTask.Status__c=='Pending Approval'}">     
+                                        <apex:outputPanel rendered="{!OR($User.Id==genTask.Approver__c,$User.Id==genTask.Approver_1__c,$User.Id==genTask.Approver_2__c,$User.Id==genTask.Approver_3__c,$User.Id==genTask.Approver_4__c,$User.Id==genTask.Approver_5__c,$User.Id==genTask.Approver_6__c,$User.Id==genTask.Approver_7__c,$User.Id==genTask.Approver_8__c,$User.Id==genTask.Approver_9__c)}">
+                                        <button type="submit" id="ApprovaButtonIdNcContainment"  onclick="ApprovePopupModal();" class="btn btn-success  dont-allow-multiple-clicks"><span class='fa fa-thumbs-o-up'></span> Decision</button>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel rendered="{!(genTask.Initial_Submitter__c==$User.Id)}">
+                                        <button type="submit" id="RecallButtonIdNcContainment"  onclick="RecallPopupModal();" class="btn btn-primary  dont-allow-multiple-clicks "><span class="fa fa-mail-reply-all"></span> Recall</button>     
+                                        </apex:outputPanel> 
+                                    </apex:outputPanel>    
+                            </apex:outputPanel> 
+                           <!--   <button type="submit" id="RecallButtonIdNcContainment"  onclick="$('#javascriptidForApprovalbutton').modal('show');" class="btn btn-primary  dont-allow-multiple-clicks" >Recall</button> -->
+                       </apex:outputPanel> 
+                       
+                    </apex:outputpanel>
+
+              </apex:outputPanel>
+            <apex:outputPanel rendered="{!AND(ContTask.RecordType.Name=='Implementation',$CurrentPage.parameters.type=='Implementation')}">
+            <apex:outputpanel layout="none" rendered="{!AND(if(ContTask.ChangeFieldApprovalStatus__c=='Pending',false,true),if(ContTask.Status__c=='Closed',false,true),if(ContTask.Status__c=='Void',false,true))}"> 
+                
+                    <apex:outputpanel layout="none" rendered="{!AND(NOT(Non_Conformance__c.Closed__c),OR(ContTask.OwnerId==$User.Id,NonConformance.OwnerId==$User.Id,$Profile.Name=='System Administrator'), OR($ObjectType.Non_Conformance__c.Updateable, AND(ISBLANK(Non_Conformance__c.Id), $ObjectType.Non_Conformance__c.Createable)))}">
+                        <apex:outputPanel rendered="{!AND(if(ContTask.Status__c=='Pending Approval',false,true),if(ContTask.Status__c=='Pending ActionPlan',false,true))}">          
+                            <button id="Cancel" type="button" class="btn btn-default dont-allow-multiple-clicks" onclick="cancelPopup();"><span class="fa fa-close"></span> Cancel</button>
+                        </apex:outputPanel>
+                    </apex:outputpanel>
+                
+                    <apex:outputpanel layout="none" rendered="{!AND(NOT(Non_Conformance__c.Closed__c),NOT(ISBLANK(Non_Conformance__c.Id)))}">
+                            <apex:outputPanel rendered="{!AND(if(ContTask.ChangeFieldApprovalStatus__c=='Pending',false,true),if(ContTask.Status__c=='Pending Approval',false,true),if(ContTask.Status__c=='Pending ActionPlan',false,true),OR(ContTask.OwnerId==$User.Id,NonConformance.OwnerId==$User.Id,$Profile.Name=='System Administrator'))}">
+                                <button id="Save" type="submit" class="btn btn-primary dont-allow-multiple-clicks" onclick="SubmitwithApproval=false;if(actPlanValidation()){$('.dont-allow-multiple-clicks').attr('disabled', 'true');saveActionPlan('{!ContTask}');$('.dont-allow-multiple-clicks').attr('disabled', 'false');}"><span class="fa fa-floppy-o"></span> Save </button>  
+                                <apex:outputPanel rendered="{!(ContTask.Status__c=='Open')}">
+                                    <!--<button type="submit" class="btn btn-success dont-allow-multiple-clicks" id="SubmitwithApprovalButtonImplementation" onclick="SubmitwithApproval=true;if(actPlanValidation()){$('#signature').modal('show');}"><span class="fa fa-send"></span> Submit </button>-->
+                                    <button type="submit" class="btn btn-success dont-allow-multiple-clicks" id="SubmitwithApprovalButtonImplementation" onclick="onSubmit()"><span class="fa fa-send"></span> Submit </button>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                            
+                        <apex:outputPanel rendered="{!NOT(ContTask.ChangeFieldApprovalStatus__c=='Pending')}">
+                            <apex:outputPanel rendered="{!ContTask.Status__c=='Pending Approval'}">     
+                                <apex:outputPanel rendered="{!OR($User.Id==ContTask.Approver__c,$User.Id==ContTask.Approver_1__c,$User.Id==ContTask.Approver_2__c,$User.Id==ContTask.Approver_3__c,$User.Id==ContTask.Approver_4__c,$User.Id==ContTask.Approver_5__c,$User.Id==ContTask.Approver_6__c,$User.Id==ContTask.Approver_7__c,$User.Id==ContTask.Approver_8__c,$User.Id==ContTask.Approver_9__c)}">
+                                    <button type="submit" id="ApprovaButtonIdNcContainment"  onclick="ApprovePopupModal();" class="btn btn-success  dont-allow-multiple-clicks"><span class='fa fa-thumbs-o-up'></span> Decision</button>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!(ContTask.Initial_Submitter__c==$User.Id)}">
+                                    <button type="submit" id="RecallButtonIdNcContainment"  onclick="RecallPopupModal();" class="btn btn-primary  dont-allow-multiple-clicks "><span class="fa fa-mail-reply-all"></span> Recall</button>     
+                                </apex:outputPanel> 
+                            </apex:outputPanel>    
+                        </apex:outputPanel>  
+                         
+                        <apex:outputPanel rendered="{!NOT(ContTask.ChangeFieldApprovalStatus__c=='Pending')}">
+                            <apex:outputPanel >   
+                                <apex:outputPanel > 
+                                    <button type="submit" id="RecallButtonNcImplementation" onclick="RecallforPendingActionPlan('{!ContTask.Id}','{!ContTask.Status__c}');" class="btn btn-primary  dont-allow-multiple-clicks"><span class="fa fa-mail-reply-all"></span> Recall</button>     
+                                </apex:outputPanel> 
+                            </apex:outputPanel>    
+                        </apex:outputPanel> 
+                    </apex:outputpanel>
+                </apex:outputpanel>   
+
+               </apex:outputPanel>
+                 <apex:outputPanel rendered="{!AND(ContTask.RecordType.Name=='Closure',$CurrentPage.parameters.type=='Closure')}">
+            <apex:outputpanel layout="none" rendered="{!AND(if(ContTask.ChangeFieldApprovalStatus__c=='Pending',false,true),if(ContTask.Status__c=='Closed',false,true),if(ContTask.Status__c=='Void',false,true))}"> 
+                
+                    <apex:outputpanel layout="none" rendered="{!AND(NOT(Non_Conformance__c.Closed__c),OR(NonConformance.OwnerId=$User.Id,ContTask.OwnerId==$User.Id,$Profile.Name=='System Administrator'),OR($ObjectType.Non_Conformance__c.Updateable, AND(ISBLANK(Non_Conformance__c.Id), $ObjectType.Non_Conformance__c.Createable)))}">
+                            <apex:outputPanel rendered="{!if(ContTask.Status__c=='Pending Approval',false,true)}">          
+                                <button type="button" class="btn btn-default" onclick="cancelPopup();"><span class="fa fa-close"></span> Cancel</button>
+                            </apex:outputPanel>
+                    </apex:outputpanel>
+                
+                    <apex:outputpanel layout="none" rendered="{!AND(NOT(Non_Conformance__c.Closed__c),NOT(ISBLANK(Non_Conformance__c.Id)))}">
+                            <apex:outputPanel rendered="{!AND(if(ContTask.ChangeFieldApprovalStatus__c=='Pending',false,true),if(ContTask.Status__c=='Pending Approval',false,true),OR(NonConformance.OwnerId=$User.Id,ContTask.OwnerId==$User.Id,$Profile.Name=='System Administrator'))}">
+                                <script>
+                                var SubmitwithApproval=true;
+                                $('#tableId_chk').change(function(){
+                                    if( this.checked){
+                                        $("#SubmitwithApprovalButtonafterSpan").html(' Start');
+                                    }
+                                    else{
+                                        if( !this.checked){
+                                            $("#SubmitwithApprovalButtonafterSpan").html(' Close');
+                                        }
+                                    }
+                                });
+                                                                
+                                </script>
+                                 <button type="submit" onclick="SubmitwithApproval=false;saveClosure();" class="btn btn-primary dont-allow-multiple-clicks"><span class="fa fa-floppy-o"></span> Save</button>
+                                <apex:outputPanel rendered="{!AND(ContTask.Status__c=='Open',OR(Non_Conformance__c.NC_Workflow_Status__c=='In Review',Non_Conformance__c.NC_Status__c=='Reopened'))}">                                 
+                                    <script>
+                                    function onvalidForm(){
+                                     var IsDigitalSignatureNeeded='<apex:outputText value="{!($Setup.QC_settings__c.Is_Digital_Signature_Needed__c)}" />';
+                                        if(ObjectiveEvidence){
+                                                if(!($("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Objective_Evidence__c").val()==null||$("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Objective_Evidence__c").val()=='')){
+                                                     if(IsDigitalSignatureNeeded=='true'){ 
+                                                         validate(null,showDigitalSig,'Taskapproval');
+                                                     }else{
+                                                         saveApprovalFromDigitalSignature(); 
+                                                         $('.dont-allow-multiple-clicks').attr('disabled', false);
+                                                         $('.dont-allow-multiple-clicks').attr('disabled', true);         }
+                                                }
+                                                else{
+                                                    $( '#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Objective_Evidence__c_error' ).html( "<p><font color='red'>This Field is required</font></p>");
+                                                }
+                                        }
+                                        else{
+                                         if(IsDigitalSignatureNeeded=='true'){
+                                         validate(null,showDigitalSig,'Taskapproval');
+                                          /*   $('#uname').val('');
+                                             $('#pw').val('');
+                                             $('.dont-allow-multiple-clicks').removeAttr('disabled');
+                                             $('#containment_digital_signature_modalid').modal('show');*/
+                                         }else{                                             
+                                             saveApprovalFromDigitalSignature();
+                                             $('.dont-allow-multiple-clicks').attr('disabled', false);
+                                             $('.dont-allow-multiple-clicks').attr('disabled', true);
+                                         }
+                                        }
+
+
+                                    }
+                                    function showDigitalSig(){
+                                                     $('#uname').val('');
+                                                     $('#pw').val('');
+                                                     $('.dont-allow-multiple-clicks').removeAttr('disabled'); 
+                                                     $('#containment_digital_signature_modalid').modal('show');
+                                    }
+                                    </script>
+                                    <button type="submit" id="SubmitwithApprovalButton" onclick="validate(null,onvalidForm,'Closureform');" class="btn btn-success dont-allow-multiple-clicks" ><span class="fa fa-play"></span><span id="SubmitwithApprovalButtonafterSpan"></span></button>
+                                </apex:outputPanel>     
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!NOT(ContTask.ChangeFieldApprovalStatus__c=='Pending')}">
+                                    <apex:outputPanel rendered="{!ContTask.Status__c=='Pending Approval'}">   
+                                        <apex:outputPanel rendered="{!OR($User.Id==ContTask.Approver__c,$User.Id==ContTask.Approver_1__c,$User.Id==ContTask.Approver_2__c,$User.Id==ContTask.Approver_3__c,$User.Id==ContTask.Approver_4__c,$User.Id==ContTask.Approver_5__c,$User.Id==ContTask.Approver_6__c,$User.Id==ContTask.Approver_7__c,$User.Id==ContTask.Approver_8__c,$User.Id==ContTask.Approver_9__c)}">
+                                        <button type="submit" id="ApprovaButtonIdNcContainment"  onclick="ApprovePopupModal();" class="btn btn-success  dont-allow-multiple-clicks" ><span class="fa fa-thumbs-o-up"></span> Decision</button>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel rendered="{!OR($Profile.Name=='System Administrator',NonConformance.OwnerId==$User.Id,ContTask.Initial_Submitter__c==$User.Id,ContTask.Owner==$User.Id)}">
+                                        <button type="submit" id="RecallButtonIdNcContainment"  onclick="RecallPopupModal();" class="btn btn-danger  dont-allow-multiple-clicks " ><span class="fa fa-hand-stop-o"></span> stop</button>     
+                                        </apex:outputPanel>                                                                             
+                                   </apex:outputPanel>    
+                            </apex:outputPanel> 
+                    </apex:outputpanel>
+                </apex:outputpanel>    
+            </apex:outputpanel>
+            </apex:repeat> 
+            <apex:outputPanel rendered="{!$CurrentPage.parameters.type=='Disposition'}">
+            
+                 <apex:outputpanel layout="none" rendered="{!AND(NOT(Non_Conformance__c.Closed__c), OR($ObjectType.Non_Conformance__c.Updateable, AND(ISBLANK(Non_Conformance__c.Id), $ObjectType.Non_Conformance__c.Createable)))}">
+                <apex:outputPanel rendered="{!NOT(OR((gDispTask.ChangeFieldApprovalStatus__c=='Pending'),(gDispTask.Status__c=='Closed'),(gDispTask.Status__c=='Void')))}">
+                    <button type="button" id="Cancel" class="btn btn-default" onclick="cancelPopup()"><span class="fa fa-close"></span> Cancel</button>
+                    <apex:outputPanel rendered="{!if(gDispTask.Status__c=='Pending Approval',false,true)}">   
+                        <button type="button" id="Save" class="btn btn-primary dont-allow-multiple-clicks" onclick="SubmitwithApproval=false;if(dispoValidation()){$('#Save').attr('disabled', 'true');saveDisposition();$('#Save').attr('disabled', 'false'); }"><span class="fa fa-floppy-o"></span> Save </button> 
+                        <apex:outputPanel rendered="{!gDispTask.Status__c=='Open'}">
+                            <button type="button" id="Submit" class="btn btn-success dont-allow-multiple-clicks" onclick="onSubmit();"><span class="fa fa-send"></span> Submit </button>
+                        </apex:outputPanel>
+                    </apex:outputPanel>        
+                    <apex:outputPanel rendered="{!if(gDispTask.Status__c=='Pending Approval',true,false)}">   
+                        <apex:outputPanel rendered="{!OR($User.Id==gDispTask.Approver__c,$User.Id==gDispTask.Approver_1__c,$User.Id==gDispTask.Approver_2__c,$User.Id==gDispTask.Approver_3__c,$User.Id==gDispTask.Approver_4__c,$User.Id==gDispTask.Approver_5__c,$User.Id==gDispTask.Approver_6__c,$User.Id==gDispTask.Approver_7__c,$User.Id==gDispTask.Approver_8__c,$User.Id==gDispTask.Approver_9__c)}">
+                            <button type="submit" id="ApprovaButtonIdNcContainment"  onclick="ApprovePopupModal();" class="btn btn-success dont-allow-multiple-clicks"><span class='fa fa-thumbs-o-up'></span> Decision</button>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!(gDispTask.Initial_Submitter__c==$User.Id)}">
+                            <button type="submit" id="RecallButtonIdNcContainment"  onclick="RecallPopupModal();" class="btn btn-primary  dont-allow-multiple-clicks "><span class="fa fa-mail-reply-all"></span> Recall</button>     
+                        </apex:outputPanel>                                                                             
+                    </apex:outputPanel>    
+                </apex:outputPanel>
+                
+                <apex:outputPanel >
+                    <apex:outputPanel rendered="{!if(gDispTask.Status__c=='Disposition Pending Completion',true,false)}">
+                        <button id='Recall' type='button' class='btn btn-primary dont-allow-multiple-clicks' onclick="$('#Recall').attr('disabled', 'true');enableAll();$('#Recall').attr('disabled', 'false');"><span class="fa fa-mail-reply-all"></span> Recall</button>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+            </apex:outputpanel>
+
+            </apex:outputPanel>
+            
+       <!-------------Next Button--------------------------->                  
+    <apex:outputPanel rendered="{!AND(counter==1,$CurrentPage.parameters.type!='Closure',OR(Non_Conformance__c.General_Tasks__r[internaltaskid].Status__c=='Closed',Non_Conformance__c.General_Tasks__r[internaltaskid].Status__c=='Void'))}">
+        <button type="button" id="nextbtn" onclick="window.location='/{!nextid}'" class="btn btn-primary dont-allow-multiple-clicks"><span class="fa fa-step-forward"></span> Next </button>
+    </apex:outputPanel>
+    <apex:outputPanel rendered="{!AND(counter>1,$CurrentPage.parameters.type!='Closure',OR(Non_Conformance__c.General_Tasks__r[internaltaskid].Status__c=='Closed',Non_Conformance__c.General_Tasks__r[internaltaskid].Status__c=='Void'))}">
+        <div class="btn-group"  >
+            <button type="button" id="nextbtn" class="btn btn-primary dont-allow-multiple-clicks"><span class="fa fa-step-forward"></span> Next </button>
+            <button type="button" id="butdropdwn" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="caret"></span>
+                <span class="sr-only">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu" >
+                <apex:repeat value="{!Non_Conformance__c.general_Tasks__r}" var="task" >
+                    <apex:repeat rendered="{!AND(tempTask==task.Sequence_Position__c,task.recordType.Name!='AdhocTask')}" value="{!Non_Conformance__c.general_Tasks__r[0]}" var="as">
+                        <li>
+                         <!--   <a href='/apex/nc_task?gtid{!JSENCODE(task.id)}&id={!JSENCODE(task.Non_Conformance__c)}&type={!JSENCODE(task.recordtype.Name)}'>{!task.AdhocTask_Title__c}</a>-->                               
+                                <a href='/{!JSENCODE(task.id)}'>{!JSENCODE(task.recordType.Name)}</a>
+                        </li>
+                    </apex:repeat>
+                    <apex:repeat rendered="{!AND(tempTask==task.Sequence_Position__c,task.recordType.Name=='AdhocTask')}" value="{!Non_Conformance__c.general_Tasks__r[0]}" var="as">
+                        <li>  <a href='/{!JSENCODE(task.id)}'>{!JSENCODE(task.AdhocTask_Title__c)}</a></li>
+                    </apex:repeat>
+                </apex:repeat>
+            </ul>
+        </div>
+    </apex:outputPanel>
+
+            <!-------------END Next Button--------------------->
+
+            
+        </apex:define>
+        <apex:define name="rightpane">
+            <!-- Right container -->
+            <div class="tab-content">  
+                <div class="tab-pane active help" id="help">
+                    <c:Contextual_Help currentpage="nc_{!LOWER(Left($CurrentPage.parameters.type,4))}"/>   
+                </div>
+                <!-- Help Pane -->
+                
+                <!-- Attachment List -->
+                
+                <c:wiz_attachments disable="{!Non_Conformance__c.NC_Status__c=='Void'}" record_id="{!Non_Conformance__c.Id}" showAddButtonLink="{! Non_Conformance__c.NC_Status__c != 'Closed' }"></c:wiz_attachments>
+                
+                <!-- Right container -->  
+            </div>       
+        </apex:define>    
+    </apex:composition>
+    <c:digital_signature rendered="{!OR($CurrentPage.parameters.type=='Containment',$CurrentPage.parameters.type=='Closure',$CurrentPage.parameters.type=='AdhocTask')}" modalid="containment_digital_signature_modalid" returl="/{!$CurrentPage.parameters.gtid}" onSuccess="if(!$('.dont-allow-multiple-clicks').attr('disabled'))
+                                                                                                                                                   {  $('.dont-allow-multiple-clicks').attr('disabled', true); 
+                                                                                                                                                   saveApprovalFromDigitalSignature();                                                                                                                                                   
+                                                                                                                                                   $('.dont-allow-multiple-clicks').attr('disabled', false); 
+                                                                                                                                                   $('.dont-allow-multiple-clicks').attr('disabled', true);                                                                                                                                             
+                                                                                                                                                   }
+                                                                                                                                                   "/>
+  <c:digital_signature rendered="{!$CurrentPage.parameters.type=='Disposition'}" returl="/{!$CurrentPage.parameters.gtid}" onSuccess="if(completedFlag){$('.dont-allow-multiple-clicks').attr('disabled', 'true');saveDisposition();$('.dont-allow-multiple-clicks').attr('disabled', 'false'); }else{$('.dont-allow-multiple-clicks').attr('disabled', 'true');completedSubTask();$('.dont-allow-multiple-clicks').attr('disabled', 'false'); }"
+   />
+               <c:digital_signature rendered="{!$CurrentPage.parameters.type=='Implementation'}" modalid="signature" returl="/{!$CurrentPage.parameters.gtid}" onSuccess="
+                       if(!isCompletedActionplan){
+                          $('.dont-allow-multiple-clicks').attr('disabled', 'true');
+                          saveActionPlan('{!ImplTask}');
+                          $('.dont-allow-multiple-clicks').attr('disabled', 'false');
+                       }
+                                                                                                                                      
+                      else{ 
+                          $('.dont-allow-multiple-clicks').attr('disabled', 'true');                                                                                                       
+                          completePendingActionPlan(completeActplanID);          
+                          $('.dont-allow-multiple-clicks').attr('disabled', 'false');                                                                                                        
+                       }
+          "/>
+          <c:wiz_validator rendered="{!$CurrentPage.parameters.type=='Implementation'}" onValid="onvalid"></c:wiz_validator>
+          <c:wiz_validator rendered="{!OR($CurrentPage.parameters.type=='Investigation',$CurrentPage.parameters.type=='Disposition')}" onvalid=""/>
+          <c:digital_signature rendered="{!$CurrentPage.parameters.type=='Investigation'}" modalid="investigation_digital_signature_modalid" returl="/{!$CurrentPage.parameters.gtid}" onSuccess=" updateInvestigationTask('{!genTask.Id}');"/>
+   
+</apex:page>

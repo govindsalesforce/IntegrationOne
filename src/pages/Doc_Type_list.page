@@ -1,0 +1,204 @@
+<!--
+
+v1.0		Qualityze Inc(SS)			29-July-2016		this page does not belong to any of the one page app pages
+and it shows all the document types present within hne system.for each  								
+document type user has the option to clone ,Edit and Create new document type from the respective 
+document type
+-->
+
+
+<apex:page standardController="Document_Type__c" extensions="DocumentTypeControllerExt,DocumentProfileControllerExt" sidebar="false" showHeader="false" standardStylesheets="false" docType="html-5.0">
+    
+    
+    <div id="container">
+        <apex:composition template="qualityze_app_layout">
+            <apex:define name="header_bar_component">           
+                <!--Begin : Header Bar With Search Option -->               
+                <c:header_bar ObjectType="{!$ObjectType.Document_Type__c}" ObjectTypeLinkTitle="Document"/>                
+                <!--End  : Header Bar With Search Option -->
+            </apex:define>
+ 
+            
+            <apex:define name="wizsteps">
+                <!-- To do   -->
+            </apex:define>
+            
+            <apex:define name="from-holder-title">
+                <apex:outputText value="{!IF(ISBLANK($CurrentPage.parameters.id),'Document Type List','')}"></apex:outputText>
+            </apex:define>
+            
+            <apex:define name="theform">
+                
+                <!-- Begin : Document Type List View -->
+                
+                <apex:outputPanel rendered="{!ISBLANK($CurrentPage.parameters.pg)}">
+                    <!-- <input type="hidden" name="sobj" value="Document_Type__c" /> -->
+                    <input type="hidden" name="page" id="page" value="doctype_list" />
+                    
+                    <div class="wiz-form-holder">
+                        
+                        <div class="row">
+                             <div class="pull-right">
+                                     <div class="button-bar">
+                               
+                                       <button class="btn btn-primary btn-xs" onclick="window.location.href='/apex/DocumentType';">
+                                                            <i class="fa fa-plus"></i>
+                                       </button>
+                                    </div>
+                                  </div>
+                                
+                                <div class="col-md-12">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Number</th>
+                                                <th>Name</th> 
+                                                <th>Status</th>
+                                                <th>Owner</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        
+                                        <tbody>
+                                            
+                                            <apex:repeat value="{!documentTypeList}" var="doctype">
+                                                <tr id="{!JSENCODE(doctype.Id)}clsexp" class="exp-table-header">
+                                                    <td id="{!JSENCODE(doctype.Id)}number">
+                                                        <a onclick="collapseInAndOut('{!JSENCODE(doctype.Id)}');"
+                                                           href="#" > <span class="col-exp"></span>{!JSENCODE(doctype.Name)}</a>
+                                                    </td>
+                                                    <td id="{!JSENCODE(doctype.Id)}name">
+                                                        <a onclick="collapseInAndOut('{!JSENCODE(doctype.Id)}');"
+                                                           href="#" > <span class="col-exp"></span>{!JSENCODE(doctype.Title__c)}</a>
+                                                    </td>
+                                                    <td id="{!JSENCODE(doctype.Id)}status">{!JSENCODE(doctype.Status__c)}</td>
+                                                    <td id="{!JSENCODE(doctype.Id)}owner">{!JSENCODE(doctype.Owner.Name)}</td>
+                                                    <td id="{!JSENCODE(doctype.Id)}caret" class="text-center"><a onclick="collapseInAndOut('{!JSENCODE(doctype.Id)}');"
+                                                           href="#"><i class="fa fa-angle-down"></i>
+                                                           </a>
+                                                    </td>
+                                                </tr>
+                                                
+                                                <tr id="{!doctype.Id}colpse">
+                                                    <td colspan="5" class="exp-panel">
+                                                        <p id="{!JSENCODE(doctype.Id)}description">{!JSENCODE(doctype.Description__c)}</p>
+                                                        <div class="col-md-12 push-down"></div>
+                                                        <div class="col-md-12 push-down"></div>
+                                                        <div class="col-md-12 push-down"></div>
+                                                        <div class="col-md-12 push-down"></div>
+                                                        
+                                                        <div>
+                                                            
+                                                            
+                                                            
+                                                            <button id="{!doctype.Id}createbtn" class="btn btn-success pull-right" onclick="window.location.href = '/apex/DocumentProfile?doctypeId='+recordId+'&camefromClone=true&docTitle='+docTitle;
+                                                                                                                                            ">Create Document</button>
+                                                            <button id="{!doctype.Id}clonebtn" class="btn btn-primary" onclick="cloneRecordFromDocList('{!doctype.Id}');">Clone</button>
+                                                                                                                                
+                                                            <button id="{!doctype.Id}editbtn" class="btn btn-primary" onclick="EditRecordFromDocList('{!doctype.Id}');">Edit</button>
+                                                                                                                               
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                
+                                                <!-- Begin : javascript for document Type list View -->   
+                                                
+                                      <script> 
+                                               
+                                             
+                                           $( document ).ready(function() { 
+                                               var docTypeIds =  "{!doctype.Id}";
+                                               $('#'+docTypeIds+'colpse').addClass('collapse');
+                                               $('#'+docTypeIds+'clsexp').removeClass('exp-table-header');
+                                               console.log('id is here'+docTypeIds);
+                                            });
+                                                
+                                               var recordId = '{!JSENCODE(doctype.Id)}';
+                                               var docTitle = '{!JSENCODE(doctype.Title__c)}';
+                                               // var docTypenumber = '{!JSENCODE(doctype.Name)}';
+                                                
+                                          function collapseInAndOut(documnettypeId){
+                                                    
+                                                     if($('#'+documnettypeId+'clsexp').hasClass('exp-table-header')){
+                                                         //alert('inside if');
+                                                   $('#'+documnettypeId+'clsexp').removeClass('exp-table-header');
+                                                     }else{
+                                                         //alert('inside else');
+                                                    
+                                                         $('#'+documnettypeId+'clsexp').addClass('exp-table-header');
+                                                     }
+                                                    $('#'+documnettypeId).toggle();
+                                                    if($('#'+documnettypeId+'colpse').hasClass('collapse')){ 
+                                                        $('#'+documnettypeId+'colpse').removeClass('collapse');
+                                                    }
+                                                    else{$('#'+documnettypeId+'colpse').addClass('collapse');}
+                                                }
+
+                                       
+                                          function cloneRecordFromDocList(documentTypeID){
+                                            
+                                               Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.DocumentTypeControllerExt.cloneDocTypeRecord}',documentTypeID,
+                                                       function(result, event) {
+                                                             alert(result);
+                                                          
+                                                            window.location= '/apex/documentType?id='+result+'&camefromClone=true';
+                                                          });
+								    
+								                      }
+								                      
+								                      
+								         function EditRecordFromDocList(documentTypeID){
+                                            
+                                               Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.DocumentTypeControllerExt.cloneDocTypeRecord}',documentTypeID,
+                                                       function(result, event) {
+                                                             alert(result);
+                                                          
+                                                            window.location= '/apex/documentType?id='+result;
+                                                          });
+								    
+								                      }            
+                                          
+                                                </script>
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </div> 
+                      
+                            
+                            
+                        </div>   
+                        
+                    </div> 
+                </apex:outputPanel>
+                <!-- javascript for document type list view  -->
+                <script>
+                function cancelPopup(){
+                    var YESButtonInRedirectModalOnClick = function () {
+                        window.location.href = '/apex/qlt_dashboard';
+                    };
+                    var NOButtonInRedirectModalOnClick = function () {
+                        
+                    };
+                    $('#redirectDialog .btn-primary').bind( "click", YESButtonInRedirectModalOnClick);
+                    $('#redirectDialog .btn-default').bind( "click", NOButtonInRedirectModalOnClick);
+                    
+                    // Show the redirect dialog
+                    $('#redirectDialog').modal('show');
+                    
+                    // Remove the onClick event
+                    $('#redirectDialog').on('hidden.bs.modal', function () {
+                        $('#redirectDialog .btn-primary').unbind( "click", YESButtonInRedirectModalOnClick);
+                        $('#redirectDialog .btn-default').unbind( "click", NOButtonInRedirectModalOnClick);
+                    }) 
+                }
+                
+            
+                
+                </script>
+                <!-- End of javascript for document type list view -->
+                <!-- End : Document Type List View -->  
+            </apex:define>
+            
+        </apex:composition>
+    </div>
+</apex:page>

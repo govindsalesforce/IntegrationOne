@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <encodingKey>ISO-8859-1</encodingKey>
+    <letterhead>Qualityze_Inc</letterhead>
+    <name>ActionPlanTask</name>
+    <style>freeForm</style>
+    <subject>{!General_Sub_Task__c.RecordType} has been assigned to you</subject>
+    <textOnly>Hello,
+
+
+
+You have been assigned a  {!General_Sub_Task__c.RecordType}  of NCR record
+
+{!General_Sub_Task__c.Non_Conformance_Number__c}. The Due date of the task is {!General_Sub_Task__c.Due_Date__c}.
+
+
+Please log in to the Qualityze application and complete the task by the due date.
+
+
+Please contact {!General_Sub_Task__c.Non_Conformance_Owner__c} if you have any questions about this assignment and/or non-conformance record.
+
+
+Thank you.
+
+
+
+
+
+
+
+
+
+
+Click here for details</textOnly>
+    <type>html</type>
+</EmailTemplate>

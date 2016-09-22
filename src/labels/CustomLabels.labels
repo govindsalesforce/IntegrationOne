@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>Change</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Change</shortDescription>
+        <value>Change</value>
+    </labels>
+    <labels>
+        <fullName>Collaboration_Review</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Collaboration Review</shortDescription>
+        <value>Collaboration Review</value>
+    </labels>
+    <labels>
+        <fullName>Content_Details</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Content Details</shortDescription>
+        <value>Content Details</value>
+    </labels>
+    <labels>
+        <fullName>Document_Approval</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Document Approval</shortDescription>
+        <value>Approval</value>
+    </labels>
+    <labels>
+        <fullName>Document_Details</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Document Details</shortDescription>
+        <value>Document Details</value>
+    </labels>
+    <labels>
+        <fullName>Document_Initiation</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Document Initiation in Document profile Details</shortDescription>
+        <value>Document Initiation</value>
+    </labels>
+    <labels>
+        <fullName>Document_Profile</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Document Profile</shortDescription>
+        <value>Document Profile</value>
+    </labels>
+    <labels>
+        <fullName>Document_Setup</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Document Setup</shortDescription>
+        <value>Document Setup</value>
+    </labels>
+    <labels>
+        <fullName>Enable_Security</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Enable Security</shortDescription>
+        <value>Enable Security</value>
+    </labels>
+    <labels>
+        <fullName>Note_To_Approver</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Note To Approver</shortDescription>
+        <value>Note To Approver</value>
+    </labels>
+    <labels>
+        <fullName>Reopen_Tasks</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Reopen Tasks</shortDescription>
+        <value>Reopen Tasks</value>
+    </labels>
+    <labels>
+        <fullName>Revise</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Revise</shortDescription>
+        <value>Revise</value>
+    </labels>
+    <labels>
+        <fullName>Revision</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Revision</shortDescription>
+        <value>Revision</value>
+    </labels>
+    <labels>
+        <fullName>Temp</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Temp</shortDescription>
+        <value>Temp</value>
+    </labels>
+    <labels>
+        <fullName>Title</fullName>
+        <categories>internal lables</categories>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Title</shortDescription>
+        <value>Custom Lables</value>
+    </labels>
+    <labels>
+        <fullName>Void</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Void</shortDescription>
+        <value>Void</value>
+    </labels>
+    <labels>
+        <fullName>Watermark_Section</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Watermark Section</shortDescription>
+        <value>Watermark Section</value>
+    </labels>
+    <labels>
+        <fullName>custom_Label</fullName>
+        <categories>internal lables</categories>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>custom Label</shortDescription>
+        <value>my custom label</value>
+    </labels>
+</CustomLabels>

@@ -1,0 +1,349 @@
+<!--
+v1.0   Qualityze Inc                                   Initial Version.
+
+v1.1   Qualityze Inc(TS)          25-AUG-2016				Doc lists
+
+-->
+<apex:page sidebar="false" controller="NonConformance" readOnly="true" extensions="CAPA,ChangeManagementControllerExt,DocumentProfileControllerExt,DocumentTypeControllerExt" showHeader="false" standardStylesheets="false" docType="html-5.0">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/app.css')}" />
+        
+        <!-- Below 2 files are for Datatable Pagination -->
+        <apex:stylesheet value="{!URLFOR($Resource.bt_static, '/static/stylesheets/dataTables.bootstrap.css')}" />
+        <!-- <apex:stylesheet value="{!URLFOR($Resource.bt_static, '/static/stylesheets/bootstrap.min.css')}" />-->          
+        
+        
+        <title>Qualityze</title>
+    </head>
+
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.min.js')}" /> 
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/bootstrap.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/bootstrap-datepicker.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.slimscroll.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/select2-4.0.0/dist/js/select2.min.js')}" />
+        
+        <!-- Below 2 files are for Datatable Pagination -->
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.dataTables.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/dataTables.bootstrap.js')}" />
+      
+        
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/typeahead.bundle.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/app.js')}" />
+
+
+
+       
+           
+    <style>
+        .error {
+            color: #F0493E !important;
+        }
+    </style>
+    <body>
+        <c:drawer_menu />
+        <apex:outputPanel rendered="{!JSENCODE($CurrentPage.Parameters.list)=='NC'}">
+        <input type="hidden" name="page" id="page" value="nc_list" />
+		<c:header_bar ObjectType="{!$ObjectType.Non_Conformance__c}" ObjectTypeLinkTitle="Non Conformance"/>
+        
+        <div class="container-fluid page-margins" id="app_warpper">
+        <h1>Open NC List</h1>
+        <!-- NC List -->
+          <div class="tab-filter">
+             
+            <div class="tab-content">
+              
+              <div role="tabpanel" class="tab-pane active" id="containment_list">
+                
+                <table class="table table-hover" cellspacing="5" id="NCLIST" width="100%" >
+                  <thead>
+                    <tr>
+                      <th width="8%">NC Number</th>
+                      <th width="8%">NC Type</th>
+                      <th width="8%">NC Source</th>
+                      <th width="8%">Product</th>
+                      <th width="8%">Process</th>
+                      <th width="8%">Defect</th>
+                      <th width="8%">NC Owner</th>
+                      <th width="8%">Business Unit</th>
+                      <th width="8%">Initiating Site</th>
+                      <th width="8%">Occurance Date</th>
+                      <th width="12%">Created Date</th>
+                      <th width="8%">Created By</th>
+                    </tr>
+                  </thead>
+
+                    <apex:repeat value="{!NCList}" var="nc">
+                      <tr class="list-row">
+                        <td width="8%"><a href="/{!nc.id}">{!nc.Name}</a></td>
+                        <td width="8%">{!nc.NC_Type__c}</td>
+                        <td width="8%">{!nc.NC_Source__c}</td>
+                        <td width="8%">{!nc.Product__r.Name}</td>
+                        <td width="8%">{!nc.Process__r.Name}</td>
+                        <td width="8%">{!nc.Defect__r.Name}</td>
+                        <td width="8%">{!nc.Owner.Name}</td>
+                        <td width="8%">{!nc.BusinessUnit__c}</td>
+                        <td width="8%">{!nc.Initiating_Site__r.Name}</td>
+                        <td width="8%"><apex:outputField value="{!nc.Occurance_Date__c}"/></td>
+                        <td width="12%"><apex:outputField value="{!nc.CreatedDate}"/></td>
+                        <td width="8%">{!nc.CreatedBy.Name}</td>
+                      </tr>
+                    </apex:repeat>
+
+                </table>
+                
+                
+                
+              </div>
+              
+              <div role="tabpanel" class="tab-pane" id="profile">Disposition</div>
+              <div role="tabpanel" class="tab-pane" id="messages">Investigation</div>
+              <div role="tabpanel" class="tab-pane" id="settings">Closure</div>
+            </div>
+            <!-- row -->
+          </div>
+    </div>
+            <script>
+            var ListId='NCLIST';
+            </script>
+    </apex:outputPanel>    
+    <apex:outputPanel rendered="{!JSENCODE($CurrentPage.Parameters.list)=='CAPA'}">
+        <c:header_bar ObjectType="{!$ObjectType.CAPA__c}" ObjectTypeLinkTitle="CAPA"/>
+        <input type="hidden" name="page" id="page" value="capa_list" />
+        <div class="container-fluid page-margins" id="app_warpper">
+        <h1>Open CAPA List</h1>
+        <!-- CAPA List -->
+          <div class="tab-filter">
+             
+            <div class="tab-content">
+              
+              <div role="tabpanel" class="tab-pane active" id="containment_list">
+                
+                <table class="table table-hover" cellspacing="5" id="CAPALIST" width="100%" >
+                  <thead>
+                    <tr>
+                      <th width="8%">CAPA Number</th>
+                      <th width="8%">CAPA Title </th>
+                      <th width="8%">CAPA Source</th>
+                      <th width="8%">Site(s) Impacted</th>
+                      <th width="8%">Department</th>
+                      <th width="8%">CAPA Owner</th>
+                      <th width="8%">Criticality</th>
+                      <th width="8%">Reported By</th>
+                      <th width="8%">Reported Date</th>
+                      <th width="8%">Occurance Date</th>
+                      <th width="12%">Created Date</th>
+                      <th width="8%">Created By</th>
+                    </tr>
+                  </thead>
+					<apex:repeat value="{!CAPAListForDisplay}" var="capa">
+                      <tr class="list-row">
+                        <td width="8%"><a href="/{!capa.id}">{!capa.Name}</a></td>
+                        <td width="8%">{!capa.Title__c}</td>
+                        <td width="8%">{!capa.CAPA_Source__c}</td>
+                        <td width="8%">{!capa.Sites_Impacted__c}</td>
+                        <th width="8%">{!capa.Department__c}</th>
+                        <td width="8%">{!capa.Owner.Name}</td>
+                        <td width="8%">{!capa.Criticality__c}</td>
+                        <td width="8%">{!capa.Reported_By__r.name}</td>
+                        <td width="8%"><apex:outputField value="{!capa.Reported_Date__c}"/></td>
+                        <td width="8%"><apex:outputField value="{!capa.Occurance_Date__c}"/></td>
+                        <td width="12%"><apex:outputField value="{!capa.CreatedDate}"/></td>
+                        <td width="8%">{!capa.CreatedBy.Name}</td>
+                      </tr>
+                    </apex:repeat>
+
+                </table>
+                
+                </div>
+              </div>
+              <!-- row -->
+            </div>
+    </div>
+        <script>
+        var ListId='CAPALIST';
+        </script>
+    </apex:outputPanel>
+        <!--V1.1 STARTS-->
+        <apex:outputPanel rendered="{!JSENCODE($CurrentPage.Parameters.list)=='CM'}">
+            <c:header_bar ObjectType="{!$ObjectType.Change_Management__c}" ObjectTypeLinkTitle="CM"/>
+            <input type="hidden" name="page" id="page" value="CM_list" />
+            <div class="container-fluid page-margins" id="app_warpper">
+                <h1>Open Change Management List</h1>
+                <!-- Change Management List -->
+                <div class="tab-filter">
+                    
+                    <div class="tab-content">
+                        
+                        <div role="tabpanel" class="tab-pane active" id="containment_list">
+                            
+                            <table class="table table-hover" cellspacing="5" id="CMLIST" width="100%" >
+                                <thead>
+                                    <tr>
+                                        <th width="8%">Change Management Number</th>
+                                        <th width="8%">Change Management Title </th>
+                                        <th width="8%">Change Management Source</th>
+                                        <th width="8%">Priority</th>
+                                        <th width="8%">Change Request Scope</th>
+                                        <th width="8%">Owner</th>
+                                        <th width="8%">Due Date</th>
+                                        <th width="8%">Initiating Site</th>
+                                        <th width="8%">Business Unit</th>
+                                        <th width="8%">Impacted Sites</th>
+                                        <th width="12%">Created Date</th>
+                                        <th width="8%">Created By</th>
+                                    </tr>
+                                </thead>
+                                  <apex:repeat value="{!CMListForDisplay}" var="cm">
+                                    <tr class="list-row">
+                                        <td width="8%"><a href="/{!cm.id}">{!cm.Name}</a></td>
+                                        <td width="8%">{!cm.Title__c}</td>
+                                        <td width="8%">{!cm.Source__c}</td>
+                                        <td width="8%">{!cm.Priority__c}</td>
+                                        <th width="8%">{!cm.Change_Request_Scope__c}</th>
+                                        <td width="8%">{!cm.Owner.Name}</td>
+                                        <td width="8%"><apex:outputField value="{!cm.Due_Date__c}"/></td>
+                                        <td width="8%">{!cm.Initiating_Site__r.Name}</td>
+                                        <td width="8%">{!cm.Business_Unit__c}</td>
+                                        <td width="8%">{!cm.Impacted_Sites__c}</td>
+                                        <td width="12%"><apex:outputField value="{!cm.CreatedDate}"/></td>
+                                        <td width="8%">{!cm.CreatedBy.Name}</td>
+                                    </tr>
+                                </apex:repeat>  
+                                
+                            </table>
+                            
+                        </div>
+                    </div>
+                    <!-- row -->
+                </div>
+            </div>
+            <script>
+            var ListId='CMLIST';
+            </script>
+        </apex:outputPanel>
+        
+        <apex:outputPanel rendered="{!JSENCODE($CurrentPage.Parameters.list)=='DP'}">
+            <c:header_bar ObjectType="{!$ObjectType.Document_Profile__c}" ObjectTypeLinkTitle="DP"/>
+            <input type="hidden" name="page" id="page" value="DP_list" />
+            <div class="container-fluid page-margins" id="app_warpper">
+                <h1>Open Document List</h1>
+                <!-- Document List -->
+                <div class="tab-filter">
+                    
+                    <div class="tab-content">
+                        
+                        <div role="tabpanel" class="tab-pane active" id="containment_list">
+                            
+                            <table class="table table-hover" cellspacing="5" id="DPLIST" width="100%" >
+                                <thead>
+                                    <tr>
+                                        <th width="8%">Document Number</th>
+                                        <th width="8%">Title </th>
+                                        <th width="8%">Description</th>
+                                        <th width="8%">Document Type</th>
+                                        <th width="8%">Status</th>
+                                        <th width="8%">Department</th>
+                                        <th width="8%">Owner</th>
+                                        <th width="8%">Product</th>
+                                        <th width="8%">Process</th>
+                                        <th width="8%">Initiating Site</th>
+                                        <th width="8%">Business Unit</th>
+                                        <th width="12%">Created Date</th>
+                                        <th width="8%">Created By</th>
+                                    </tr>
+                                </thead>
+                                <apex:repeat value="{!DPListForDisplay}" var="dp">
+                                    <tr class="list-row">
+                                        <td width="8%"><a href="/{!dp.id}">{!dp.Name}</a></td>
+                                        <td width="8%">{!dp.Title__c}</td>
+                                        <td width="8%"><apex:outputLabel value="{!dp.Description__c}"/></td>
+                                        <td width="8%">{!dp.Document_Type__r.Title__c}</td>
+                                        <td width="8%">{!dp.Status__c}</td>
+                                        <th width="8%">{!dp.Department__r.Name}</th>
+                                        <td width="8%">{!dp.Owner.Name}</td>
+                                        <td width="8%">{!dp.Product_Name__c}</td>
+                                        <td width="8%">{!dp.Process_Name__c}</td>
+                                        <td width="8%">{!dp.Initiating_Site__r.Name}</td>
+                                        <td width="8%">{!dp.Business_Unit__c}</td>
+                                        <td width="12%"><apex:outputField value="{!dp.CreatedDate}"/></td>
+                                        <td width="8%">{!dp.CreatedBy.Name}</td>
+                                    </tr>
+                                </apex:repeat>
+                                
+                            </table>
+                            
+                        </div>
+                    </div>
+                    <!-- row -->
+                </div>
+            </div>
+            <script>
+            var ListId='DPLIST';
+            </script>
+        </apex:outputPanel>
+        
+        <apex:outputPanel rendered="{!JSENCODE($CurrentPage.Parameters.list)=='DT'}">
+            <c:header_bar ObjectType="{!$ObjectType.Document_Type__c}" ObjectTypeLinkTitle="DT"/>
+            <input type="hidden" name="page" id="page" value="DT_list" />
+            <div class="container-fluid page-margins" id="app_warpper">
+                <h1>Open Document Type List</h1>
+                <!-- Document List -->
+                <div class="tab-filter">
+                    
+                    <div class="tab-content">
+                        
+                        <div role="tabpanel" class="tab-pane active" id="containment_list">
+                            
+                            <table class="table table-hover" cellspacing="5" id="DTLIST" width="100%" >
+                                <thead>
+                                    <tr>
+                                        <th width="12%">Document Type Number</th>
+                                        <th width="12%">Title </th>
+                                        <th width="12%">Description</th>
+                                 		<th width="12%">Owner</th>
+                                        <th width="12%">Initiating Site</th>
+                                        <th width="12%">Business Unit</th>
+                                        <th width="12%">Created Date</th>
+                                        <th width="12%">Created By</th>
+                                    </tr>
+                                </thead>
+                                <apex:repeat value="{!DocumentTypeList}" var="dt">
+                                    <tr class="list-row">
+                                        <td width="12%"><a href="/{!dt.id}">{!dt.Name}</a></td>
+                                        <td width="12%">{!dt.Title__c}</td>
+                                        <td width="12%"><apex:outputText value="{!dt.Description__c}"/></td>
+                                        <td width="12%">{!dt.Owner.Name}</td>
+                                        <td width="12%">{!dt.Initiating_Site__r.name}</td>
+                                        <td width="12%">{!dt.Business_Unit__c}</td>
+                                        <td width="12%"><apex:outputField value="{!dt.CreatedDate}"/></td>
+                                        <td width="12%">{!dt.CreatedBy.Name}</td>
+                                    </tr>
+                                </apex:repeat>
+                                
+                            </table>
+                            
+                        </div>
+                    </div>
+                    <!-- row -->
+                </div>
+            </div>
+            <script>
+            var ListId='DTLIST';
+            </script>
+        </apex:outputPanel>
+        <!-- V1.2 ENDS-->
+     <c:static_footer />
+     
+     <c:sfdcapp />
+     <script src="../../soap/ajax/34.0/connection.js" type="text/javascript"></script>
+    </body>
+     <script>
+    $(document).ready(function() {
+        $('#'+ListId).dataTable();
+        });
+    </script>
+</apex:page>

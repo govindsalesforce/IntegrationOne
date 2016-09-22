@@ -1,0 +1,574 @@
+<apex:component controller="Component_Handler" extensions="QC_custom_settings" >
+    <apex:attribute name="ModalId" description="Modal Id" type="string" required="true" />   
+    <apex:attribute name="FieldName" description="Field label" type="string" required="true" />
+    <apex:attribute name="FieldId" description="Field Id" type="string" required="true" />      
+    <apex:attribute name="FieldValue" description="Field Value"  type="string" required="false" />  
+    <apex:attribute name="FieldDateValue" description="Field Value"  type="date" required="false" />
+    <apex:attribute name="FieldType" description="Field Type"  type="string"  />  
+    <apex:attribute name="TochangeFieldName" description="Field that has to change Type"  type="string"  />    
+    <apex:attribute name="Required" description="Field required"  type="boolean"  /> 
+    <apex:attribute name="RecordId" description="RecordId which should be submitted for approval"  type="id"  />    
+    <apex:attribute name="isLock" description="To lock the record"  type="Boolean"  /> 
+    <apex:attribute name="GT" description="task id" type="General_Task__c" required="true" />      
+    <apex:attribute name="fieldclass" description="class for field" type="string" default="wiz-fields"/>
+    <apex:attribute name="typeofApprover" description="Approver type" type="string" default="wiz-fields"/>
+    <div class="{!fieldclass}">
+        <apex:outputPanel rendered="{!NOT(isLock)}">
+            <apex:outputPanel rendered="{!if(GT.ChangeFieldApprovalStatus__c=='Pending',false,true)}">
+                <label class="pull-right" for="Change">
+                    <a href="#" onclick='{!ModalId}_changeField()'>Change</a>
+                </label>
+            </apex:outputPanel>     
+            <apex:outputPanel rendered="{!(GT.ChangeFieldApprovalStatus__c=='Pending')}"> 
+                <apex:outputPanel rendered="{!if(AND(GT.New_Owner__c!=null,IF(NOT(ISBLANK(Prefix)),Prefix+'__New_Owner__c','New_Owner__c')==TochangeFieldName),true,false)}">
+                    <label class="pull-right" for="Pending Approval">
+                        <a href="#" onclick='{!ModalId}_changeField()'>Pending Approval</a>
+                    </label>
+                </apex:outputPanel>
+                
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!if(GT.ChangeFieldApprovalStatus__c=='Pending',true,false)}"> 
+                <apex:outputPanel rendered="{!if(AND(GT.New_Due_Date__c!=null,IF(NOT(ISBLANK(Prefix)),Prefix+'__New_Due_Date__c','New_Due_Date__c')==TochangeFieldName),true,false)}">
+                    <label class="pull-right" for="Pending Approval">
+                        <a href="#" onclick='{!ModalId}_changeField()'>Pending Approval</a>
+                    </label>
+                </apex:outputPanel>
+            </apex:outputPanel>  
+        </apex:outputPanel>     
+        <label for="label for change Feild">
+            <span class="mandatory">
+                <apex:outputtext value="*" rendered="{!if(Required==true,true,false)}"/></span>
+            {!FieldName}
+        </label>
+        <div class="form-control" disabled="disabled">
+            <apex:outputPanel rendered="{!FieldType=='date'}">  
+                <apex:outputText value="{0,date,dd MMM yyyy}">
+                    <apex:param value="{!FieldDateValue}" /> 
+                </apex:outputText>
+                <div class="pull-right">
+                    <span class='glyphicon glyphicon-calendar'></span>
+                </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!FieldType!='date'}">  
+                {!FieldValue}
+                <div class="pull-right">
+                    <span class='glyphicon glyphicon-triangle-bottom'></span>
+                </div>
+            </apex:outputPanel> 
+        </div>
+    </div>
+    
+    
+    
+    
+    <apex:outputPanel rendered="{!NOT(isLock)}">
+        <script>
+        $( document ).ready(function() {
+            $('#{!FieldId}select_approver, #{!FieldId}approver_note').addClass('hidden');
+            if('{!GT.ChangeFieldApprovalStatus__c!="Pending"}'!='false'){
+                $('#{!FieldId}approver_note').addClass('hidden');
+            }
+            if({!FieldId}_approved=='Approve'){
+                $('#{!FieldId}_Comment_Required').hide();
+                $('#{!FieldId}__ApprovalRescomment').removeClass('{!FieldId}_required');
+            }
+            $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c').datetimepicker()
+            .on('dp.change', function(e){
+                $('#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}New_Due_Date__c').data("DateTimePicker").minDate(new Date);
+            });
+            $('#{!FieldId}_doVerifyUserNameButton').addClass('hidden');
+        });
+        
+        function {!FieldId}_ClearErrorschangefield(){
+            $('.{!FieldId}_required').each(function(){
+                $( '#'+this.id+'__error' ).html( "");
+            });
+        }
+        
+        function {!FieldId}_onClickTab(tab){
+            if(tab=='{!FieldId}changeDetails'){
+                {!FieldId}_ClearErrorschangefield();
+                $('#{!FieldId}_doVerifyUserNameButton').addClass('hidden');
+                $('#{!FieldId}RecallButtonIdNctaskChangeField').removeClass('hidden');
+                $('#{!FieldId}Authenticate_user_name').addClass('{!FieldId}_required');
+                $('#{!FieldId}Authenticate_password').addClass('{!FieldId}_required'); 
+                $('#{!FieldId}_user_name').removeClass('{!FieldId}_required');
+                $('#{!FieldId}_password').removeClass('{!FieldId}_required'); 
+            }
+            else
+                if(tab=='{!FieldId}decision'){
+                    {!FieldId}_ClearErrorschangefield();
+                    $('#{!FieldId}_doVerifyUserNameButton').removeClass('hidden');
+                    $('#{!FieldId}RecallButtonIdNctaskChangeField').addClass('hidden');
+                    $('#{!FieldId}Authenticate_user_name').removeClass('{!FieldId}_required');
+                    $('#{!FieldId}Authenticate_password').removeClass('{!FieldId}_required'); 
+                    $('#{!FieldId}_user_name').addClass('{!FieldId}_required');
+                    $('#{!FieldId}_password').addClass('{!FieldId}_required'); 
+                }
+        }
+        
+        var isrecall=false;
+        function {!FieldId}_doVerifyUserName(callback,formsubmit){
+            
+            
+            var username=$('#{!FieldId}_user_name').val();
+            var passowrd=$('#{!FieldId}_password').val();
+            
+            if(formsubmit){
+                 username=$('#{!FieldId}Authenticate_user_name').val();
+                 passowrd=$('#{!FieldId}Authenticate_password').val();
+                $('#{!FieldId}_user_name').removeClass('hidden');
+                $('#{!FieldId}_password').removeClass('hidden');  
+            }else{
+                if(isrecall){
+                    username=$('#{!FieldId}Authenticate_user_name').val();
+                    passowrd=$('#{!FieldId}Authenticate_password').val();
+                    $('#{!FieldId}_user_name').removeClass('{!FieldId}_required');
+                    $('#{!FieldId}_password').removeClass('{!FieldId}_required');                     
+                }
+
+            }
+            
+            if(!$('.dont-allow-multiple-clicks').attr('disabled')){
+                $('.dont-allow-multiple-clicks').attr('disabled', true);
+            }
+            
+            var valid=true;
+            $('.{!FieldId}_required').each(function(){
+                $( '#'+this.id+'__error' ).html( "");
+            });
+            
+            $('.{!FieldId}_required').each(
+                function(){
+                    var validateid=this.id;
+                    $( "#"+validateid+'__error' ).html('');
+                    console.log(this.value.length);
+                    console.log(this);
+                    if(this.value.length==0||this.value==''){
+                        console.log($('#'+validateid+'__error' ));
+                        $( '#'+validateid+'__error' ).html( "<p><font color='red'>This field is required</font></p>");
+                        valid=false;
+                    }
+                }
+            );
+            if(valid==false){
+                $('.dont-allow-multiple-clicks').attr('disabled', false);
+                return;
+            }
+            
+			var IsDigitalSignatureNeeded='<apex:outputText value="{!($Setup.QC_settings__c.Is_Digital_Signature_Needed__c)}" />';
+            if(IsDigitalSignatureNeeded=='true'){
+                if('{!$User.UserName}'==username&&valid==true)
+                {
+                    Visualforce.remoting.Manager.invokeAction(
+                        // @RemoteAction
+                        '{!$RemoteAction.Component_Handler.doVerify}',passowrd,function(result, event){
+                            if(event.status){
+                                if(result){
+                                    callback();
+                                }
+                                else{
+                                    alert('Unable to verify password!');
+                                    if($('.dont-allow-multiple-clicks').attr('disabled')){
+                                        $('.dont-allow-multiple-clicks').attr('disabled', false);
+                                    }
+                                }
+                            }
+                            else{ 
+                                alert('Unable to verify password!');
+                                if($('.dont-allow-multiple-clicks').attr('disabled')){
+                                    $('.dont-allow-multiple-clicks').attr('disabled', false);
+                                }
+                            }
+                            
+                        });
+                }
+                else
+                {
+                    alert('invalid username'+username);
+                    if($('.dont-allow-multiple-clicks').attr('disabled')){
+                        $('.dont-allow-multiple-clicks').attr('disabled', false);
+                    }
+                }
+            }else{
+                callback();
+            }
+            
+        }
+        
+        function {!FieldId}_doSubmitApprovalRequest(param){
+        console.log(param);
+            var duedate=new Date();
+            console.log('duedate---------->'+duedate);
+            if(!$('.dont-allow-multiple-clicks').attr('disabled')){
+                $('.dont-allow-multiple-clicks').attr('disabled', true);
+            }
+            if('{!FieldType}'!='date'){ 
+                $( '#{!TochangeFieldName}_error' ).html( "");
+                if($('#{!TochangeFieldName}').val()=='{!GT.Owner}'){
+                    $( '#{!TochangeFieldName}_error' ).html( "<p><font color='red'>same owner</font></p>");
+                    $('.dont-allow-multiple-clicks').attr('disabled', false);
+                    return;
+                }
+                if($('#{!TochangeFieldName}').val()==null||$('#{!TochangeFieldName}').val()==''){
+                    $( '#{!TochangeFieldName}_error' ).html( "<p><font color='red'>This Field is required</font></p>");
+                    $('.dont-allow-multiple-clicks').attr('disabled', false);
+                    return;
+                }   
+            }
+            else{
+            console.log('from change type date'+$('#{!TochangeFieldName}_hidden').val());
+                $( '#{!TochangeFieldName}_error' ).html( "");
+                if($('#{!TochangeFieldName}_hidden').val()=='{!GT.Due_Date__C}'){
+                    $( '#{!TochangeFieldName}_error' ).html( "<p><font color='red'>same date</font></p>");
+                    $('.dont-allow-multiple-clicks').attr('disabled', false);
+                    return;
+                }
+                if($('#{!TochangeFieldName}_hidden').val()==null||$('#{!TochangeFieldName}_hidden').val()==''){
+                    $( '#{!TochangeFieldName}_error' ).html( "<p><font color='red'>This Field is Required</font></p>");
+                    $('.dont-allow-multiple-clicks').attr('disabled', false);
+                    return;
+                } 
+            }
+            if({!FieldId}_approvalRequired=='Yes'){
+                if($('#{!FieldId}_testApprover').val()==null||$('#{!FieldId}_testApprover').val()==''){
+                    $( '#{!FieldId}_testApprover_error' ).html( "<p><font color='red'>This Field is required</font></p>");
+                    $('.dont-allow-multiple-clicks').attr('disabled', false);
+                    return;
+                } 
+                
+                var listid=$( "#{!FieldId}_Approvercomment" ).val();
+                var listid=new Array();
+                var ids=$('#{!FieldId}_testApprover').val()
+                if(ids.length>10){
+                    alert('you can choose maximum of 10 approvers');
+                    return;
+                }
+                for(i=0;i<ids.length;i++){
+                    listid.push(ids[i]);
+                    listid.push(ids[ids.length-1]);    
+                }
+                
+                var newDueDate=new Date($('#{!TochangeFieldName}_hidden').val());
+                console.log('nwedate-->'+newDueDate);
+                newDueDate=(newDueDate.getMonth()+1)+'/'+newDueDate.getDate()+'/'+newDueDate.getFullYear(); 
+                if($('#{!TochangeFieldName}_hidden').val()==null||$('#{!TochangeFieldName}_hidden').val()=='')
+                    newDueDate=null;
+                console.log('SubmitApprovalRequest');
+                SubmitApprovalRequest('{!RecordId}','{!$User.id}',listid,escapeHtml($('#{!FieldId}__ApprovalReqcomment').val()),'{!FieldId}',escapeHtml($('#{!TochangeFieldName}').val()),newDueDate);
+                
+            }
+            else{
+                
+                console.log($('#{!TochangeFieldName}').val());
+                console.log('{!FieldValue}');
+                if($('#{!TochangeFieldName}').val()=='{!GT.Owner}'){
+                    console.log('inside');
+                    $( '#{!TochangeFieldName}-error' ).html( "<p><font color='red'>same owner</font></p>");
+                    $( '#{!TochangeFieldName}_error' ).html( "<p><font color='red'>same owner</font></p>");
+                    $('.dont-allow-multiple-clicks').attr('disabled', false);
+                    return;
+                }
+                if($('#{!TochangeFieldName}_hidden').val()=='{!GT.Due_Date__C}'){
+                    console.log('inside {!TochangeFieldName}_hidden');
+                    $( '#{!TochangeFieldName}-error' ).html( "<p><font color='red'>same owner</font></p>");
+                    $( '#{!TochangeFieldName}_error' ).html( "<p><font color='red'>same owner</font></p>");
+                    $('.dont-allow-multiple-clicks').attr('disabled', false);
+                    return;
+                }                                    
+                console.log('after return {!FieldId}');
+                console.log( $('#{!TochangeFieldName}').val());
+                if('{!FieldDateValue}'!=null||'{!FieldDateValue}'!=''){//{!FieldType=='date'}
+                    $('#{!TochangeFieldName}'+'_hidden').attr('name', '{!FieldId}');
+                }
+                if($('#{!TochangeFieldName}').val()!=null||$('#{!TochangeFieldName}').val()!=''){//{!FieldType=='date'}
+                
+                    $('#{!TochangeFieldName}').attr('name', '{!FieldId}');
+                     console.log( 'inside if');
+                }
+                console.log( $('#{!TochangeFieldName}').val());
+                console.log( $('#{!TochangeFieldName}'));
+                {!FieldId}_doVerifyUserName({!FieldId}_savefielVaueToDB,param);
+                // {!FieldId}_doVerifyUserName(savefielVaueToDB,param);
+                /*   var newDueDate=new Date($('#{!TochangeFieldName}_hidden').val());
+                                                    newDueDate=(newDueDate.getMonth()+1)+'/'+newDueDate.getDate()+'/'+newDueDate.getFullYear(); 
+                                                    insertFeild('{!FieldId}',$('#{!TochangeFieldName}').val(),newDueDate,'{!GT.id}');*/
+                }
+                
+                
+            }	
+        
+        function {!FieldId}_savefielVaueToDB(){
+            validate('null',{!FieldId}_submitNCTaskform,'{!FieldId}_NCTaskform');
+        }
+        var {!FieldId}_approvalRequired='No';
+        function {!FieldId}_approvalRequire(ApprReq){
+            var hiddenElements = $('#{!FieldId}select_approver, #{!FieldId}approver_note').removeClass('hidden');
+            if( ApprReq.checked){
+                $(hiddenElements).removeClass('hidden');
+                $('#Authenticate{!FieldId}').addClass('hidden');
+                {!FieldId}_approvalRequired='Yes';
+            }
+            if( !ApprReq.checked){
+                {!FieldId}_approvalRequired='No';
+                $('#Authenticate{!FieldId}').removeClass('hidden');
+                $(hiddenElements).addClass('hidden');
+            };
+        }
+        function {!FieldId}_ApproveRecord(){
+            if(!$('.dont-allow-multiple-clicks').attr('disabled')){
+                $('.dont-allow-multiple-clicks').attr('disabled', true);
+            }
+            ApprovalResponse('{!RecordId}',escapeHtml($('#{!FieldId}__ApprovalRescomment').val()),{!FieldId}_approved,'{!FieldId}');
+        }
+        function {!FieldId}_RecallRecord(){
+            if(!$('.dont-allow-multiple-clicks').attr('disabled')){
+                $('.dont-allow-multiple-clicks').attr('disabled', true);
+            }
+            ApprovalResponse('{!RecordId}',escapeHtml($('#{!FieldId}__ApprovalRescomment').val()),'Removed','{!FieldId}');
+        }        
+        var {!FieldId}_approved='Approve';
+        function {!FieldId}_showApproveField(ele,value){
+            {!FieldId}_approved=value;
+            if({!FieldId}_approved=='Approve'){
+                $('#{!FieldId}_Comment_Required').hide();
+                $('#{!FieldId}__ApprovalRescomment').removeClass('{!FieldId}_required');
+            }
+            else{
+                $('#{!FieldId}_Comment_Required').show(); 
+                $('#{!FieldId}__ApprovalRescomment').addClass('{!FieldId}_required');    
+            }
+        }
+        
+        
+        function {!ModalId}_changeField(){
+            $('#{!FieldId}_user_name').val('');
+            $('#{!FieldId}_password').val('');
+            $('#'+'{!ModalId}').modal('show');
+        }
+        function {!FieldId}_submitNCTaskform() {
+            console.log('submitNCTaskform');
+            if(!$('.dont-allow-multiple-clicks').attr('disabled')){
+                $('.dont-allow-multiple-clicks').attr('disabled', true);
+                if ($('#NCTaskinfo').css('display') !== 'none') {
+                    console.log('{!FieldId}_submitNCTaskform');
+                    console.log('{!FieldId}_val');
+                    console.log($('#{!TochangeFieldName}').val());
+                    $('#{!FieldId}_NCTaskform').submit();                
+                }
+            }
+        }
+        </script>
+        
+        <div class="modal fade" id="{!ModalId}"  role="dialog" aria-labelledby="{!ModalId}">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="{!ModalId}">Change {!FieldName}</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div>
+                            
+                            <!-- Nav tabs -->
+                            <ul class="nav nav-tabs" role="tablist">
+                                <li role="presentation" class="active"><a href="#{!FieldId}changeDetails" onclick="{!FieldId}_onClickTab('{!FieldId}changeDetails');" aria-controls="changeDetails" role="tab" data-toggle="tab">Change Details</a></li>
+                                <li id='{!FieldId}_LI_decision' class="LI_decision" role="presentation"><a href="#{!FieldId}decision" onclick="{!FieldId}_onClickTab('{!FieldId}decision');" aria-controls="decision" role="tab" data-toggle="tab">Decision</a></li>
+                            </ul>
+                            
+                            <!-- Tab panes -->
+                            <div class="tab-content push-down">
+                                <!-- change details pane  -->
+                                <div role="tabpanel" class="tab-pane active " id="{!FieldId}changeDetails">
+                                    <div class="row"><!-- row start -->
+                                        <div class="wiz-form-holder ">
+											<div class="wiz-fields  form-group col-md-6 col-sm-6 col-xs-12">
+                                                    <label for="label for change Feild">
+                                                        <span class="mandatory">
+                                                            <apex:outputtext value="*" rendered="{!if(Required==true,true,false)}"/></span>
+                                                        {!FieldName}
+                                                    </label>
+                                                    <div class="form-control" disabled="disabled">
+                                                        <apex:outputPanel rendered="{!FieldType=='date'}"> 
+                                                            <apex:outputText value="{0,date,dd MMM yyyy}">
+                                                                <apex:param value="{!FieldDateValue}" /> 
+                                                            </apex:outputText>
+                                                            <div class="pull-right">
+                                                                <span class='glyphicon glyphicon-calendar'></span>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                        <apex:outputPanel rendered="{!FieldType!='date'}">  
+                                                            {!FieldValue}
+                                                            <div class="pull-right">
+                                                                <span class='glyphicon glyphicon-triangle-bottom'></span>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                    </div>
+                                                    
+                                                        
+                                            </div> 
+                                            <!--<c:wiz_form recordid="{!RecordId}" formclass="{!FieldId}_NCTaskform validate" formid="{!FieldId}_NCTaskform" submitpage="stringify_nct"  postsavejs="location.reload();">  -->
+                                            <apex:componentbody />
+                                            <!--</c:wiz_form>  -->
+                                            <apex:outputPanel rendered="{!AND(if(GT.Status__c=='Pending Approval',false,true),if(GT.Status__c=='Closed',false,true),if(GT.ChangeFieldApprovalStatus__c=='Pending',false,true))}">
+                                                <div class="col-md-12">
+                                                    <label for="exampleInputEmail1"> Approval Required:</label><br/>
+                                                    
+                                                    
+                                                    <c:wiz_checkbox FieldId="{!FieldId}_chk" FieldName="{!FieldId}_chk" initvalue="false"  onChangeFunction="{!FieldId}_approvalRequire"></c:wiz_checkbox>
+                                                    
+                                                </div>
+                                            </apex:outputPanel>
+                                            <div class="col-md-12 wiz-fields-wide" id="{!FieldId}select_approver">
+                                                <div class="form-group">
+                                                    <label for="exampleInputEmail1"><span class="mandatory">*</span> Select Approver:</label>
+                                                    <c:wiz_multi disabled="false" multiple="true" FieldId="{!FieldId}_testApprover" initValues="" typeofuser="{!typeofApprover}"  querytable="User" queryfields="Name" />    
+                                                </div>
+                                            </div>
+                                            
+                                            <apex:outputPanel rendered="{!AND(GT.ChangeFieldApprovalStatus__c=='Pending',OR($User.Id==GT.Approver__c,$User.Id==GT.Approver_1__c,$User.Id==GT.Approver_2__c,$User.Id==GT.Approver_3__c,$User.Id==GT.Approver_4__c,$User.Id==GT.Approver_5__c,$User.Id==GT.Approver_6__c,$User.Id==GT.Approver_7__c,$User.Id==GT.Approver_8__c,$User.Id==GT.Approver_9__c))}">
+                                                <div class="wiz-fields-wide">
+                                                    <div class="form-group">
+                                                        <label for="exampleInputEmail1"><span class="mandatory"></span> Note to Approver:</label>
+                                                        <div class="alert alert-info"> <apex:outputField value="{!GT.Note_To_Approver_Owner_DueDate__c}" /> </div>             
+                                                    </div>
+                                                </div>
+                                            </apex:outputPanel>
+                                            <div class="col-md-12 wiz-fields-wide" id="{!FieldId}approver_note">
+                                                <apex:outputPanel rendered="{!NOT(GT.ChangeFieldApprovalStatus__c=='Pending')}">
+                                                    <div class="form-group">
+                                                        <label for="exampleInputEmail1"><span class="mandatory"></span> Note to Approver:</label>
+                                                        <textarea id='{!FieldId}__ApprovalReqcomment' type="text" class="form-control"   value='' maxlength="255"  oninput="maxlengthvalidation(this)">{!GT.Note_To_Approver_Owner_DueDate__c}</textarea>
+                                                        <div id="{!FieldId}__ApprovalReqcomment_error" class="help-block with-errors"></div>
+                                                    </div>
+                                                </apex:outputPanel>    
+                                            </div>
+                                            <apex:outputPanel rendered="{!AND($Setup.QC_settings__c.Is_Digital_Signature_Needed__c,OR(GT.Initial_Submitter__c==$User.Id,$Profile.Name=='System Administrator',GT.Ownerid==$User.Id))}">
+                                                <div id='Authenticate{!FieldId}' class="">
+                                                    <div class="col-md-6 col-sm-6 col-xs-12 wiz-fields" id="user_name" disabled='disabled'>
+                                                        <div class="form-group disabled" disabled="disabled">
+                                                            <label for="exampleInputEmail1"><span class="mandatory">*</span> User Name:</label>
+                                                            <input id='{!FieldId}Authenticate_user_name' class="form-control {!FieldId}_required" type="text" value='' />
+                                                            <div class="help-block with-errors" id="{!FieldId}Authenticate_user_name__error"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6 col-sm-6 col-xs-12 wiz-fields" id="password">
+                                                        <div class="form-group">
+                                                            <label for="exampleInputEmail1"><span class="mandatory">*</span> Password:</label>
+                                                            <input id='{!FieldId}Authenticate_password' class="form-control {!FieldId}_required" type="password" value='' />
+                                                            <div class="help-block with-errors" id="{!FieldId}Authenticate_password__error"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </apex:outputPanel>
+                                            
+                                            
+                                        </div>
+                                    </div> <!-- Row Ends -->
+                                    
+                                    
+                                </div>
+                                
+                                <div role="tabpanel" class="tab-pane" id="{!FieldId}decision">
+                                    <div id="decision_form">
+                                        <div class="row"><!-- row start -->
+                                            <div class="wiz-form-holder ">
+                                                
+                                                <div class="wiz-fields-wide push-down">
+                                                    <label for="exampleInputEmail1"><span class="mandatory">*</span> Decision:</label><br/>
+                                                    <div class="btn-group" data-toggle="buttons">
+                                                        <label  class="btn btn-primary active"><span class='fa fa-thumbs-o-up'/>
+                                                            <input onchange="{!FieldId}_showApproveField(this.checked, 'Approve')" name="owner_decision" value="APPROVE" autocomplete="off" checked="" type="radio" />Approve
+                                                        </label>
+                                                        <label  class="btn btn-primary"><span class='fa fa-thumbs-o-down'/>
+
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="wiz-fields-wide push-down" id="comment">
+                                                    <div class="form-group">
+                                                        <label for="exampleInputEmail1"><span id="{!FieldId}_Comment_Required" class="mandatory">*</span> Comment:</label>
+                                                        <textarea id='{!FieldId}__ApprovalRescomment' type="text" class="form-control {!FieldId}_required" value='' />
+                                                        <div class="help-block with-errors " id="{!FieldId}__ApprovalRescomment__error"></div>
+                                                    </div>
+                                                </div>
+                                                <apex:outputPanel rendered="{!AND(GT.ChangeFieldApprovalStatus__c=='Pending',$Setup.QC_settings__c.Is_Digital_Signature_Needed__c)}">
+                                                    <div class="wiz-fields" id="user_name" disabled='disabled'>
+                                                        <div class="form-group disabled" disabled="disabled">
+                                                            <label for="exampleInputEmail1"><span class="mandatory">*</span> User Name:</label>
+                                                            <input id='{!FieldId}_user_name' class="form-control {!FieldId}_required" type="text" value='' />
+                                                            <div class="help-block with-errors" id="{!FieldId}_user_name__error"></div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="wiz-fields" id="password">
+                                                        <div class="form-group">
+                                                            <label for="exampleInputEmail1"><span class="mandatory">*</span> Password:</label>
+                                                            <input id='{!FieldId}_password' class="form-control {!FieldId}_required" type="password" value='' />
+                                                            <div class="help-block with-errors" id="{!FieldId}_password__error"></div>
+                                                        </div>
+                                                    </div>
+                                                </apex:outputPanel>
+                                                
+                                            </div>
+                                        </div> <!-- Row Ends -->
+                                    </div>
+                                    
+                                    
+                                </div>
+                                
+                            </div>
+                            
+                        </div>
+                        <div class="clearfix"></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" onclick="{!FieldId}cancle();">Cancel</button>
+                            <apex:outputPanel rendered="{!(GT.ChangeFieldApprovalStatus__c=='Pending')}">            
+                                <!--<button type="button" onclick="validate('null',submitNCTaskform);" class="btn btn-primary dont-allow-multiple-clicks">Ok</button>-->            
+                                <apex:outputPanel rendered="true">                     
+                                    <button type="button" id="{!FieldId}_doVerifyUserNameButton" onclick="{!FieldId}_doVerifyUserName({!FieldId}_ApproveRecord,false);" class="btn btn-primary dont-allow-multiple-clicks doVerifyUserNameButton">OK</button>                                   
+                                    <apex:outputPanel rendered="{!OR(GT.Initial_Submitter__c==$User.Id,GT.Ownerid==$User.Id)}">     
+                                        <button type="button" id="{!FieldId}RecallButtonIdNctaskChangeField" onclick="isrecall=true;{!FieldId}_doVerifyUserName({!FieldId}_RecallRecord,false);" class="btn btn-primary dont-allow-multiple-clicks">Recall</button>                     
+                                    </apex:outputPanel>    
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!NOT(GT.ChangeFieldApprovalStatus__c=='Pending')}">
+                                <!--<button type="button" onclick="validate('null',{!FieldId}_submitNCTaskform);" class="btn btn-primary dont-allow-multiple-clicks">Ok</button>-->            
+                                <button type="button" onclick="{!FieldId}_doSubmitApprovalRequest(true);" class="btn btn-primary dont-allow-multiple-clicks">OK</button>  
+                            </apex:outputPanel>
+                        </div>
+                        <script>
+                        function {!FieldId}cancle(){
+                            /*var r = confirm("All the data will be lost");
+                            if (r == true) {
+                                $('#'+'{!ModalId}').modal('hide');
+                            } else {
+                                console.log("You pressed Cancel!");
+                            }*/
+                            var YESButtonInRedirectModalOnClick = function () {
+                                $('#'+'{!ModalId}').modal('hide');
+                                $('#redirectDialog').modal('hide');
+                            };
+                            var NOButtonInRedirectModalOnClick = function () {
+                                
+                            };
+                            $('#redirectDialog .btn-primary').bind( "click", YESButtonInRedirectModalOnClick);
+                            $('#redirectDialog .btn-default').bind( "click", NOButtonInRedirectModalOnClick);
+                            
+                            // Show the redirect dialog
+                            $('#redirectDialog').modal('show');
+                            
+                            // Remove the onClick event
+                            $('#redirectDialog').on('hidden.bs.modal', function () {
+                                $('#redirectDialog .btn-primary').unbind( "click", YESButtonInRedirectModalOnClick);
+                                $('#redirectDialog .btn-default').unbind( "click", NOButtonInRedirectModalOnClick);
+                            }) 
+                        }
+                        </script>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </apex:outputPanel>
+</apex:component>

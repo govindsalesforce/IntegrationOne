@@ -1,0 +1,435 @@
+<!--
+   v1.0        Qualityze Inc                           InititalVersion
+   
+   v1.1        Qualityze Inc(GP)       20-SEP-2016     Added approvals related to DOC and Change Management
+ -->
+<apex:page sidebar="false" controller="Approvalclass" readOnly="true" showHeader="true" standardStylesheets="false" docType="html-5.0">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/app.css')}" />
+        
+        <!-- Below 2 files are for Datatable Pagination -->
+        <apex:stylesheet value="{!URLFOR($Resource.bt_static, '/static/stylesheets/dataTables.bootstrap.css')}" />
+        <!-- <apex:stylesheet value="{!URLFOR($Resource.bt_static, '/static/stylesheets/bootstrap.min.css')}" />-->          
+        
+        
+        <title>Qualityze</title>
+    </head>
+
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.min.js')}" /> 
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/bootstrap.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/bootstrap-datepicker.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.slimscroll.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/select2-4.0.0/dist/js/select2.min.js')}" />
+        
+        <!-- Below 2 files are for Datatable Pagination -->
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.dataTables.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/dataTables.bootstrap.js')}" />
+      
+        
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/typeahead.bundle.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/app.js')}" />
+
+
+
+       
+           
+    <style>
+        .error {
+        color: #F0493E !important;
+        }
+        label.btn-primary , .btn-primary, body button, body .x-btn,  body .btnDisabled, body .btnCancel, body .menuButton .menuButtonButton{
+        padding: 4px 8px !important;
+        color: #fff !important;
+        background-color: #337ab7 !important;
+        border-color: #2e6da4;
+        background: #337ab7 url('../images/transparent.png') repeat-x right top !important;
+        }
+        label.btn-primary ,  body button, body .x-btn, body .btnDisabled, body .btnCancel, body .menuButton .menuButtonButton{
+        padding: 4px 8px !important;
+        color: #fff !important;
+        background-color: #337ab7 !important;
+        border-color: #2e6da4;
+        background: #337ab7 url('../images/transparent.png') repeat-x right top;
+        }
+        
+        label.btn-primary:active ,label.btn-primary:hover, label.btn-primary:focus, label.btn-primary.focus, label.btn-primary:active, label.btn-primary.active{
+        background-color: #215888 !important;
+        }
+        
+        
+        
+        .btn-default, body button, body .x-btn, body .btnDisabled, body .btnCancel, body .menuButton .menuButtonButton{
+        padding: 4px 8px !important;
+        color: #777 !important;
+        background-color: #fff;
+        border-color: #2e6da4;
+        background: #fff url('../images/transparent.png') repeat-x right top !important;
+        }
+        label.btn-default ,  body button, body .x-btn,  body .btnDisabled, body .btnCancel, body .menuButton .menuButtonButton{
+        padding: 4px 8px !important;
+        color: #fff;
+        background-color: #fff ;
+        border-color: #2e6da4;
+        background: #fff url('../images/transparent.png') repeat-x right top !important;
+        }
+    </style>
+    <body>
+     <!--   <c:drawer_menu />
+            <c:header_bar />-->
+        <c:wiz_approvalbutton approvalbuttonid="ApprovaButtonIdNcContainment" jsid="javascriptidForApprovalbutton"  ></c:wiz_approvalbutton>
+        <div class="container-fluid page-margins" id="app_warpper">
+            <div class="row">
+            </div>
+            <div class="row"></div>
+            
+            <h1><a href="/apex/qlt_dashboard">Dashboard<span class="glyphicon glyphicon-chevron-right"/></a>Pending Approval Requests</h1>    
+            <p></p>
+            
+        <!-- NC List -->
+          <div class="tab-filter">
+             
+            <div class="tab-content">
+              
+              <div role="tabpanel" class="tab-pane active" id="containment_list">
+                
+                <table class="table table-hover" cellspacing="5" id="ApproverList" width="100%" >
+                  <thead>
+                    <tr>
+                      <th width="8%">{!$CurrentPage.Parameters.type} Number</th>
+                      <th width="8%">Task</th>
+                      <th width="8%">Approval Type</th>
+                      <th width="8%">Due Date</th>
+                      <th width="8%">Note To Approver</th>
+                      <th width="8%">Submitter</th>
+                      <th width="8%">Response</th>
+                    </tr>
+                  </thead>
+
+                    <apex:repeat value="{!ApproverList}" var="gt" rendered="{!$CurrentPage.Parameters.type=='NC'}">
+
+                      <tr class="list-row">
+                        <td width="20%"><a href="/{!gt.Non_Conformance__c}">{!gt.non_conformance__r.Name}</a></td>
+                          <td width="20%"><a href="/{!gt.id}">{!gt.RecordType.Name}</a></td>  
+                        <td width="20%">  
+                            <apex:outputPanel rendered="{!AND(NOT(gt.Status__c=='Pending Approval'),gt.New_Owner__c!=null)}">Change Owner
+                              <script> 
+                                var va{!gt.id}Type=' Change Owner'; 
+                              </script>                            
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!AND(NOT(gt.Status__c=='Pending Approval'),gt.New_Due_Date__c!=null)}">Change Due Date
+                              <script> 
+                                var va{!gt.id}Type=' Change Due Date'; 
+                              </script>                            
+                            </apex:outputPanel> 
+                            <apex:outputPanel rendered="{!(gt.Status__c=='Pending Approval')}">Task Approval
+                              <script> 
+                                var va{!gt.id}Type='Task'; 
+                              </script>                            
+                            </apex:outputPanel>
+                        </td>   
+                          <td width="12%"><apex:outputField value="{!gt.Due_Date__c}"/></td>
+                          <td width="20%">
+                             
+                              <apex:outputText rendered="{!NOT(ISBLANK(gt.Note_To_Approver__c))}" >                                            
+                                                <span data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="{!JSENCODE(gt.Note_To_Approver__c)}" title="" class="status-marker "> <apex:outputText rendered="{!(gt.Status__c=='Pending Approval')}" value="{!LEFT(gt.Note_To_Approver__c,60)}"/>...</span>
+                                            </apex:outputText>
+                              <apex:outputPanel rendered="{!NOT(ISBLANK(gt.Note_To_Approver_Owner_DueDate__c))}">
+                                  <span data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="{!JSENCODE(gt.Note_To_Approver_Owner_DueDate__c)}" title="" class="status-marker "> 
+                                  <apex:outputText rendered="{!NOT(gt.Status__c=='Pending Approval')}" value="{!Left(gt.Note_To_Approver_Owner_DueDate__c,60)}"/>...</span>                              
+                              </apex:outputPanel>
+                              
+                          </td>
+                        <td width="20%">{!User[submitted[gt.id]].Name}</td> 
+                          <td width="20%">
+                           <!--   <a href="#"  id="ApprovaButtonIdListNcContainment"  onclick="ApprovePopupModalForListncApproval('{!gt.RecordType.Name}',va{!gt.id}Type,'{!gt.id}');" class="btn btn-success  dont-allow-multiple-clicks" >
+                                  <span class='fa fa-thumbs-o-up'></span>Decision</a>   -->
+                               <a href="#" class="btn btn-primary  " onclick="ApprovePopupModalForListncApproval('{!gt.RecordType.Name}',va{!gt.id}Type,'{!gt.id}');" ><span class='fa fa-thumbs-o-up'></span>Decision</a>
+                           <!-- <apex:form >
+                               <apex:commandLInk value="Submit"  styleClass="btn  btn-primary "  onclick="ApprovePopupModalForListncApproval('{!gt.RecordType.Name}',va{!gt.id}Type,'{!gt.id}');">
+                                   <span class='fa fa-thumbs-o-up'></span>Decision
+                               </apex:commandLInk>
+                              </apex:form>-->
+                              
+                          </td>
+                      </tr>
+                    </apex:repeat>
+                    
+                    <apex:repeat value="{!CAPAApproverList}" var="id" rendered="{!$CurrentPage.Parameters.type=='CAPA'}">
+
+                      <tr class="list-row">
+                        <td width="20%"><a href="/{!TargetParent[id].Non_Conformance__c}">{!TargetParent[id].CAPA__r.Name}</a></td>
+                          <td width="20%"><a href="/{!TargetParent[id].id}">{!TargetParent[id].RecordType.Name}</a></td>  
+                        <td width="20%">  
+                            <apex:outputPanel rendered="{!AND(NOT(TargetParent[id].Status__c=='Pending Approval'),TargetParent[id].New_Owner__c!=null)}">Change Owner
+                              <script> 
+                                var va{!TargetParent[id].id}Type=' Change Owner'; 
+                              </script>                            
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!AND(NOT(TargetParent[id].Status__c=='Pending Approval'),TargetParent[id].New_Due_Date__c!=null)}">Change Due Date
+                              <script> 
+                                var va{!TargetParent[id].id}Type=' Change Due Date'; 
+                              </script>                            
+                            </apex:outputPanel> 
+                            <apex:outputPanel rendered="{!(TargetParent[id].Status__c=='Pending Approval')}">Task Approval
+                              <script> 
+                                var va{!TargetParent[id].id}Type='Task'; 
+                              </script>                            
+                            </apex:outputPanel>
+                        </td>   
+                          <td width="12%"><apex:outputField value="{!TargetParent[id].Due_Date__c}"/></td>
+                          <td width="20%">
+                             
+                              <apex:outputText rendered="{!NOT(ISBLANK(TargetParent[id].Note_To_Approver__c))}" >                                            
+                                                <span data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="{!JSENCODE(TargetParent[id].Note_To_Approver__c)}" title="" class="status-marker "> <apex:outputText rendered="{!(TargetParent[id].Status__c=='Pending Approval')}" value="{!LEFT(TargetParent[id].Note_To_Approver__c,60)}"/>...</span>
+                                            </apex:outputText>
+                              <apex:outputPanel rendered="{!NOT(ISBLANK(TargetParent[id].Note_To_Approver_Owner_DueDate__c))}">
+                                  <span data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="{!JSENCODE(TargetParent[id].Note_To_Approver_Owner_DueDate__c)}" title="" class="status-marker "> 
+                                  <apex:outputText rendered="{!NOT(TargetParent[id].Status__c=='Pending Approval')}" value="{!Left(TargetParent[id].Note_To_Approver_Owner_DueDate__c,60)}"/>...</span>                              
+                              </apex:outputPanel>
+                              
+                          </td>
+                        <td width="20%">{!User[submitted[TargetParent[id].id]].Name}</td> 
+                          <td width="20%">
+                              <a href="#"  id="ApprovaButtonIdListNcContainment"  onclick="ApprovePopupModalForListncApproval('{!TargetParent[id].RecordType.Name}',va{!TargetParent[id].id}Type,'{!TargetParent[id].id}');" class="btn btn-primary  dont-allow-multiple-clicks" >
+                                  <span class='fa fa-thumbs-o-up'></span>Decision</a>  
+                          </td>
+                      </tr>
+                    </apex:repeat>
+                    
+                      <!-- v1.1 start -->
+                    <apex:repeat value="{!DOCApproverList}" var="id" rendered="{!JSENCODE($CurrentPage.Parameters.type)=='DOC'}">
+
+                      <tr class="list-row">
+                          
+                        <td width="20%">
+                            
+                            <apex:outputPanel rendered="{!$ObjectType.Document_Profile__c!=Left(TargetParent[id].id,3)}">     
+                                <a href="/{!JSENCODE(TargetParent[id].Document_Profile__c)}">
+                            {!JSENCODE(TargetParent[id].Document_Profile__r.Name)}
+                                    </a>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!$ObjectType.Document_Profile__c==Left(TargetParent[id].id,3)}">    
+                                <a href="/{!JSENCODE(TargetParent[id].id)}">
+                                {!JSENCODE(TargetParent[id].Name)}
+                                    </a>
+                            </apex:outputPanel>
+                            
+                            </td>
+                          
+                          <td width="20%">
+                              
+                          <apex:outputPanel rendered="{!$ObjectType.Document_Profile__c!=Left(TargetParent[id].id,3)}">                              
+                              <a href="/{!JSENCODE(TargetParent[id].id)}">{!JSENCODE(TargetParent[id].RecordType.Name)}</a>
+                          </apex:outputPanel>
+                              
+                          </td>  
+                        <td width="20%">  
+                            <!--v1.0.2  start-->
+                            <apex:outputPanel rendered="{!$ObjectType.Document_Profile__c!=Left(TargetParent[id].id,3)}">                             
+                                <apex:outputPanel rendered="{!AND(NOT((TargetParent[id].Status__c)=='Pending Approval'),(TargetParent[id].New_Owner__c)!=null)}">Change Owner
+                                    <script> 
+                                    var va{!JSENCODE(TargetParent[id].id)}Type=' Change Owner'; 
+                                    </script>                            
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!AND(NOT((TargetParent[id].Status__c)=='Pending Approval'),(TargetParent[id].New_Due_Date__c)!=null)}">Change Due Date
+                                    <script> 
+                                    var va{!JSENCODE(TargetParent[id].id)}Type=' Change Due Date'; 
+                                    </script>                            
+                                </apex:outputPanel> 
+                                <apex:outputPanel rendered="{!((TargetParent[id].Status__c)=='Pending Approval')}">Task Approval
+                                    <script> 
+                                    var va{!JSENCODE(TargetParent[id].id)}Type='Task'; 
+                                    </script>                            
+                                </apex:outputPanel>
+                            </apex:outputPanel>                            
+                            <apex:outputtext rendered="{!AND($ObjectType.Document_Profile__c==Left(TargetParent[id].id,3),TargetParent[id].ApprovalProcess__c=='Document Approval')}" value="Document Approval"> 
+                              <script> 
+                                var va{!JSENCODE(TargetParent[id].id)}Type='Document Profile'; 
+                              </script> 
+                            </apex:outputtext>
+                            <apex:outputtext rendered="{!AND($ObjectType.Document_Profile__c==Left(TargetParent[id].id,3),NOT((TargetParent[id].Status__c)=='Pending Approval'),(TargetParent[id].New_Owner__c)!=null)}" value="Document Change Owner"> 
+                              <script> 
+                                var va{!JSENCODE(TargetParent[id].id)}Type='Document Change Owner'; 
+                              </script> 
+                            </apex:outputtext>
+                            
+                        </td>   
+                          <td width="12%">
+                              
+                              <apex:outputField rendered="{!$ObjectType.Document_Profile__c!=Left(TargetParent[id].id,3)}" value="{!TargetParent[id].Due_Date__c}"/>
+                              
+                          </td>
+                          <td width="20%">
+                             
+                              <apex:outputText rendered="{!NOT(ISBLANK(JSENCODE(TargetParent[id].Note_To_Approver__c)))}" >                                            
+                                                <span data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="{!JSENCODE(TargetParent[id].Note_To_Approver__c)}" title="" class="status-marker ">
+                                                   <!--v1.0.2  start-->
+                                                    <apex:outputPanel rendered="{!$ObjectType.Document_Profile__c!=Left(TargetParent[id].id,3)}" >
+                                                    <apex:outputText rendered="{!(TargetParent[id].Status__c=='Pending Approval')}" value="{!LEFT(TargetParent[id].Note_To_Approver__c,60)}"/></apex:outputPanel>...</span>                                                                                                        
+                                  					<!--v1.0.2  end-->
+                                            </apex:outputText>
+                              <!--v1.0.2  start-->
+                              <apex:outputPanel rendered="{!$ObjectType.Document_Profile__c!=Left(TargetParent[id].id,3)}" >
+                              <apex:outputPanel rendered="{!NOT(ISBLANK(JSENCODE(TargetParent[id].Note_To_Approver_Owner_DueDate__c)))}">
+                                  <span data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="{!JSENCODE(TargetParent[id].Note_To_Approver_Owner_DueDate__c)}" title="" class="status-marker "> 
+                                  <apex:outputText rendered="{!NOT(JSENCODE(TargetParent[id].Status__c)=='Pending Approval')}" value="{!Left(JSENCODE(TargetParent[id].Note_To_Approver_Owner_DueDate__c),60)}"/>...</span>                              
+                              </apex:outputPanel>
+                              </apex:outputPanel>
+                              <!--v1.0.2  end-->
+                              
+                          </td>
+                        <td width="20%">{!User[submitted[JSENCODE(TargetParent[id].id)]].Name}</td> 
+                          <td width="20%">
+                              <a href="#"  id="ApprovaButtonIdListNcContainment"  onclick="ApprovePopupModalForListncApproval('{!JSENCODE(TargetParent[id].RecordType.Name)}',va{!JSENCODE(TargetParent[id].id)}Type,'{!JSENCODE(TargetParent[id].id)}');" class="btn btn-primary  dont-allow-multiple-clicks" >
+                                  <span class='fa fa-thumbs-o-up'></span>Decision</a>  
+                          </td>
+                      </tr>
+                    </apex:repeat>
+                    
+                    <apex:repeat value="{!CMApproverList}" var="id" rendered="{!JSENCODE($CurrentPage.Parameters.type)=='CM'}">
+
+                      <tr class="list-row">
+                          
+                        <td width="20%">
+                            
+                            <apex:outputPanel rendered="{!$ObjectType.Change_Management__c!=Left(TargetParent[id].id,3)}">     
+                                <a href="/{!JSENCODE(TargetParent[id].Change_Management__c)}">
+                            {!JSENCODE(TargetParent[id].Change_Management__r.Name)}
+                                    </a>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!$ObjectType.Change_Management__c==Left(TargetParent[id].id,3)}">    
+                                <a href="/{!JSENCODE(TargetParent[id].id)}">
+                                {!JSENCODE(TargetParent[id].Name)}
+                                    </a>
+                            </apex:outputPanel>
+                            
+                            </td>
+                          
+                          <td width="20%">
+                              
+                          <apex:outputPanel rendered="{!$ObjectType.Change_Management__c!=Left(TargetParent[id].id,3)}">                              
+                              <a href="/{!JSENCODE(TargetParent[id].id)}">{!JSENCODE(TargetParent[id].RecordType.Name)}</a>
+                          </apex:outputPanel>
+                              
+                          </td>  
+                        <td width="20%">  
+                            <!--v1.0.2  start-->
+                            <apex:outputPanel rendered="{!$ObjectType.Change_Management__c!=Left(TargetParent[id].id,3)}">                             
+                                <apex:outputPanel rendered="{!AND(NOT((TargetParent[id].Status__c)=='Pending Approval'),(TargetParent[id].New_Owner__c)!=null)}">Change Owner
+                                    <script> 
+                                    var va{!JSENCODE(TargetParent[id].id)}Type=' Change Owner'; 
+                                    </script>                            
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!AND(NOT((TargetParent[id].Status__c)=='Pending Approval'),(TargetParent[id].New_Due_Date__c)!=null)}">Change Due Date
+                                    <script> 
+                                    var va{!JSENCODE(TargetParent[id].id)}Type=' Change Due Date'; 
+                                    </script>                            
+                                </apex:outputPanel> 
+                                <apex:outputPanel rendered="{!((TargetParent[id].Status__c)=='Pending Approval')}">Task Approval
+                                    <script> 
+                                    var va{!JSENCODE(TargetParent[id].id)}Type='Task'; 
+                                    </script>                            
+                                </apex:outputPanel>
+                            </apex:outputPanel>                            
+                            <apex:outputtext rendered="{!AND($ObjectType.Change_Management__c==Left(TargetParent[id].id,3),TargetParent[id].Status__c=='Pending Approval')}" value="Change Management"> 
+                              <script> 
+                                var va{!JSENCODE(TargetParent[id].id)}Type='Change Management'; 
+                              </script> 
+                            </apex:outputtext>
+                            <apex:outputtext rendered="{!AND($ObjectType.Change_Management__c==Left(TargetParent[id].id,3),NOT((TargetParent[id].Status__c)=='Pending Approval'),(TargetParent[id].New_Owner__c)!=null)}" value="Change Owner"> 
+                              <script> 
+                                var va{!JSENCODE(TargetParent[id].id)}Type='Change Owner'; 
+                              </script> 
+                            </apex:outputtext>
+                            <!--v1.0.2  end-->
+                        </td>   
+                          <td width="12%">
+                              <!--v1.0.2  start-->
+                              <apex:outputField rendered="{!$ObjectType.Change_Management__c!=Left(TargetParent[id].id,3)}" value="{!TargetParent[id].Due_Date__c}"/>
+                              <!--v1.0.2  end-->
+                          </td>
+                          <td width="20%">
+                             
+                              <apex:outputText rendered="{!NOT(ISBLANK(JSENCODE(TargetParent[id].Note_To_Approver__c)))}" >                                            
+                                                <span data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="{!JSENCODE(TargetParent[id].Note_To_Approver__c)}" title="" class="status-marker ">
+                                                   <!--v1.0.2  start-->
+                                                    <apex:outputPanel rendered="{!$ObjectType.Change_Management__c!=Left(TargetParent[id].id,3)}" >
+                                                    <apex:outputText rendered="{!(TargetParent[id].Status__c=='Pending Approval')}" value="{!LEFT(TargetParent[id].Note_To_Approver__c,60)}"/></apex:outputPanel>...</span>                                                                                                        
+                                  					<!--v1.0.2  end-->
+                                            </apex:outputText>
+                              <!--v1.0.2  start-->
+                               <apex:outputPanel rendered="{!$ObjectType.Change_Management__c!=Left(TargetParent[id].id,3)}" >
+                              <apex:outputPanel rendered="{!NOT(ISBLANK(JSENCODE(TargetParent[id].Note_To_Approver_Owner_DueDate__c)))}">
+                                  <span data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="{!JSENCODE(TargetParent[id].Note_To_Approver_Owner_DueDate__c)}" title="" class="status-marker "> 
+                                  <apex:outputText rendered="{!NOT(JSENCODE(TargetParent[id].Status__c)=='Pending Approval')}" value="{!Left(JSENCODE(TargetParent[id].Note_To_Approver_Owner_DueDate__c),60)}"/>...</span>                              
+                              </apex:outputPanel>
+                              </apex:outputPanel>
+                              <!--v1.0.2  end-->
+                              
+                          </td>
+                        <td width="20%">{!User[submitted[JSENCODE(TargetParent[id].id)]].Name}</td> 
+                          <td width="20%">
+                              <a href="#"  id="ApprovaButtonIdListNcContainment"  onclick="ApprovePopupModalForListncApproval('{!JSENCODE(TargetParent[id].RecordType.Name)}',va{!JSENCODE(TargetParent[id].id)}Type,'{!JSENCODE(TargetParent[id].id)}');" class="btn btn-primary  dont-allow-multiple-clicks" >
+                                  <span class='fa fa-thumbs-o-up'></span>Decision</a>  
+                          </td>
+                      </tr>
+                    </apex:repeat>
+                    <!-- v1.1 end -->
+
+                </table>
+
+                
+              </div>
+              
+              <div role="tabpanel" class="tab-pane" id="profile">Disposition</div>
+              <div role="tabpanel" class="tab-pane" id="messages">Investigation</div>
+              <div role="tabpanel" class="tab-pane" id="settings">Closure</div>
+            </div>
+            <!-- row -->
+          </div>
+    </div>
+
+     <c:static_footer />
+     
+     <c:sfdcapp />
+     <script src="../../soap/ajax/34.0/connection.js" type="text/javascript"></script>
+    </body>
+     <script>
+    $(document).ready(function() {
+        $('#ApproverList').dataTable();
+        });
+        var Targetobjectid;
+     function ApprovePopupModalForListncApproval(task,Type,objectid){
+                    Targetobjectid=objectid;
+                    $('#ahrefjavascriptidForApprovalbutton_LI_decision').html('Approve');
+                    $('.LI_decision').show();
+                    $('#javascriptidForApprovalbutton_decision_wiz-fields-wide').show();  
+                    $('#javascriptidForApprovalbutton_header').html('Approve '+task+' '+Type);
+                    $('#javascriptidForApprovalbutton_Comment_Required').hide(); 
+                    $('.doVerifyUserNameButton').show();
+                    $('#ApprovaButtonIdNcContainment').show(); 
+                    $('#javascriptidForApprovalbutton__ApprovalRescomment').removeClass('javascriptidForApprovalbutton_required');
+                    $('#javascriptidForApprovalbutton__ApprovalRescomment').val('');                    
+                    $('#javascriptidForApprovalbutton').modal('show');
+                    $('#javascriptidForApprovalbutton_user_name').val('');
+                    $('#javascriptidForApprovalbutton_password').val('');
+                    recall=false;
+                }   
+                function ApprovalResponse(RecordId,ApprovalRescomment,approved,FieldId){
+                            RecordId=Targetobjectid;
+                            Visualforce.remoting.Manager.invokeAction(
+                            // @RemoteAction
+                            '{!$RemoteAction.Approvalclass.submitApprovalResponse}',RecordId,ApprovalRescomment,approved,FieldId,function(result, event){
+                                                                                            if(event.status){
+                                                                                                //alert('sucess');
+                                                                                                location.reload();
+                                                                                            }
+                                });
+                }     
+
+    </script>
+</apex:page>

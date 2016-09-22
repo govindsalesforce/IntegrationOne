@@ -1,0 +1,2170 @@
+<!--
+v1.0                        Qualityze Inc(GRT)          08-JULY-2016            Initial Version.
+This page includes Document Type Create belonging to the Document Type.
+v1.0.1                      Qualityze Inc(PRG)          14-JULY-2016            Details section     
+v1.0.2                      Qualityze Inc(ST)           19-AUG-2016              for chronology   
+v1.0.3                      Qualityze Inc(ST)           09-AUG-2016              for print
+-->
+
+<apex:page standardController="Document_Type__c"
+           extensions="DocumentTypeControllerExt,QC_custom_settings"
+           sidebar="false" showHeader="false" standardStylesheets="false"
+           docType="html-5.0">
+    
+    <script type="text/javascript">
+    
+    $( document ).ready(function() {
+        $('#attchment_tab').html('');
+        setTimeout(show(), 1000);
+        
+    }); 
+    function show(){
+        $("#loading").hide();
+        $("#overlay").hide();
+    }
+    
+    
+    function detailpage(){
+        
+        
+        window.location.href = '/apex/documentType?id={!JSENCODE($CurrentPage.parameters.id)}&pg=doc_TypeDetails';
+        
+        
+    }
+    function changeinit(){
+        
+        
+        window.location.href = '/apex/documentType?id={!JSENCODE($CurrentPage.parameters.id)}&pg=doctype';
+        
+        
+    }
+    
+    // Checkbox - Radio button group change non selected button class 
+    function onchangesecondaryformat(idval){
+        console.log("inside onchange func="+ idval);
+        $("#secondaryformatgroup :input").attr('name','');
+        $("#secondaryformatgroup :input").attr('value','');
+        $('#'+idval).addClass(" btn-primary").removeClass("btn-default");
+        $('#'+idval).find('input').attr('name','Secondary_Format__c');
+        $('#'+idval).find('input').attr('value',idval);
+        $('#'+idval).siblings().addClass(" btn-default");
+        $('#'+idval).siblings().removeClass("btn-primary");
+    }
+    
+    </script>
+    <div id="overlay"
+         style="background-color: rgba(0, 0, 0, 0.15); z-index: 999; position: absolute; left: 0; top: 0; width: 100%; height: 200%;"></div>
+    <div id="loading"
+         style="height: 64px; width: 64px; align: center; position: absolute; margin: -100px 0 0 -200px; top: 80%; left: 50%; z-index: 1000">
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i> <span
+                                                                 class="sr-only">Loading...</span>
+        
+    </div>
+    
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/app.css')}" />
+        
+        <!-- Below 2 files are for Datatable Pagination -->
+        <apex:stylesheet value="{!URLFOR($Resource.bt_static, '/static/stylesheets/dataTables.bootstrap.css')}" />
+        <!-- <apex:stylesheet value="{!URLFOR($Resource.bt_static, '/static/stylesheets/bootstrap.min.css')}" />-->
+        
+        
+        <title>Qualityze</title>
+    </head>
+    <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/bootstrap.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/bootstrap-datepicker.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.slimscroll.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/select2-4.0.0/dist/js/select2.min.js')}" />
+    
+    <!-- Below 2 files are for Datatable Pagination -->
+    <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.dataTables.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/dataTables.bootstrap.js')}" />
+    
+    
+    <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/typeahead.bundle.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/app.js')}" />
+    <style>
+        .error {
+        color: #F0493E !important;
+        }
+    </style>
+    
+    
+    
+    <div id="container" class="{!if($CurrentPage.parameters.pg=='docType_details_print','hidden','')}">
+        <apex:composition template="qualityze_app_layout">
+            <apex:define name="header_bar_component">
+                <!--Begin : Header Bar With Search Option -->
+                <c:header_bar ObjectType="{!$ObjectType.Document_Type__c}"
+                              ObjectTypeLinkTitle="Document Type" />
+                <!--End  : Header Bar With Search Option -->
+            </apex:define>
+            
+            <apex:define name="theheader">
+                <!--  DocumentType_Header STARTS    -->
+                <c:DocumentType_Header doctypeRecordId="{!IF($CurrentPage.parameters.camefromClone=='true','',DocType.Id)}"
+                                       rendered="{!NOT(ISBLANK(DocType.Id))}" />
+                <!--  DocumentType_header ENDS    -->
+            </apex:define>
+            
+            <!--<apex:define name="wizsteps">
+<div class="row">
+<div class="col-md-offset-10 col-md-2 col-sm-2 col-xs-2 right-to-wiz hidden-sm hidden-xs">
+<div class="btn-group pull-right nc-detail-btn">
+<apex:outputPanel rendered="{!OR($CurrentPage.parameters.pg=='doctype')}" >
+<a href="#" class="btn btn-primary" id="show_details" onclick="detailpage();">
+<i class="fa fa-file-text-o"></i> Document Type Details
+</a>
+</apex:outputPanel> 
+
+<apex:outputPanel rendered="{!OR($CurrentPage.parameters.pg=='doc_TypeDetails')}" >
+<a href="#" class="btn btn-primary" id="show_details" onclick="changeinit();">
+<i class="fa fa-file-text-o"></i> Document Initiation
+</a>
+</apex:outputPanel>
+
+</div>
+</div>
+</div>
+</apex:define>-->
+            
+            <apex:define name="from-holder-title">
+                <!-- To do   -->
+                <apex:outputText value="Document Type" />
+            </apex:define>
+            <apex:define name="theform">
+                <apex:outputpanel rendered="{!OR($CurrentPage.parameters.pg=='doctype',ISBLANK($CurrentPage.parameters.pg))}"> 
+                    <!-- Starting of Tabs-->
+                    <div class="wiz-form-holder">
+                        <div class="row">
+                            <!--    Left form container -->
+                            <!--<div class="wizard-form"> -->
+                            
+                            <div>
+                                <!-- Nav tabs -->
+                                <ul class="nav nav-tabs inpane-tabs" role="tablist">
+                                    <li role="presentation" class="active" id="docdetails"><a
+                                                                              href="#doc_details" aria-controls="doc_details" role="tab"
+                                                                              data-toggle="tab">Details</a></li>
+                                    <!--<apex:outputpanel rendered="true">-->
+                                    <li role="presentation" id="docsecurity"><a href="#doc_security"
+                                                               aria-controls="doc_security" role="tab" data-toggle="tab">Security</a></li>
+                                    <!--</apex:outputpanel>-->
+                                    <!--<apex:outputpanel rendered="true">-->
+                                    <li role="presentation"><a href="#doc_documents"
+                                                               aria-controls="doc_documents" role="tab" data-toggle="tab">Documents</a></li>
+                                    <!--</apex:outputpanel>-->
+                                    
+                                </ul>
+                                <!-- Tab panes -->
+                                
+                                <script type="text/javascript">
+                            
+                            $(function(){
+                                var curPagedttab = "{!JSENCODE($CurrentPage.parameters.dttab)}";
+                                if(curPagedttab=='dtdet'){
+                                    
+                                    $('#docsecurity').removeClass('active');
+                                    $('#doc_security').removeClass('active');
+                                    $('#docdetails').addClass('active');   
+                                    $('#doc_details').addClass('active');
+                                    
+                                    
+                                }
+                                
+                                
+                                if(curPagedttab=='dtsec'){
+                                    
+                                    $('#docsecurity').addClass('active');
+                                    $('#doc_security').addClass('active');
+                                    $('#docdetails').removeClass('active');   
+                                    $('#doc_details').removeClass('active');
+                                    
+                                }
+                                
+                            });
+                            
+                            </script>
+                            
+
+                                
+                                
+                                <div class="tab-content">
+                                    
+                                    
+                                    <!-- v1.0.1 DocumentType details START -->
+                                    <div role="tabpanel" class="tab-pane active" id="doc_details">
+                                        <c:wiz_form submitpage="stringify_sobject" formid="detailssec"
+                                                    formclass="appform validate" RecordId="{!DocType.Id}">
+                                            <div class="clearfix"></div>
+                                            <input type="hidden" name="sobj" value="Document_Type__c" />
+                                            <input type="hidden" name="page" id="page"
+                                                   value="documentType" />
+                                            <!--  <input type="hidden" name="FieldId" value="{!IF($CurrentPage.parameters.camefromClone=='true','',DocType.Id)}" /> -->
+                                            <input type="hidden" name="Id" value="{!IF($CurrentPage.parameters.camefromClone=='true','',DocType.Id)}" />
+                                            <input type="hidden" name="isEditable__c" id="isEditable"
+                                                   value="{!DocType.isEditable__c}" /> 
+                                            
+                                            
+                                                                
+                                           <!--   <script> 
+                                            var docTypesArray = [];
+                                            </script>
+                                            -->
+                                            <apex:repeat value="{!$ObjectType.Document_Type__c.FieldSets.Document_Type}"
+                                                         var="f">
+                                             <!--     
+                                                <script>
+                                                var obj = {};
+                                                obj = {"name":"{!f}","value":"{!DocType[f]}"};
+                                                docTypesArray.push(obj);
+                                                
+                                                obj={};
+                                                                      
+                                                    </script>--> 
+                                                <c:wiz_field Wide="{!OR($ObjectType.Document_Type__c.Fields[f].type=='textarea',$ObjectType.Document_Type__c.Fields[f].type=='multipicklist',f==IF(NOT(ISBLANK(Prefix)),Prefix+'__Title__c','Title__c'))}"
+                                                             FieldLabel="{!if($ObjectType.Document_Type__c.Fields[f].Label=='Owner ID','Owner',$ObjectType.Document_Type__c.Fields[f].Label)}"
+                                                             required="{!OR(f.required, f.dbrequired)}"
+                                                             jsid="{!LEFT(f,LEN(f)-3)}"
+                                                             rendered="{!$ObjectType.Document_Type__c.Fields[f].Accessible}">
+                                                    
+                                                    <c:wiz_richtext rendered="{!AND($ObjectType.Document_Type__c.Fields[f].type=='textarea',$ObjectType.Document_Type__c.Fields[f].htmlFormatted,NOT(OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c)))}"
+                                                                    FieldId="{!f}" FieldName="{!f}" initvalue="{!DocType[f]}"
+                                                                    Required="{!OR(f.required, f.dbrequired)}" maxlength="4000"></c:wiz_richtext>
+                                                    <apex:outputpanel rendered="{!AND($ObjectType.Document_Type__c.Fields[f].type=='textarea',$ObjectType.Document_Type__c.Fields[f].htmlFormatted,OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c))}">
+                                                        <div class="alert alert-info">
+                                                            <apex:outputField value="{!DocType[f]}" />
+                                                        </div>
+                                                    </apex:outputpanel>
+                                                    <c:wiz_textarea rendered="{!AND($ObjectType.Document_Type__c.Fields[f].type=='textarea',NOT($ObjectType.Document_Type__c.Fields[f].htmlFormatted),NOT(OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c)))}"
+                                                                    ObjectName="{!$ObjectType.Document_Type__c.Name}"
+                                                                    FieldId="{!f}" FieldName="{!f}" initvalue="{!DocType[f]}"
+                                                                    Required="{!OR(f.required, f.dbrequired)}"
+                                                                    disabled="{!OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c)}"></c:wiz_textarea>
+                                                    <apex:outputpanel rendered="{!AND($ObjectType.Document_Type__c.Fields[f].type=='textarea',NOT($ObjectType.Document_Type__c.Fields[f].htmlFormatted),OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c))}">
+                                                        <div class="alert alert-info">
+                                                            <apex:outputField value="{!DocType[f]}" />
+                                                        </div>
+                                                    </apex:outputpanel>
+                                                    <c:wiz_input rendered="{!$ObjectType.Document_Type__c.Fields[f].type=='string'}"
+                                                                 fieldId="{!f}" fieldname="{!f}" initvalue="{!DocType[f]}"
+                                                                 required="{!OR(f.required, f.dbrequired)}"
+                                                                 disabled="{!OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c)}"></c:wiz_input>
+                                                    
+                                                     <apex:outputPanel rendered="{!NOT(f=='Number_Scheme__c')}">
+                                                    <c:wiz_multi width="100%"
+                                                                 rendered="{!AND($ObjectType.Document_Type__c.Fields[f].type=='reference',NOT(f=='Status'))}"
+                                                                 required="{!OR(f.required, f.dbrequired)}" FieldId="{!f}"
+                                                                 multiple="false" queryFields="Name"
+                                                                 querytable="{!IF(f=='OwnerId','User',$ObjectType.Document_Type__c.Fields[f].referenceTo[0])}"
+                                                                 initValues="{label: '{!JSENCODE(IF(NOT(ISBLANK(DocType[$ObjectType.Document_Type__c.Fields[f].relationshipName].Name)) ,DocType[$ObjectType.Document_Type__c.Fields[f].relationshipName].Name, IF(f=='Initiating_Site__c',DocType[$ObjectType.Document_Type__c.Fields[f].relationshipName].Name,$User.FirstName + ' ' + $User.LastName)))}',value:'{!JSENCODE(IF(NOT(ISBLANK(DocType[f])),DocType[f], IF(f=='Initiating_Site__c',DocType[f],$User.Id)))}'}"
+                                                                 disabled="{!OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c)}"
+                                                                 >
+             
+                                                    </c:wiz_multi>
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!f=='Number_Scheme__c'}">
+                                                        <c:wiz_multi width="100%"
+                                                                     rendered="{!AND($ObjectType.Document_Type__c.Fields[f].type=='reference')}"
+                                                                     required="{!OR(f.required, f.dbrequired)}"
+                                                                     FieldId="{!f}" multiple="false" queryFields="Name"
+                                                                     querytable="{!$ObjectType.Document_Type__c.Fields[f].referenceTo[0]}"
+                                                                     initvalues="{value: '{!JSENCODE(DocType[f])}', label:'{!JSENCODE(DocType[$ObjectType.Document_Type__c.Fields[f].relationshipName].Name)}'}"
+                                                                     disabled="{!OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c)}"
+                                                                     filter="Module__c"
+                                                                     filtervalue="Document">
+                                                        </c:wiz_multi>
+                                                    </apex:outputPanel>
+                                                   
+                                                    
+                                                    <c:wiz_select ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Type__c"
+                                                                  developername="{!f}" onChangeFunction="" width="100%"
+                                                                  rendered="{!AND($ObjectType.Document_Type__c.Fields[f].type=='picklist',NOT(f=='Status__c'))}"
+                                                                  FieldId="{!f}" FieldName="{!f}" initvalue="{!DocType[f]}"
+                                                                  unSelectedDisplayText="  "
+                                                                  Required="{!OR(f.required, f.dbrequired)}"
+                                                                  disabled="{!OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c)}"></c:wiz_select>
+                                                    
+                                                    <apex:outputPanel rendered="{!AND($ObjectType.Document_Type__c.Fields[f].type=='multipicklist')}">
+                                                        
+                                                        <select id="{!f}" name="{!f}" class="form-control"
+                                                                multiple="multiple" style="width: 100%;"></select>
+                                                    </apex:outputPanel>
+                                                    
+                                                    <c:wiz_RadioSet onchangefunction=""
+                                                                    rendered="{!AND($ObjectType.Document_Type__c.Fields[f].type=='picklist',f=='Status__c')}"
+                                                                    FieldName="{!f}"
+                                                                    ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Type__c"
+                                                                    initvalue="{!DocType[f]}"
+                                                                    disabled="{!OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c)}" />
+                                                    
+                                                </c:wiz_field>
+                                                <apex:outputPanel rendered="{!$ObjectType.Document_Type__c.Fields[f].type=='picklist'}"><div class="clearfix"></div></apex:outputPanel>
+                                            </apex:repeat> 
+                                            <div class="wiz-fields-wide col-md-6 col-sm-6 col-xs-12">
+                                                <div class="form-group">
+                                                    <div class="panel-group" role="tablist">
+                                                        <label for="exampleInputEmail1">Document Template:</label><br />
+                              
+                                                        <input type="button" class="btn btn-primary " id="browseBtn"
+                                                               value="Browse"                                                  
+                                                               onclick="getUploadedFileName('#doctype_attachmentFile', '#attachname');;isAttachmentExist=false;" />
+                                                        <input type="file" style="display: none"
+                                                               id="doctype_attachmentFile" name="files" multiple="false"/>
+                                                        <div id="doctype_attachmentFile_error" class="help-block with-errors"></div>
+                                                        <label ><a id="attachname" href="" download=""></a> </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!----------Water mark Section -start-----------------
+                                            <div class="wiz-fields-wide col-md-12">
+                                                <div class="form-group"> 
+                                                    <div class="panel-group" role="tablist">
+                                                        <div class="form-group">  
+                                                            <div class="panel panel-default"> 
+                                                                <div class="panel-heading" role="tab" data-toggle="collapse" href="#Watermark_Section" aria-expanded="true" aria-controls="Watermark_Section"> 
+                                                                    <h4 class="panel-title"> 
+                                                                        <a class=""> <apex:outputText value="{!$Label.Watermark_Section}"></apex:outputText></a> 
+                                                                    </h4> 
+                                                                </div> 
+                                                                <div id="Watermark_Section" class="panel-collapse collapse " role="tabpanel" aria-labelledby="Watermark_Section" aria-expanded="true" style=""> 
+                                                                    <div class="panel-body">
+                                                                        <apex:repeat value="{!$ObjectType.Document_Type__c.FieldSets.Watermark_Section}" var="f">
+                                                                            <apex:outputPanel rendered="{!f==JSENCODE(IF(NOT(ISBLANK(Prefix)),Prefix+'__Header__c','Header__c'))}">
+                                                                                <h2>Watermark Position</h2>
+                                                                            </apex:outputPanel>  
+                                                                                <script>
+                                                                                //  var obj = {};
+                                                                                //  obj = {"name":"{!f}","value":"{!DocType[f]}"};
+                                                                                //  docTypesArray.push(obj);
+                                                                                //  obj={};
+
+                                                                                </script>
+                                                                            <!--{!$ObjectType.Document_Type__c.Fields[f].type=='boolean'}--
+                                                                            <c:wiz_field Wide="{!OR($ObjectType.Document_Type__c.Fields[f].type=='textarea',$ObjectType.Document_Type__c.Fields[f].type=='multipicklist',f==IF(NOT(ISBLANK(Prefix)),Prefix+'__Title__c','Title__c'))}"
+                                                                                         FieldLabel="{!if($ObjectType.Document_Type__c.Fields[f].Label=='Owner ID','Owner',$ObjectType.Document_Type__c.Fields[f].Label)}"
+                                                                                         required="{!f.required}" jsid="{!LEFT(f,LEN(f)-3)}"
+                                                                                         rendered="{!$ObjectType.Document_Type__c.Fields[f].Accessible}">
+                                                                                <div class="clearfix"></div>
+                                                                                
+                                                                                <c:wiz_slider initvalue="{!DocType[f]}"
+                                                                                              FieldName="{!f}"
+                                                                                              FieldId="{!f}"
+                                                                                              onchangefunction="change" isEditable="{!OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c)}"
+                                                                                              isActive="{!IF(DocType[f]==false,'','active')}"
+                                                                                              rendered="{!$ObjectType.Document_Type__c.Fields[f].type=='boolean'}">
+                                                                                   
+                                                                                </c:wiz_slider>
+                                                                                
+                                                                                <c:wiz_input rendered="{!OR($ObjectType.Document_Type__c.Fields[f].type=='string',$ObjectType.Document_Type__c.Fields[f].type=='double')}"
+                                                                                             fieldId="{!f}" fieldname="{!f}"
+                                                                                             type="{!if($ObjectType.Document_Type__c.Fields[f].type=='double','number','text')}" maxlength="{!if($ObjectType.Document_Type__c.Fields[f].type=='double',$ObjectType.Document_Type__c.Fields[f].precision,$ObjectType.Document_Type__c.Fields[f].length)}"
+                                                                                             initvalue="{!DocType[f]}" required="{!f.required}"
+                                                                                             disabled="{!OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c)}"></c:wiz_input>
+                                                                                
+                                                                                
+                                                                                <c:wiz_richtext rendered="{!AND(NOT(OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c)),$ObjectType.Document_Type__c.Fields[f].type=='textarea',$ObjectType.Document_Type__c.Fields[f].htmlFormatted,NOT(OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable))))}"
+                                                                                                FieldId="{!f}" FieldName="{!f}"
+                                                                                                initvalue="{!DocType[f]}" Required="{!f.required}" maxlength="4000"></c:wiz_richtext>
+                                                                                <apex:outputpanel rendered="{!AND(OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c,$CurrentPage.parameters.camefromClone=='true'),$ObjectType.Document_Type__c.Fields[f].type=='textarea',$ObjectType.Document_Type__c.Fields[f].htmlFormatted,OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable)))}">
+                                                                                    <div class="alert alert-info">
+                                                                                        <apex:outputField value="{!DocType[f]}" />
+                                                                                    </div>
+                                                                                </apex:outputpanel>
+                                                                                
+                                                                                <c:wiz_textarea rendered="{!AND(NOT(OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c)),$ObjectType.Document_Type__c.Fields[f].type=='textarea',f!=IF(NOT(ISBLANK(Prefix)),Prefix+'__Impacted_Sites__c','Impacted_Sites__c'),NOT($ObjectType.Document_Type__c.Fields[f].htmlFormatted),NOT(OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable))))}"
+                                                                                                ObjectName="{!$ObjectType.Document_Type__c.name}"
+                                                                                                FieldId="{!f}" FieldName="{!f}"
+                                                                                                initvalue="{!DocType[f]}" Required="{!f.required}"></c:wiz_textarea>
+                                                                                <apex:outputpanel rendered="{!AND(OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c),$ObjectType.Document_Type__c.Fields[f].type=='textarea',NOT($ObjectType.Document_Type__c.Fields[f].htmlFormatted),OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable)))}">
+                                                                                    <div class="alert alert-info">
+                                                                                        <apex:outputField value="{!DocType[f]}" />
+                                                                                    </div>
+                                                                                </apex:outputpanel>
+                                                                                <c:wiz_date rendered="{!$ObjectType.Document_Type__c.Fields[f].type=='date'}"
+                                                                                            FieldId="{!f}" required="{!if(f.required,'','none')}none"
+                                                                                            FieldName="{!f}" initdate="{!DocType[f]}"
+                                                                                            updateable="{!NOT(OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c,$CurrentPage.parameters.camefromClone=='true'))}">
+                                                                                </c:wiz_date>           
+                                                                                <apex:outputPanel rendered="{!$ObjectType.Document_Type__c.Fields[f].type=='date'}">
+                                                                                    <script>                            
+                                                                                    $(document).ready(function() {
+                                                                                        $("#{!f}").datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY" });
+                                                                                    });
+                                                                                    </script>
+                                                                                    
+                                                                                </apex:outputPanel> 
+                                                                                <c:wiz_multi width="100%"
+                                                                                             rendered="{!$ObjectType.Document_Type__c.Fields[f].type=='reference'}"
+                                                                                             required="{!f.required}" FieldId="{!f}" multiple="false"
+                                                                                             queryFields="Name"
+                                                                                             querytable="{!IF(f=='OwnerId','User',$ObjectType.Document_Type__c.Fields[f].referenceTo[0])}"
+                                                                                             initvalues="{value: '{!JSENCODE(DocType[f])}', label:'{!JSENCODE(DocType[$ObjectType.Document_Type__c.Fields[f].relationshipName].Name)}'}"
+                                                                                             disabled="{!OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c,$CurrentPage.parameters.camefromClone=='true',NOT($ObjectType.Document_Type__c.Fields[f].updateable))}">
+                                                                                    
+                                                                                </c:wiz_multi>
+                                                                                <c:wiz_select ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_type__c"
+                                                                                              developername="{!f}" onChangeFunction="" width="100%"
+                                                                                              rendered="{!$ObjectType.Document_Type__c.Fields[f].type=='picklist'}"
+                                                                                              FieldId="{!f}" FieldName="{!f}"
+                                                                                              initvalue="{!DocType[f]}"
+                                                                                              unSelectedDisplayText="   " Required="{!f.required}"
+                                                                                              disabled="{!OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c,$CurrentPage.parameters.camefromClone=='true',NOT($ObjectType.Document_Type__c.Fields[f].updateable))}"></c:wiz_select>
+                                                                                <apex:outputPanel rendered="{!AND($ObjectType.Document_Type__c.Fields[f].type=='multipicklist')}">
+                                                                                    
+                                                                                    <select id="{!f}" name="{!f}" class="form-control"
+                                                                                            multiple="multiple" style="width: 100%;"></select>
+                                                                                    
+                                                                                    
+                                                                                </apex:outputPanel>
+                                                                            </c:wiz_field>
+                                                                            <apex:outputPanel rendered="{!f==IF(NOT(ISBLANK(Prefix)),Prefix+'__Impacted_Sites__c','Impacted_Sites__c')}">
+                                                                                <c:wiz_multi width="100%"
+                                                                                             required="{!f.required}" FieldId="{!f}" multiple="true"
+                                                                                             queryFields="Name"
+                                                                                             querytable="Manufacturing_Site__c"
+                                                                                             initvalues="{value: '{!JSENCODE(DocType[f])}', label:'{!JSENCODE(DocType[$ObjectType.Document_Type__c.Fields[f].relationshipName].Name)}'}"
+                                                                                             disabled="{!OR(DocType.isEditable__c,$CurrentPage.parameters.camefromClone=='true',NOT($ObjectType.Document_Type__c.Fields[f].updateable))}">
+                                                                                    
+                                                                                </c:wiz_multi>        
+                                                                                
+                                                                            </apex:outputPanel>
+                                                                         <apex:outputPanel rendered="{!OR($ObjectType.Document_Type__c.Fields[f].type=='String',$ObjectType.Document_Type__c.Fields[f].type=='reference')}"><div class="clearfix"></div></apex:outputPanel>    
+                                                                        </apex:repeat>
+                                                                        
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!---------Water Mark Section----End---------------> 
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            <!--Doc Setup start-->
+                                            
+                                            
+                                            <div class="wiz-fields-wide col-md-12">
+                                                <div class="form-group">
+                                                    <div class="panel-group" role="tablist">
+                                                        <div class="form-group">
+                                                            <div class="panel panel-default">
+                                                                <div class="panel-heading collapsed" role="tab"
+                                                                     data-toggle="collapse" href="#additional_info"
+                                                                     aria-expanded="false" aria-controls="additional_info">
+                                                                    <h4 class="panel-title">
+                                                                        <a href="#"> Document Setup</a>
+                                                                    </h4>
+                                                                </div>
+                                                                <div id="additional_info" class="panel-collapse collapse"
+                                                                     role="tabpanel" aria-labelledby="additional_info"
+                                                                     aria-expanded="false" style="height: 0px;">
+                                                                    <div class="panel-body">
+                                                                        
+                                                                        <apex:repeat value="{!$ObjectType.Document_Type__c.FieldSets.Document_Setup}"
+                                                                                     var="f">
+                                                                         <!--    <script>
+                                                                            var obj = {};
+                                                                            obj = {"name":"{!f}","value":"{!DocType[f]}"};
+                                                                            docTypesArray.push(obj);
+                                                                            obj={};
+                                                                                </script>
+                                                                                --> 
+                                                                            <c:wiz_field Wide="{!OR($ObjectType.Document_Type__c.Fields[f].type=='textarea',$ObjectType.Document_Type__c.Fields[f].type=='multipicklist')}"
+                                                                                         FieldLabel="{!if($ObjectType.Document_Type__c.Fields[f].Label=='Owner ID','Owner',$ObjectType.Document_Type__c.Fields[f].Label)}"
+                                                                                         required="{!f.required}" jsid="{!LEFT(f,LEN(f)-3)}"
+                                                                                         rendered="{!$ObjectType.Document_Type__c.Fields[f].Accessible}">
+                                                                                <div class="clearfix"></div>
+                                                                                <c:wiz_input rendered="{!OR($ObjectType.Document_Type__c.Fields[f].type=='string',$ObjectType.Document_Type__c.Fields[f].type=='double')}"
+                                                                                             fieldId="{!f}" fieldname="{!f}"
+                                                                                             type="{!IF($ObjectType.Document_Type__c.Fields[f].type=='string','text','number')}"
+                                                                                             initvalue="{!DocType[f]}" required="{!f.required}"
+                                                                                             disabled="{!OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c)}"></c:wiz_input>
+                                                                                <c:wiz_select ObjectName="{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Document_Type__c"
+                                                                                              developername="{!f}" onChangeFunction=""
+                                                                                              width="100%"
+                                                                                              rendered="{!AND($ObjectType.Document_Type__c.Fields[f].type=='picklist',NOT(f=='Secondary_Format__c'))}"
+                                                                                              FieldId="{!f}" FieldName="{!f}"
+                                                                                              initvalue="{!DocType[f]}" unSelectedDisplayText="  "
+                                                                                              Required="{!f.required}"
+                                                                                              disabled="{!OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c)}"></c:wiz_select>
+                                                                                <apex:outputPanel rendered="{!AND($ObjectType.Document_Type__c.Fields[f].type=='multipicklist')}">
+                                                                                    
+                                                                                    <select id="{!f}" name="{!f}" class="form-control"
+                                                                                            multiple="multiple" style="width: 100%;"></select>
+                                                                                    
+                                                                                    
+                                                                                </apex:outputPanel>
+                                                                                <c:wiz_multi width="100%"
+                                                                                             rendered="{!AND($ObjectType.Document_Type__c.Fields[f].type=='reference')}"
+                                                                                             required="{!OR(f.required, f.dbrequired)}"
+                                                                                             FieldId="{!f}" multiple="false" queryFields="Name"
+                                                                                             querytable="{!$ObjectType.Document_Type__c.Fields[f].referenceTo[0]}"
+                                                                                             initvalues="{value: '{!JSENCODE(DocType[f])}', label:'{!JSENCODE(DocType[$ObjectType.Document_Type__c.Fields[f].relationshipName].Name)}'}"
+                                                                                             disabled="{!OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c)}"
+                                                                                             filter="Module__c"
+                                                                                             filtervalue="Document">
+                                                                                    
+                                                                                </c:wiz_multi>
+                                                                                <!--<apex:outputPanel rendered="{!f=='Secondary_Format__c'}">
+<div class="btn-group" data-toggle="buttons"
+id="secondaryformatgroup">
+<label class="btn btn-primary active " id="Autosync"
+onClick="onchangesecondaryformat(this.id)">
+<input autocomplete="off"
+name="Secondary_Format__c" value="Autosync"
+checked="" type="radio"  /> Autosync
+</label> <label class="btn  btn-default" id='Manual'
+onClick="onchangesecondaryformat(this.id)">
+<input autocomplete="off" type="radio" /> Manual
+</label> <label class="btn  btn-default" id='None'
+onClick="onchangesecondaryformat(this.id)">
+<input autocomplete="off" type="radio" />None
+</label>
+</div>
+</apex:outputPanel>-->
+                                                                                
+                                                                                <c:wiz_slider rendered="{!$ObjectType.Document_Type__c.Fields[f].type=='boolean'}"
+                                                                                              FieldId="{!f}"
+                                                                                              isActive="{!IF(DocType[f]==false,'','active')}"
+                                                                                              initvalue="{!DocType[f]}"
+                                                                                              isEditable="{!OR(NOT($ObjectType.Document_Type__c.Fields[f].updateable),DocType.isEditable__c)}" />
+                                                                                
+                                                                            </c:wiz_field>
+                                                                            <apex:outputPanel rendered="{!OR($ObjectType.Document_Type__c.Fields[f].type=='String',$ObjectType.Document_Type__c.Fields[f].type=='reference')}"><div class="clearfix"></div></apex:outputPanel>
+                                                                        </apex:repeat>
+                                                                        
+                                                                        
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!--Doc setup End-->
+                                            
+                                            
+                                            <!-- DocumentType details End -->
+                                        </c:wiz_form>
+                                        <apex:define name="buttonbar">
+                                            <div
+                                                 class="fix-footer navbar-fixed-bottom navbar-inverse wiz-button-bar"
+                                                 style='position: fixed'>
+                                                <div class="col-sm-12 text-right">
+                                                    <apex:outputpanel layout="none" rendered="true">
+                                                        <button type="button" class="btn btn-default dont-allow-multiple-clicks"
+                                                                onclick="cancelPopup();">
+                                                            <span class="fa fa-close"></span> Cancel
+                                                        </button>
+                                                        <button type="button" id="save"
+                                                                class="btn btn-primary dont-allow-multiple-clicks"
+                                                                onclick="isSubmit=false;validate();">
+                                                            <span class="fa fa-floppy-o"></span> Save
+                                                        </button>
+                                                        <button type="button" id="submitdetails"
+                                                                class="btn btn-success dont-allow-multiple-clicks"
+                                                                data-toggle="modal"
+                                                                onClick="activestatus();">
+                                                            <span class="fa fa-send"></span> Submit
+                                                        </button>
+                                                    </apex:outputpanel>
+                                                </div>
+                                            </div>
+                                        </apex:define>
+                                    </div>
+                                    <!-- Tab pane ends -->
+                                    <div role="tabpanel" class="tab-pane" id="doc_security">
+                                      <apex:outputPanel rendered="{!JSENCODE($CurrentPage.parameters.id)!=NULL && JSENCODE($CurrentPage.parameters.id)!=' '}">		  
+                                        <c:wiz_field Wide="true"
+                                                     FieldLabel="{!JSENCODE(IF(contains(customLabelKeys,'Enable_Security'),customLabels['Enable_Security'].Field_Label__c, $ObjectType.Document_Type__c.Fields.Enable_Security__c.Label))}"
+                                                     required="false" jsid="Enable_Security"
+                                                     rendered="{!$OBjectType.Document_Type__c.Fields.Enable_Security__c.Accessible}">
+                                            
+                                            <c:wiz_slider rendered="true"
+                                                          isActive="{!IF(Document_Type__c.Enable_Security__c,'active','')}"
+                                                          isEditable="{!Document_Type__c.isEditable__c}"
+                                                          FieldId="Enable_Security__c"
+                                                          initvalue="{!Document_Type__c.Enable_Security__c}"
+                                                          callbackfunction="showhidesecurity();"
+                                                          />
+                                            
+                                            
+                                        </c:wiz_field>
+                                        </apex:outputPanel>
+                                        
+                                        <script type="text/javascript">
+                                    $(function() {
+                                        
+                                        if({!Document_Type__c.isEditable__c}==true){
+                                            $('#Enable_Security__c_slider').attr('onclick','');
+                                            
+                                            }
+
+                                        
+                                        if({!Document_Type__c.Enable_Security__c}==true){
+                                            
+                                            
+                                            $('#hideshow').removeClass( "hidden" ).addClass( "wiz-field" );
+                                        }
+                                        else
+                                        {
+                                            
+                                            $('#hideshow').removeClass( "wiz-field" ).addClass( "hidden" );   
+                                            
+                                        }
+                                        
+                                    });
+                                    </script>
+                                        
+                                        <p/><p/>
+                                        <div class="hidden" id="hideshow">
+                                            <div class="col-md-12 ">
+                                                
+                                                <div class="wiz-fields-wide col-md-12">
+                                                    <div class="form-group"> 
+                                                        <div>
+                                                            <div class="form-group"> 
+                                                                
+                                                                <!-- Nav tabs -->
+                                                                <ul class="nav nav-tabs" role="tablist">
+                                                                    <li role="presentation" class="active"><a href="#AuthEntity" aria-controls="AuthEntity" role="tab" data-toggle="tab">Authorised Entity</a></li>
+                                                                    <li role="presentation"><a href="#ViewEntity" aria-controls="ViewEntity" role="tab" data-toggle="tab">View Only Entities</a></li>
+                                                                </ul>
+                                                                
+                                                                <!-- Tab panes -->
+                                                                <div class="tab-content">
+                                                                    
+                                                                    <!-- Authorised pane -->
+                                                                    <div role="tabpanel" class="tab-pane active" id="AuthEntity">
+                                                                        <div class="panel-body">
+                                                                            
+                                                                            <!-- Accordion -->
+                                                                            <div class="panel-group" role="tablist">
+                                                                                <div class="form-group">  
+                                                                                    <div class="panel panel-default"> 
+                                                                                        <div class="panel-heading" role="tab" data-toggle="collapse" href="#select_auth_user" aria-expanded="true" aria-controls="select_auth_user"> 
+                                                                                            <h4 class="panel-title"> 
+                                                                                                Select Users(<label class="badge"  id ="number"></label> of <span class="badge">{!usercount}</span> Selected) 
+                                                                                            </h4> 
+                                                                                        </div>  
+                                                                                        <div id="select_auth_user" class="panel-collapse collapse " role="tabpanel" aria-labelledby="select_auth_user" aria-expanded="true" style=""> 
+                                                                                            
+                                                                                            <div class="panel-body">
+                                                                                                <p class="text-right">
+                                                                                                    <button class="btn btn-sm btn-primary" onclick="allusers();">All</button>
+                                                                                                    <button class="btn btn-sm btn-default" onclick="selectedusers();">Selected</button>
+                                                                                                    <button class="btn btn-sm btn-default" onclick="unselectedusers();">Non Selected</button>
+                                                                                                </p>
+                                                                                                <table class="table select-users">  
+                                                                                                    <tbody id="usrTbody">
+                                                                                                        <tr>
+                                                                                                            <th>Users</th>
+                                                                                                            <th style="width: 100px"><a href="#" onclick="checkall();" id="checkAllId"> Select All</a></th>
+                                                                                                        </tr>
+                                                                                                        
+                                                                                                        <apex:repeat value="{!userList}" var="usrs" >
+                                                                                                            <tr id="{!JSENCODE(usrs.Id)}" >
+                                                                                                                <td><apex:outputtext value="{!usrs.Name}"/></td>
+                                                                                                                <td><i class="fa fa-plus action-link" onclick="usrsActions(this,'{!JSENCODE(usrs.Id)}','{!JSENCODE(usrs.name)}');" id="{!JSENCODE(usrs.Id)}_checkids"></i></td>
+                                                                                                            </tr>
+                                                                                                            
+                                                                                                        </apex:repeat>
+                                                                                                        
+                                                                                                        
+                                                                                                    </tbody>
+                                                                                                </table>
+                                                                                            </div>
+                                                                                            
+                                                                                            
+                                                                                        </div> 
+                                                                                        
+                                                                                    </div> 
+                                                                                    <div class="panel panel-default"> 
+                                                                                        <div class="panel-heading" role="tab" data-toggle="collapse" href="#select_auth_userr" aria-expanded="true" aria-controls="select_auth_user"> 
+                                                                                            <h4 class="panel-title"> 
+                                                                                                Select groups(<label class="badge"  id ="grnumber"></label> of <span class="badge">{!groupcount}</span> Selected) 
+                                                                                            </h4> 
+                                                                                        </div>
+                                                                                        
+                                                                                        <div id="select_auth_userr" class="panel-collapse collapse " role="tabpanel" aria-labelledby="select_auth_userr" aria-expanded="true" style=""> 
+                                                                                            
+                                                                                            <div class="panel-body">
+                                                                                                <p class="text-right">
+                                                                                                    <button class="btn btn-sm btn-primary" onclick="allusersGrp();">All</button>
+                                                                                                    <button class="btn btn-sm btn-default" onclick="selectedusersGrp();">Selected</button>
+                                                                                                    <button class="btn btn-sm btn-default" onclick="unselectedusersGrp();">Non Selected</button>
+                                                                                                </p>
+                                                                                                <table class="table select-users">  
+                                                                                                    <tbody id="grpTbody">
+                                                                                                        <tr>
+                                                                                                            <th>Users</th>
+                                                                                                            <th style="width: 100px"><a href="#" onclick="checkallgroupGrp();" id="checkallgroupGrpId"> Select All</a></th>
+                                                                                                        </tr>
+                                                                                                        
+                                                                                                        <apex:repeat value="{!groupList}" var="usrs" >
+                                                                                                            <tr id="{!JSENCODE(usrs.Id)}" >
+                                                                                                                <td><apex:outputtext value="{!usrs.Name}"/></td>
+                                                                                                                <td><i class="fa fa-plus action-link" onclick="grpsActions(this,'{!JSENCODE(usrs.Id)}','{!JSENCODE(usrs.Name)}');" id="{!JSENCODE(usrs.Id)}_checkgrpids"></i></td>
+                                                                                                            </tr>
+                                                                                                        </apex:repeat>
+                                                                                                        
+                                                                                                    </tbody>
+                                                                                                </table>
+                                                                                            </div>
+                                                                                            
+                                                                                            
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>   
+                                                                        </div>
+                                                                    </div>
+                                                                    
+                                                                    
+                                                                    <!-- view pane -->
+                                                                    <div role="tabpanel" class="tab-pane " id="ViewEntity">
+                                                                        <div class="panel-body">
+                                                                            <div class="panel-group" role="tablist">
+                                                                                <div class="form-group">
+                                                                                    <div class="panel panel-default">
+                                                                                        <div class="panel-heading" role="tab" data-toggle="collapse" href="#select_view_user" aria-expanded="true" aria-controls="select_view_user"> 
+                                                                                            <h4 class="panel-title"> 
+                                                                                                Select Users(<label class="badge"  id ="viewnumber"></label> of <span class="badge">{!usercount}</span> Selected) 
+                                                                                            </h4> 
+                                                                                        </div>  
+                                                                                        
+                                                                                        <div id="select_view_user" class="panel-collapse collapse " role="tabpanel" aria-labelledby="select_view_user" aria-expanded="true" style=""> 
+                                                                                            
+                                                                                            <div class="panel-body">
+                                                                                                <p class="text-right">
+                                                                                                    <button class="btn btn-sm btn-primary" onclick="allusersView();">All</button>
+                                                                                                    <button class="btn btn-sm btn-default" onclick="selectedusersView();">Selected</button>
+                                                                                                    <button class="btn btn-sm btn-default" onclick="unselectedusersView();">Non Selected</button>
+                                                                                                </p>
+                                                                                                <table class="table select-users">  
+                                                                                                    <tbody id="usrviewTbody">
+                                                                                                        <tr>
+                                                                                                            <th>Users</th>
+                                                                                                            <th style="width: 100px"><a href="#" onclick="checkallView();" id="checkallViewId"> Select All</a></th>
+                                                                                                        </tr>
+                                                                                                        
+                                                                                                        <apex:repeat value="{!userList}" var="usrs" >
+                                                                                                            <tr id="uva{!JSENCODE(usrs.Id)}" >
+                                                                                                                <td><apex:outputtext value="{!usrs.Name}"/></td>
+                                                                                                                <td><i class="fa fa-plus action-link" onclick="usrsviewActions(this,'{!JSENCODE(usrs.Id)}','{!JSENCODE(usrs.Name)}');" id="{!JSENCODE(usrs.Id)}_checkviewids"></i></td>
+                                                                                                            </tr>
+                                                                                                        </apex:repeat>
+                                                                                                        
+                                                                                                    </tbody>
+                                                                                                </table>
+                                                                                            </div>
+                                                                                            
+                                                                                            
+                                                                                            
+                                                                                            
+                                                                                        </div>          
+                                                                                        
+                                                                                        
+                                                                                    </div>     
+                                                                                    
+                                                                                    <div class="panel panel-default"> 
+                                                                                        <div class="panel-heading" role="tab" data-toggle="collapse" href="#select_viewgroup_user" aria-expanded="true" aria-controls="select_viewgroup_user"> 
+                                                                                            <h4 class="panel-title"> 
+                                                                                                Select groups(<label class="badge"  id ="viewgrpnumber"></label> of <span class="badge">{!groupcount}</span> Selected) 
+                                                                                            </h4> 
+                                                                                        </div>
+                                                                                        
+                                                                                        <div id="select_viewgroup_user" class="panel-collapse collapse " role="tabpanel" aria-labelledby="select_viewgroup_user" aria-expanded="true" style=""> 
+                                                                                            
+                                                                                            <div class="panel-body">
+                                                                                                <p class="text-right">
+                                                                                                    <button class="btn btn-sm btn-primary" onclick="allusersViewGrp();">All</button>
+                                                                                                    <button class="btn btn-sm btn-default" onclick="selectedusersViewGrp();">Selected</button>
+                                                                                                    <button class="btn btn-sm btn-default" onclick="unselectedusersViewGrp();">Non Selected</button>
+                                                                                                </p>
+                                                                                                <table class="table select-users">  
+                                                                                                    <tbody id="grpviewTbody">
+                                                                                                        <tr>
+                                                                                                            <th>Users</th>
+                                                                                                            <th style="width: 100px"><a href="#" onclick="checkallgroupViewGrp();" id="checkallgroupViewGrp"> Select All</a></th>
+                                                                                                        </tr>
+                                                                                                        
+                                                                                                        <apex:repeat value="{!groupList}" var="usrs" >
+                                                                                                            <tr id="uga{!JSENCODE(usrs.Id)}" >
+                                                                                                                <td><apex:outputtext value="{!usrs.Name}"/></td>
+                                                                                                                <td><i class="fa fa-plus action-link" onclick="viewgrpsActions(this,'{!JSENCODE(usrs.Id)}','{!JSENCODE(usrs.Name)}');" id="{!JSENCODE(usrs.Id)}_checkgrpsids"></i></td>
+                                                                                                            </tr>
+                                                                                                        </apex:repeat>
+                                                                                                        
+                                                                                                    </tbody>
+                                                                                                </table>
+                                                                                            </div>
+                                                                                            
+                                                                                            
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    
+                                                                                    
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    
+                                                                    
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        <apex:define name="buttonbar">
+                                            <div
+                                                 class="fix-footer navbar-fixed-bottom navbar-inverse wiz-button-bar"
+                                                 style='position: fixed'>
+                                                <div class="col-sm-12 text-right">
+                                                    <apex:outputpanel layout="none" rendered="true">
+                                                        <button type="button" class="btn btn-default"
+                                                                onclick="cancelPopup();">
+                                                            <span class="fa fa-close"></span> Cancel
+                                                        </button>
+                                                        <button type="button" id="save"
+                                                                class="btn btn-primary dont-allow-multiple-clicks"
+                                                                onclick="saveusersData();">
+                                                            <span class="fa fa-floppy-o"></span> Save
+                                                        </button>
+                                                        <button type="button" id="submit"
+                                                                class="btn btn-success dont-allow-multiple-clicks"
+                                                                data-toggle="modal"
+                                                                onClick="submitusersData();">
+                                                            <span class="fa fa-send"></span> Submit
+                                                        </button>
+                                                    </apex:outputpanel>
+                                                </div>
+                                            </div>
+                                        </apex:define>
+                                    </div>
+                                    
+                                    <!--<apex:outputpanel rendered="false">-->
+                                    <!-- Doc view/create story STARTS -->
+                                    <div role="tabpanel" class="tab-pane" id="doc_documents">
+                                        <div class="wiz-field nc-resolution">
+                                            
+                                            <div class="wiz-fields-wide col-md-12"></div>
+                                            
+                                            
+                                            <div class="col-md-12">
+                                                <div class="pull-right">
+                                                    <!--Onclick action added by RAVI-->
+                                                    <button class="btn btn-default btn-xs"
+                                                            onclick="export1();">
+                                                        Export <i class="fa fa-file-excel-o"></i>
+                                                    </button>
+                                                    <script>
+                                                    function export1(){
+                                                        var myList = new Array();
+                                                        myList = '{!documentList}';
+                                                        text = myList.toString().replace("[", "").replace("]", "");
+                                                        if( text != ""){
+                                                            window.location.href = '/{!JSENCODE($setup.QC_settings__c.DocumentsReportList__c)}?pv0={!JSENCODE(Document_Type__c.Name)}&export=1&enc=UTF-8&xf=xls';
+                                                        }
+                                                        else{
+                                                            // alert('No Documents to Export');
+                                                            showDialog(1,'No Documents to Export');
+                                                        }
+                                                    }
+                                                    </script>
+                                                    <!--Onclick action added by RAVI(END)-->
+                                                    <!--Onclick action added by RAVI-->
+                                                    <apex:outputpanel layout="none" rendered="{!doctype.Status__c == 'Active'}">
+                                                        <button class="btn btn-primary btn-xs" onclick="window.open('/apex/DocumentProfile?dtid={!JSENCODE(doctypeid)}&dtitle={!JSENCODE(DocType.Title__c)}');">
+                                                            <i class="fa fa-plus"></i>
+                                                        </button>
+                                                    </apex:outputpanel>
+                                                    <!--Onclick action added by RAVI(END)-->
+                                                    
+                                                </div>
+                                                
+                                                
+                                                
+                                                <body>
+                                                    
+                                                    
+                                                    <h1>Documents Using this Document Type</h1>
+                                                    
+                                                    <table class="table table-hover table-bordered" id="td">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Number</th>
+                                                                <th>Revision</th>
+                                                                <th width="30%">Title</th>
+                                                                <th>Owner</th>
+                                                                <th>Effective Date</th>
+                                                                <th>Expiration Date</th>
+                                                                <th>Status</th>
+                                                                <!--<th></th>-->
+                                                            </tr>
+                                                        </thead>
+                                                        <apex:repeat value="{!documentList}" var="dl">
+                                                            <tr>
+                                                                <td width="10%"><a target="_blank" href="/apex/DocumentProfile?id={!JSENCODE(dl.Id)}&pg=doc_Details" class="btn-link">{!JSENCODE(dl.Name)}</a></td>
+                                                                <td>{!JSENCODE(dl.Current_Rev__c)}</td>
+                                                                <td>{!JSENCODE(dl.Title__c)}</td>
+                                                                <td>{!JSENCODE(dl.Owner.Name)}</td>
+                                                                <td><apex:outputField value="{!dl.Effective_Date__c}" /></td>
+                                                                <td><apex:outputField value="{!dl.Expiration_Date__c}" /></td>
+                                                                <td>{!JSENCODE(dl.Status__c)}</td>
+                                                                <!--<td><a href="#">View</a></td>-->
+                                                            </tr>
+                                                        </apex:repeat>
+                                                    </table>
+                                                    <script src="../../soap/ajax/34.0/connection.js"
+                                                    type="text/javascript"></script>
+                                                    
+                                                    <script>
+                                                    var ListId='td';
+                                                    $(document).ready(function() {
+                                                        $('#'+ListId).dataTable();
+                                                    });
+                                                    </script>
+                                                    
+                                                    
+                                                    
+                                                </body>
+                                            </div>
+                                        </div>
+                                        
+                                    </div>
+                                    
+                                    
+                                    <!-- Doc view/create story ENDS -->
+                                    <!--</apex:outputpanel>-->
+                                    
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                    <!--End of  Tabs-->
+                </apex:outputPanel>
+                
+                
+                
+                <apex:outputPanel rendered="{!OR($CurrentPage.parameters.pg=='doc_TypeDetails')}" >
+                    <apex:define name="theform">
+                        <h1><apex:outputText value="Document Details Initiation" /></h1>
+                        
+                        <table class="table table-responsive table-bordered">
+                            <apex:repeat value="{!$ObjectType.Document_Type__c.FieldSets.Document_Type}"
+                                         var="f">
+                                <tr>
+                                    <td class="title-col">
+                                        {!if($ObjectType.Document_Type__c.Fields[f].Label=='Owner ID','Owner',$ObjectType.Document_Type__c.Fields[f].Label)}
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!Document_Type__c[f]}"/>
+                                    </td>
+                                </tr>
+                            </apex:repeat>                    
+                        </table>
+                        
+                        
+                      <!--  <h1><apex:outputText value="Watermark Section"/></h1> 
+                        <table class="table table-responsive table-bordered">
+                            <apex:repeat value="{!$ObjectType.Document_Type__c.FieldSets.Watermark_Section}"
+                                         var="f">
+                                <tr>
+                                    <td class="title-col">
+                                        {!if($ObjectType.Document_Type__c.Fields[f].Label=='Owner ID','Owner',$ObjectType.Document_Type__c.Fields[f].Label)}
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!Document_Type__c[f]}"/>
+                                    </td>
+                                </tr>
+                            </apex:repeat>                    
+                        </table>  -->
+                        
+                        <h1><apex:outputText value="Document Setup"/></h1> 
+                        <table class="table table-responsive table-bordered">
+                            <apex:repeat value="{!$ObjectType.Document_Type__c.FieldSets.Document_Setup}"
+                                         var="f">
+                                <tr>
+                                    <td class="title-col">
+                                        {!if($ObjectType.Document_Type__c.Fields[f].Label=='Owner ID','Owner',$ObjectType.Document_Type__c.Fields[f].Label)}
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!Document_Type__c[f]}"/>
+                                    </td>
+                                </tr>
+                            </apex:repeat>                    
+                        </table>
+                        <h1><apex:outputText value="Document Security"/></h1>
+                        <table class="table table-responsive table-bordered">
+                            <apex:repeat value="{!$ObjectType.Document_Type__c.FieldSets.Security_Fields}"
+                                         var="f">
+                                <tr>
+                                    <td class="title-col">
+                                        {!if($ObjectType.Document_Type__c.Fields[f].Label=='Owner ID','Owner',$ObjectType.Document_Type__c.Fields[f].Label)}
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!Document_Type__c[f]}"/>
+                                    </td>
+                                </tr>
+                            </apex:repeat>
+                        </table>
+                        
+                        
+                    </apex:define>
+                    
+                    
+                </apex:outputPanel>
+                
+            </apex:define>
+            
+            <!-- v1.0.2 start-->
+            <!---contextual Help in progess starts-->
+            <apex:define name="rightpane">
+                
+                <div id="rightContainer" class="tab-content">
+                    <apex:define name="rightpane">
+                        <!-- Right container -->
+                        <div id="rightContainer" class="tab-content">
+                            <div class="tab-pane active help" id="help">
+                               <c:Contextual_Help currentpage3="{!IF(ISBLANK($CurrentPage.parameters.pg),'doctype',$CurrentPage.parameters.pg)}" />
+                            </div>
+                        </div>
+                    </apex:define>
+                    <!--contextual help in progress ends-->
+                    
+                    <!-- chronology-->
+                    <div class="tab-pane  chronology" id="chronology">
+                        <c:documenttype_chronology rendered="{!$CurrentPage.parameters.pg=='doc_TypeDetails'}" DTID="{!JSENCODE(DocType.Id)}"/>                     
+                    </div> 
+                    <!--chronology -->
+                </div>
+            </apex:define>
+            <!-- v1.0.2 end -->
+            
+        </apex:composition>
+    </div>
+    <!-- script satish start----->
+    
+    <script type="text/javascript">
+    
+    
+    $(document).ready(function() { 
+        
+        i=0,j=0,k=0,l=0;
+        $("#number").text(i);
+        $("#grnumber").text(j);
+        $("#viewnumber").text(j);
+        $("#viewgrpnumber").text(j);
+        
+        
+        
+    });
+    
+    var i;
+    
+    
+    var j;
+    
+    
+    
+    var k;
+   
+    
+    
+    var l;
+   
+    
+    
+    
+    
+    
+    
+    </script>
+    
+    
+    <!-- script satish end ------>
+    
+    <script type="text/javascript">
+    <!-- Documents Load html in the tabs under doc profile -->
+        
+         var list=[],list2=[],uClass,gClass;
+        
+        
+         var checkusrs = [], deleteusrIds=[],checknames=[],deleteusrNames=[],index;
+    
+    function usrsActions(tId,rowId,rowName){                                  
+       
+        console.log('rowId issssss '+rowId);
+        if($(tId).attr('class') == 'fa fa-plus action-link'){
+             i++;
+             $("#number").text(i);
+            $(tId).attr('class','fa fa-check action-link');
+            $("#usrTbody").find("#"+rowId).attr('class','warning');
+            checkusrs.push(rowId);
+             checknames.push(rowName); 
+            index = deleteusrIds.indexOf(rowId);
+            console.log('index '+index);
+            console.log('check users '+checkusrs);
+            if(index > -1){
+                deleteusrIds.splice(index, 1);
+            }
+            
+        }else if($(tId).attr('class') == 'fa fa-check action-link'){
+            i--;
+            $("#number").text(i); 
+            $(tId).attr('class','fa fa-plus action-link');
+            $("#usrTbody").find("#"+rowId).attr('class','');
+            index = deleteusrIds.indexOf(rowId);
+            index = deleteusrNames.indexOf(rowName);
+            console.log('index '+index);
+            if(index > -1){
+                deleteusrIds.splice(index, 1);
+                 deleteusrNames.splice(index, 1);
+            }else{
+                deleteusrIds.push(rowId);
+                 deleteusrNames.push(rowName);
+            }   
+            index = checkusrs.indexOf(rowId);
+            index = checknames.indexOf(rowName);
+            
+            console.log('index '+index);
+            if(index > -1){
+                checkusrs.splice(index, 1);
+                 checknames.splice(index, 1);
+                
+            }   
+        }
+        
+    }
+    
+    
+    
+    var checkgrps = [], deletegrpsIds=[],checkgrpsNames=[],deletegrpsIdsName=[],indexval;
+    
+    function grpsActions(gtId,growId,growName){                                  
+        
+        
+        
+        console.log('rowId '+growId);
+        if($(gtId).attr('class') == 'fa fa-plus action-link'){
+            j++;
+            $("#grnumber").text(j); 
+            
+            $(gtId).attr('class','fa fa-check action-link');
+            $("#grpTbody").find("#"+growId).attr('class','warning');
+            checkgrps.push(growId);
+              checkgrpsNames.push(growName);
+            indexval = deletegrpsIds.indexOf(growId);
+            console.log('index '+indexval);
+            if(indexval > -1){
+                deletegrpsIds.splice(indexval, 1);
+            }
+            
+        }else if($(gtId).attr('class') == 'fa fa-check action-link'){
+            j--;
+            $("#grnumber").text(j); 
+            
+            $(gtId).attr('class','fa fa-plus action-link');
+            $("#grpTbody").find("#"+growId).attr('class','');
+            indexval = deletegrpsIds.indexOf(growId);
+            indexval = deletegrpsIdsName.indexOf(growName);
+            console.log('index '+indexval);
+            if(indexval > -1){
+                deletegrpsIds.splice(indexval, 1);
+                deletegrpsIdsName.splice(indexval, 1);
+            }else{
+                deletegrpsIds.push(growId);
+                deletegrpsIdsName.push(growName);
+            }   
+            indexval = checkgrps.indexOf(growId);
+            indexval = checkgrpsNames.indexOf(growName);
+            console.log('index '+indexval);
+            if(indexval > -1){
+                checkgrps.splice(indexval, 1);
+                checkgrpsNames.splice(indexval, 1);
+            }   
+        }
+        
+    }
+    
+    
+    
+       var checkviewusrs = [], deleteviewusrIds=[],checkviewusrsName=[],deleteviewusrName=[],indexview;
+    
+    function usrsviewActions(vtId,vrowId,vrowName){                                  
+      console.log('rowId '+vrowId);
+        if($(vtId).attr('class') == 'fa fa-plus action-link'){
+            k++;
+            $("#viewnumber").text(k); 
+            
+            
+            $(vtId).attr('class','fa fa-check action-link');
+            $("#usrviewTbody").find("#"+vrowId).attr('class','warning');
+            checkviewusrs.push(vrowId);
+            checkviewusrsName.push(vrowName); 
+            indexview = deleteviewusrIds.indexOf(vrowId);
+            console.log('index '+indexview);
+            if(indexview > -1){
+                deleteviewusrIds.splice(indexview, 1);
+            }
+            
+        }else if($(vtId).attr('class') == 'fa fa-check action-link'){
+            k--;
+            $("#viewnumber").text(k); 
+            
+            $(vtId).attr('class','fa fa-plus action-link');
+            $("#usrviewTbody").find("#"+vrowId).attr('class','');
+            indexview = deleteviewusrIds.indexOf(vrowId);
+            indexview = deleteviewusrName.indexOf(vrowName);
+            console.log('index '+indexview);
+            if(indexview > -1){
+                deleteviewusrIds.splice(indexview, 1);
+                deleteviewusrName.splice(indexview, 1);
+            }else{
+                deleteviewusrIds.push(vrowId);
+                deleteviewusrName.push(vrowName);
+            }   
+            indexview = checkviewusrs.indexOf(vrowId);
+            indexview = checkviewusrsName.indexOf(vrowName);  
+            console.log('index '+indexview);
+            if(indexview > -1){
+                checkviewusrs.splice(indexview, 1);
+                checkviewusrsName.splice(indexview, 1);
+            }   
+        }
+        
+    }
+    
+     var checkviewgropusrs = [], deleteviewgroupIds=[],checkviewgropusrsName=[],deleteviewgroupName=[],indexgroupview;
+    
+    function viewgrpsActions(vgId,vgrowId,vgrowName){                                  
+        
+        
+        
+        console.log('rowId '+vgrowId);
+        if($(vgId).attr('class') == 'fa fa-plus action-link'){
+            l++;
+            $("#viewgrpnumber").text(l); 
+            
+            $(vgId).attr('class','fa fa-check action-link');
+            $("#grpviewTbody").find("#"+vgrowId).attr('class','warning');
+            checkviewgropusrs.push(vgrowId);
+            checkviewgropusrsName.push(vgrowName);
+            indexgroupview = deleteviewgroupIds.indexOf(vgrowId);
+            console.log('index '+indexgroupview);
+            if(indexgroupview > -1){
+                deleteviewgroupIds.splice(indexgroupview, 1);
+            }
+            
+        }
+        else if($(vgId).attr('class') == 'fa fa-check action-link'){
+            l--;
+            $("#viewgrpnumber").text(l); 
+            
+            $(vgId).attr('class','fa fa-plus action-link');
+            $("#grpviewTbody").find("#"+vgrowId).attr('class','');
+            indexgroupview = deleteviewgroupIds.indexOf(vgrowId);
+            indexgroupview = deleteviewgroupName.indexOf(vgrowName);
+            console.log('index '+indexgroupview);
+            if(indexgroupview > -1){
+                deleteviewgroupIds.splice(indexgroupview, 1);
+                deleteviewgroupName.splice(indexgroupview, 1);
+            }else{
+                deleteviewgroupIds.push(vgrowId);
+                deleteviewgroupName.push(vgrowName);
+            }   
+            indexgroupview = checkviewgropusrs.indexOf(vgrowId);
+            indexgroupview = checkviewgropusrsName.indexOf(vgrowName);
+            console.log('index '+indexgroupview);
+            if(indexgroupview > -1){
+                checkviewgropusrs.splice(indexgroupview, 1);
+                checkviewgropusrsName.splice(indexgroupview, 1);
+            }   
+        }
+        
+    }
+    
+    var isSubmitted=true;
+    function submitusersData(){
+        
+        if(checkusrs=='' && checkgrps=='' && checkviewusrs =='' &&  checkviewgropusrs ==''){
+                            
+                            
+                            showDialog('-1','Please Select atleast one User or Group!');
+                        } 
+        
+        else{
+            
+        
+        var doctypeID = "{!$currentpage.parameters.id}";
+        var security= $("#Enable_Security__c").val();
+        
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.DocumentTypeControllerExt.AuthorisedEntityUsersSave}',doctypeID,checknames,checkgrpsNames,checkviewusrsName,checkviewgropusrsName,isSubmitted,security,checkusrs,checkgrps,checkviewusrs,checkviewgropusrs,
+                                                  function(result, event) {
+
+                                                      
+                                                      window.location= '/apex/documenttype?id='+doctypeID+'&pg=doctype'+'&dttab=dtsec';
+                                                      
+                                                  });
+    }
+        }
+    
+                
+        
+    
+   
+    
+      var issaved=false; 
+    function saveusersData(){
+        
+        if(checkusrs=='' && checkgrps=='' && checkviewusrs =='' &&  checkviewgropusrs ==''){
+                            
+                            
+                            showDialog('-1','Please Select atleast one User or Group!');
+                        } 
+        else{
+        // alert(checkusrs);
+        var doctypeID = "{!$currentpage.parameters.id}";
+        var security= $("#Enable_Security__c").val();
+        // alert(security);
+        
+        //  alert(doctypeID);
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.DocumentTypeControllerExt.AuthorisedEntityUsersSave}',doctypeID,checknames,checkgrpsNames,checkviewusrsName,checkviewgropusrsName,issaved,security,checkusrs,checkgrps,checkviewusrs,checkviewgropusrs,
+                                                  function(result, event) {
+                                                      // alert(result);
+                                                      
+                                                      window.location= '/apex/documenttype?id='+doctypeID+'&dttab=dtsec';
+                                                      
+                                                  });
+    }
+        }
+    
+    
+    
+                                function allusers(){
+
+                                    $.each(list,function(user){
+
+                                        $('#'+list[user]).show();
+                                    });
+                                }  
+                                
+                                
+                                function allusersGrp(){
+                                    $.each(list2,function(user){
+                                        $('#'+list2[user]).show();
+                                    });
+                                }
+                                
+                                function allusersView(){
+                                    $.each(list,function(user){
+                                        $('#'+'uva'+list[user]).show();
+                                    });
+                                    
+                                }
+                                
+                                
+                                function allusersViewGrp(){
+                                    $.each(list2,function(user){
+                                        $('#'+'uga'+list2[user]).show();
+                                    });
+                                }  
+                                
+                                function unselectedusers(){
+                                    $.each(list,function(user){
+                                        uClass = $('#'+list[user]+'_checkids').attr('class');
+                                        if(uClass == 'fa fa-check action-link'){
+                                            $('#'+list[user]).hide();
+                                        }else{
+                                            $('#'+list[user]).show();
+                                        }
+                                    });
+                                }
+                                
+                                
+                                function unselectedusersGrp(){
+                                    $.each(list2,function(user){
+                                        gClass = $('#'+list2[user]+'_checkgrpids').attr('class');
+                                        if(gClass == 'fa fa-check action-link'){
+                                            $('#'+list2[user]).hide();
+                                        }else{
+                                            $('#'+list2[user]).show();
+                                        }
+                                    });
+                                }
+                                
+                                
+                                
+                                function unselectedusersView(){
+                                    $.each(list,function(user){
+                                        uClass = $('#'+list[user]+'_checkviewids').attr('class');
+                                        if(uClass == 'fa fa-check action-link'){
+                                            $('#'+'uva'+list[user]).hide();
+                                        }else{
+                                            $('#'+'uva'+list[user]).show();
+                                        }
+                                    });
+                                }
+                                
+                                function unselectedusersViewGrp(){
+                                    $.each(list2,function(user){
+                                        gClass = $('#'+list2[user]+'_checkgrpsids').attr('class');
+                                        if(gClass == 'fa fa-check action-link'){
+                                            $('#'+'uga'+list2[user]).hide();
+                                        }else{
+                                            $('#'+'uga'+list2[user]).show();
+                                        }
+                                    });
+                                }
+                                
+                                
+                                
+                                var i=0;
+                                function checkall(){
+                                    checkusrs =[];
+                                    checknames =[];
+                                    var uName;
+                                    
+                                    $.each(list,function(user){
+                                        $('#'+list[user]+'_checkids').attr('class','fa fa-check action-link');
+                                        i++;
+                                        uName=$('#'+list[user]).find('td').eq(0).text();
+                                        checkusrs.push(list[user].toString());
+                                        checknames.push(uName);
+                                        $("#number").text(i); 
+                                    });
+                                }
+                                
+                                
+                                 var j=0;
+                                function checkallgroupGrp(){
+                                    checkgrps =[];
+                                    checkgrpsNames =[];
+                                    var gName;
+                                    
+                                    $.each(list2,function(user){
+                                        $('#'+list2[user]+'_checkgrpids').attr('class','fa fa-check action-link');
+                                          j++;
+                                        gName=$('#'+list2[user]).find('td').eq(0).text();
+                                        checkgrps.push(list2[user].toString());
+                                        checkgrpsNames.push(gName);
+                                         $("#grnumber").text(j); 
+                                    });
+                                }
+                                
+                                 var k=0;
+                                function checkallView(){
+                                    checkviewusrs =[];
+                                    checkviewusrsName =[];
+                                    var uName;
+                                    
+                                    $.each(list,function(user){
+                                        $('#'+list[user]+'_checkviewids').attr('class','fa fa-check action-link');
+                                         k++;
+                                        uName=$('#'+list[user]).find('td').eq(0).text();
+                                        checkviewusrs.push(list[user].toString());
+                                        checkviewusrsName.push(uName);
+                                         $("#viewnumber").text(k); 
+                                    });
+                                }
+                                
+                                 var l=0;
+                                function checkallgroupViewGrp(){
+                                    checkviewgropusrs =[];
+                                    checkviewgropusrsName =[];
+                                    var gName;
+                                    
+                                    $.each(list2,function(user){
+                                        $('#'+list2[user]+'_checkgrpsids').attr('class','fa fa-check action-link');
+                                           l++;
+                                        gName=$('#'+list2[user]).find('td').eq(0).text();
+                                        checkviewgropusrs.push(list2[user].toString());
+                                        checkviewgropusrsName.push(gName);
+                                        $("#viewgrpnumber").text(l); 
+                                    });
+                                }
+                                
+                                function selectedusers(){
+                                    $.each(list,function(user){
+                                        uClass = $('#'+list[user]+'_checkids').attr('class');
+                                        if(uClass == 'fa fa-plus action-link'){
+                                            $('#'+list[user]).hide();
+                                        }else{
+                                            $('#'+list[user]).show();
+                                        }
+                                    });
+                                } 
+                                
+                                
+                                function selectedusersGrp(){
+                                    $.each(list2,function(user){
+                                        gClass = $('#'+list2[user]+'_checkgrpids').attr('class');
+                                        if(gClass == 'fa fa-plus action-link'){
+                                            $('#'+list2[user]).hide();
+                                        }else{
+                                            $('#'+list2[user]).show();
+                                        }
+                                    });
+                                } 
+                                
+                                
+                                function selectedusersView(){ 
+                                    $.each(list,function(user){
+                                        uClass = $('#'+list[user]+'_checkviewids').attr('class');
+                                        if(uClass == 'fa fa-plus action-link'){
+                                            $('#'+'uva'+list[user]).hide();
+                                        }else{
+                                            $('#'+'uva'+list[user]).show();
+                                        }
+                                    });
+                                } 
+                                
+                                function selectedusersViewGrp(){
+                                    $.each(list2,function(user){
+                                        gClass = $('#'+list2[user]+'_checkgrpsids').attr('class');
+                                        if(gClass == 'fa fa-plus action-link'){
+                                            $('#'+'uga'+list2[user]).hide();
+                                        }else{
+                                            $('#'+'uga'+list2[user]).show();
+                                        } 
+                                    });
+                                } 
+                                
+                                
+                                
+        
+        
+        
+        var isAttachmentExist=false;
+    var isStatusselected = true;
+    var stausonclick= $('#rs{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Status__c').click(function(){
+        isStatusselected = false;
+        //alert(isStatusselected);
+    });
+    $( document ).ready(function() {    
+        
+        //  var list=[];
+        
+        <apex:repeat value="{!userList}" var="usr" >
+            
+            list.push('{!usr.id}'.split(','));
+         </apex:repeat>
+        
+        
+        var selectedUsers='{!JSENCODE(DocType.Authorised_Entity_Users__c)}'.split(',');
+        var selectedUsersName='{!JSENCODE(DocType.Authorised_Entity_Users_Name__c)}'.split(',');
+        //alert(selectedUsers[0]);
+        for(var i=0;i<selectedUsers.length;i++){
+            console.log(selectedUsers[i].trim());
+            var tid= $("#"+selectedUsers[i].trim()).find("i");
+            console.log(tid);
+             usrsActions(tid,selectedUsers[i].trim(),selectedUsersName[i].trim());
+           
+        } 
+         if({!DocType.isEditable__c}==true){
+             
+             $('#checkAllId').attr('onclick','');
+                
+                for(var i=0;i<list.length;i++){
+                    
+                    console.log('list values are  '+list[i]);
+                    
+                    $('#'+list[i]+'_checkids').attr('onclick','');
+                    
+                   
+                }
+                
+            }
+        
+        // var list2=[];
+        
+        <apex:repeat value="{!groupList}" var="usr" >
+            
+            list2.push('{!usr.id}'.split(','));
+         </apex:repeat>
+        
+        
+        var selectedGroup='{!JSENCODE(DocType.Authorised_Entity_Groups__c)}'.split(',');
+        var selectedGroupName='{!JSENCODE(DocType.Authorised_Entity_Groups_Name__c)}'.split(',');
+        //alert(selectedGroup[0]);
+        for(var i=0;i<selectedGroup.length;i++){
+            console.log(selectedGroup[i].trim());
+            var gtId= $("#"+selectedGroup[i].trim()).find("i");
+            console.log(gtId);
+            grpsActions(gtId,selectedGroup[i].trim(),selectedGroupName[i].trim());
+         }
+        if({!DocType.isEditable__c}==true){
+            $('#checkallgroupGrpId').attr('onclick','');
+                
+                for(var i=0;i<list2.length;i++){
+                    
+                    console.log('list values are  '+list2[i]);
+                    
+                    $('#'+list2[i]+'_checkgrpids').attr('onclick','');
+                   
+                }
+                
+            }
+        
+        
+         var list3=[];
+        
+        <apex:repeat value="{!userList}" var="usrs" >
+            
+            list3.push('{!usrs.id}'.split(','));
+         </apex:repeat>
+        
+        var selectedviewUsers='{!JSENCODE(DocType.Viewonly_Entity_Users__c)}'.split(',');
+         var selectedviewUsersName='{!JSENCODE(DocType.Viewonly_Entity_Users_Name__c)}'.split(',');
+        //alert(selectedviewUsers[0]);
+        for(var i=0;i<selectedviewUsers.length;i++){
+            console.log(selectedviewUsers[i].trim());
+            var vtId= $("#"+"uva"+selectedviewUsers[i].trim()).find("i");
+           usrsviewActions(vtId,selectedviewUsers[i].trim(),selectedviewUsersName[i].trim());
+       }
+         if({!DocType.isEditable__c}==true){
+                 $('#checkallViewId').attr('onclick','');
+                for(var i=0;i<list3.length;i++){
+                   $('#'+list3[i]+'_checkviewids').attr('onclick','');
+                   
+                }
+                
+            }
+        
+         var list4=[]; 
+         <apex:repeat value="{!groupList}" var="usrs" >
+           list4.push('{!usrs.id}'.split(','));
+         </apex:repeat>
+        
+        var selectedviewGroup='{!JSENCODE(DocType.Viewonly_Entity_Groups__c)}'.split(',');
+        var selectedviewGroupName='{!JSENCODE(DocType.Viewonly_Entity_Groups_Name__c)}'.split(',');
+        // alert(selectedviewGroup[0]);
+        for(var i=0;i<selectedviewGroup.length;i++){
+            console.log(selectedviewGroup[i].trim());
+            var vgId= $("#"+"uga"+selectedviewGroup[i].trim()).find("i");
+            console.log(vgId);
+          viewgrpsActions(vgId,selectedviewGroup[i].trim(),selectedviewGroupName[i].trim());
+            
+        }
+        if({!DocType.isEditable__c}==true){
+            $('#checkallgroupViewGrp').attr('onclick','');
+            for(var i=0;i<list4.length;i++){
+                $('#'+list4[i]+'_checkgrpsids').attr('onclick','');
+                
+            }
+            
+        }
+        
+        //alert('helo');
+        var availableCategories='{!JSENCODE(availableCategories )}'.split(','); 
+        var selectedCategories='{!JSENCODE(DocType.Categories__c)}'.split(';');
+        console.log(availableCategories);
+        console.log(selectedCategories);
+        for(var i=0;i<availableCategories.length-1;i++){
+            console.log('catagories  '+  availableCategories[i] +'    '+jQuery.inArray(availableCategories[i],selectedCategories));
+            if(jQuery.inArray(availableCategories[i],selectedCategories)>-1){
+                $("#Categories__c").append('<option selected="selected" value='+availableCategories[i]+'>'+availableCategories[i]+'</option>');
+            }
+            else{
+                $("#Categories__c").append('<option value='+availableCategories[i]+'>'+availableCategories[i]+'</option>');
+            } 
+            
+        } 
+        
+        $("#Categories__c").select2({
+            closeOnSelect:false
+        }); 
+        onchangesecondaryformat('{!DocType.Secondary_Format__c}')
+        
+        
+        
+        if({!DocType.isEditable__c} ){
+            
+            $("#{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Categories__c").attr('disabled',true);
+            $('#Autosync').addClass("disabled");
+            $('#Manual').addClass("disabled");
+            $('#None').addClass("disabled");
+            $('#browseBtn').addClass("disabled");
+            $('.dont-allow-multiple-clicks').attr('disabled', true);
+        }
+        
+        
+        if({!NOT(ISBLANK(DocType.Id))}){
+            // alert('get attachment');
+            Visualforce.remoting.Manager.invokeAction(
+                // @RemoteAction
+                '{!$RemoteAction.DocumentTypeControllerExt.getAttachment}','{!DocType.Id}',
+                // Callback
+                function(result,event){
+                    if(event.status){
+                        //  alert(result);
+                        if(result !=null){
+                        //alert('inside remote=='+result.Name+'id--'+result.Id);
+                        //alert('inside load isAttachmentExist'+isAttachmentExist);
+                        var hrefval='/servlet/servlet.FileDownload?file='+result.Id
+                        var hrefname=result.Name;
+                        $('#attachname').attr('href',hrefval);
+                        $('#attachname').attr('download',hrefname);
+                        $('#attachname').append(result.Name);
+                        $('#doctype_attachmentFile').removeAttr( "required" );
+                        isAttachmentExist=true;
+                        //alert('inside load after isAttachmentExist'+isAttachmentExist);
+                        }
+                    }                               
+                },
+                {escape:true}
+            );
+        }
+        
+    });         
+    
+    var getUploadedFileName = function(target_file_field, file_name){
+        $(target_file_field).trigger('click');
+        $(target_file_field).on('change', function(){
+            var fileName = $(this).val().split('/').pop().split('\\').pop();
+            //alert(fileName);
+            $(file_name).html(fileName);
+            console.log(fileName);
+        })
+    }
+    
+    //test function
+    
+    function activestatus(){
+        // alert('test status=>'+isStatusselected);
+         if('{!DocType.Status__c}'== 'Inactive'){
+            isStatusselected = false;
+            }
+        if(isStatusselected){
+            // alert('inside if');
+            var btn = $('#rs{!IF(NOT(ISBLANK(Prefix)),Prefix+'__','')}Status__c').find('label').eq(1).addClass('active');
+            console.log(btn);
+            btn.click();
+            var activeval = btn.find('input').val();
+            console.log(activeval);
+        }
+        $('#submitdetails').addClass('most-recent-click');
+        $('#nextBtn').removeClass('most-recent-click');
+        isSubmit=true;
+        validate();
+    }
+    function cancelPopup(){
+        //alert('hello-->{!DocType.Id}');
+        var YESButtonInRedirectModalOnClick = function () {
+          if('{!DocType.Id}'==''){
+               window.location= '/apex/DocumentType';
+              }else{
+           window.location= '/apex/DocumentType?id={!$CurrentPage.parameters.id}&pg=doctype'; 
+                  }
+               
+        };
+        var NOButtonInRedirectModalOnClick = function () {
+            
+        };
+        $('#redirectDialog .btn-primary').bind( "click", YESButtonInRedirectModalOnClick);
+        $('#redirectDialog .btn-default').bind( "click", NOButtonInRedirectModalOnClick);
+        
+        // Show the redirect dialog
+        $('#redirectDialog').modal('show');
+        
+        // Remove the onClick event
+        $('#redirectDialog').on('hidden.bs.modal', function () {
+            $('#redirectDialog .btn-primary').unbind( "click", YESButtonInRedirectModalOnClick);
+            $('#redirectDialog .btn-default').unbind( "click", NOButtonInRedirectModalOnClick);
+        }) 
+    }
+    var isSubmit;
+    function onValiddocform(){
+        
+        // alert('isSubmit--->'+isSubmit)
+        console.log('after validation');
+        if(isSubmit){
+            $('#isEditable').attr('value','true')
+            var isDigSigNd='<apex:outputText value="{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}"/>'
+            if(isDigSigNd=='true'){
+                $('#uname').val('');$('#pw').val('');$('.dont-allow-multiple-clicks').removeAttr('disabled'); $('#signature').modal('show');
+            }else{
+                navigateAfterDigitalSignature();
+            }
+        }else{
+            navigateAfterDigitalSignature();
+        }
+        
+    }
+    function navigateAfterDigitalSignature(){
+        if(!$('.dont-allow-multiple-clicks').attr('disabled')){
+            $('.dont-allow-multiple-clicks').attr('disabled', true);
+            saveDocType();
+        } 
+        
+        
+    }
+    
+    function saveDocType(){
+        //  alert('inside save before isAttachmentExist'+isAttachmentExist);
+        /* <apex:repeat value="{!documentTypeClone}" var="dtl">
+            obj = {}
+          docTypesArray.push(obj);
+           
+        </apex:repeat>
+        */
+       // console.log(docTypesArray);
+        var fields = $('#detailssec').serializeArray();
+        console.log(fields);
+        var len = fields.length;
+        console.log(len+'length****');
+       // var cameFromClone = '{!$CurrentPage.parameters.camefromclone}';
+        
+     /* if(cameFromClone=='true'){
+            
+            var formdata = JSON.stringify(docTypesArray);
+            //  alert('formdata is here with doctype aray'+formdata);
+            
+        }
+        else {
+             
+            // alert('fields form data is here with fields'+formdata); 
+        }
+        
+        */
+        
+        var formdata = JSON.stringify(fields);
+        
+        var sobj='Document_Type__c';
+        
+        //file attachment with nochange
+        if(isAttachmentExist){
+            // alert('updating existing record no chage in file attachment');
+            
+            // alert('from save doc');
+            
+           
+            Visualforce.remoting.Manager.invokeAction(
+                // @RemoteAction
+                '{!$RemoteAction.DocumentTypeControllerExt.SaveDocType}',formdata,sobj,isAttachmentExist,
+                // Callback
+                function(result, event){
+                    if(result){
+                        //   alert('test-123');
+                        window.location= '/apex/DocumentType?id='+result+'&pg=doctype'+'&dttab=dtdet';    
+                    }else{
+                        //$('#submit').attr('disabled', 'false');
+                        //$('#submit').attr('disabled', 'false');
+                        //$('#cancel').attr('disabled', 'false');
+                    }
+                }
+            );
+            console.log(formdata);
+            
+        }
+        
+        
+        
+        
+        if(!isAttachmentExist){
+            //file attachment modified
+            // alert('updating file attachment when changed');
+            // alert('from save doc');
+            
+            
+            //Fileupload
+            
+            
+                Visualforce.remoting.Manager.invokeAction(
+                    // @RemoteAction
+                    '{!$RemoteAction.DocumentTypeControllerExt.SaveDocType}',formdata,sobj,isAttachmentExist,
+                    // Callback
+                    function(result, event){
+                        if(result){
+                            //  alert('test');
+                        loaddoctempletattachment(result);      
+                        }else{
+                            //$('#submit').attr('disabled', 'false');
+                            //$('#submit').attr('disabled', 'false');
+                            //$('#cancel').attr('disabled', 'false');
+                        }
+                    }
+                );
+            
+            
+            
+            
+        }//if-with file change
+        console.log('formdata');
+        console.log(formdata);
+        
+    }//savedoc
+     //Ajax function to load  doc templet attachment
+    function loaddoctempletattachment(doctypeid){
+        // alert('attachment ajax');
+        if(document.getElementById('doctype_attachmentFile').files.length>0){
+         var file = document.getElementById('doctype_attachmentFile').files[0];
+         attachmentName = file.name;
+         var attachmentBody = "";
+         fileReader = new FileReader();
+         fileReader.onload = function(e) {
+              attachment = window.btoa(this.result);  //Base 64 encode the file before sending it
+              jQuery.ajax({
+                type: "POST",
+                url: "https://{!JSENCODE(Server)}.salesforce.com/services/data/v{!JSENCODE(API_Version)}/sobjects/Attachment/",
+                contentType:"application/json; charset=utf-8",
+                headers: { 
+                    "Authorization" : "Bearer "+getSessionId()
+                },
+                data    : JSON.stringify({'name':attachmentName,'body':attachment,'parentId':doctypeid,'Description':attachmentName+'@DocType','isprivate':false})
+            }).success(function(result) {
+                console.log(result);
+                  /*  if(fileCount<=files.length-2){
+                    proVal=$('.progress-bar').attr('aria-valuenow');
+                    proStep=parseInt(proVal)+10;
+                    $('.progress-bar').css('width', proStep+'%').attr('aria-valuenow',proStep);
+                    fileCount++;
+                    uploadAttachments(files[fileCount],fileDecs[fileCount]);
+                }else{
+                
+                
+                }*/
+               window.location= '/apex/DocumentType?id='+doctypeid+'&pg=doctype'+'&dttab=dtdet';  
+            }).fail(function(err){
+                  console.log('Unable to Insert file \n Contact your Adminstrator with this error message \n' + JSON.stringify(err));
+                  /* $("#modal-body_error").text('Unable to Insert file \n Contact your Adminstrator with this error message \n' + JSON.stringify(err));               
+                  $('.progress').hide();
+                $('.progress-bar').css('width', proStep+'%').attr('aria-valuenow',0);*/
+                
+            });
+             
+             
+             } 
+           fileReader.onerror = function(e) {
+                $("#modal-body_error").text("There was an error reading the file.  Please try again.");
+            }
+            fileReader.onabort = function(e) {
+                $("#modal-body_error").text("There was an error reading the file.  Please try again.");
+            }
+            attachmentBody = fileReader.readAsBinaryString(file);  //Read the body of the file
+            }else{
+                 window.location= '/apex/DocumentType?id='+doctypeid+'&pg=doctype'; 
+                }
+        
+        }
+    
+    //wiz_slider callback function
+    function showhidesecurity(){
+        // alert('show security');  
+         if($('#Enable_Security__c').val()=='false'){
+       
+     $('#hideshow').removeClass( "hidden" ).addClass( "wiz-field" );
+    
+        }
+        else{
+    $('#hideshow').removeClass( "wiz-field" ).addClass( "hidden" );   
+    
+        }
+    }
+    </script>
+    <c:digital_signature returl=""
+                         onSuccess="navigateAfterDigitalSignature();" />
+    <c:wiz_validator onValid="
+                              onValiddocform();
+                              " ignorehidden="false" />
+    <c:digital_signature returl=""
+                         onSuccess="navigateAfterDigitalSignature();" />
+    <c:wiz_alert alertId="WizAlert" />
+    
+    <!----------------------------v1.0.3 start----------------------------------------------->
+    <apex:outputPanel rendered="{!$CurrentPage.parameters.pg=='docType_details_print'}">
+         <html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/app.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/bootstrap-datepicker.min.css')}" />
+    <title>Document Type Report</title>
+
+  </head>
+    <body style="background-color: #FFF;">
+            <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/app.css')}" />
+            <script>
+            window.onload =function() { window.print(); };
+            </script>
+        
+        <div class="" id="app_warpper">
+                <div class="report-holder">
+                    <div class="wiz-form-holder" style="padding: 20px;">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <img src ="{! URLFOR($Resource.bt_static,'/static/images/report-logo.png') }" class="report-logo"/>
+                            </div>
+                            
+                            <div class="col-md-12">
+                                
+                                <h1>Document Type Header</h1>
+                                <table class="table table-responsive table-bordered">
+                                    <body>
+                                     <tr>
+                                         <th>  {!$ObjectType.Document_Type__c.Fields.Name.Label}  </th>
+                                         <th>   Owner </th>
+                                         <th>   {!$ObjectType.Document_Type__c.Fields.createdDate.Label}</th>
+                                         <th> {!$ObjectType.Document_Type__c.Fields.Business_Unit__c.Label} </th>
+                                         <th>  {!$ObjectType.Document_Type__c.Fields.Initiating_Site__c.Label} </th>
+                                         <th>  {!$ObjectType.Document_Type__c.Fields.Status__c.Label}</th>
+                                     </tr>
+                                        
+                                     <tr>
+                                         <td> {!doctype.Name} </td>
+                                         <td> {!doctype.Owner.Name} </td>
+                                         <td><apex:outputText value="{0,date, dd MMM yyyy}"> <!-- TODO: Make this dependent on Org settings so that date format can be updated from a central location -->
+                                    <apex:param value="{!doctype.createdDate}"/>
+                                </apex:outputText></td>
+                                         <td> {!doctype.Business_Unit__c}</td>
+                                         <td> {!doctype.Initiating_Site__r.Name}</td>
+                                         <td>{!doctype.Status__c}</td>
+                                     </tr>    
+                                        
+                                        
+                                        
+                                        
+                                    </body>  
+                                    
+                                    
+                                    
+                                </table>
+                                
+                                
+                                
+                                
+                            </div>
+                        </div>
+                        
+                         <h1><apex:outputText value="Document Details Initiation" /></h1>
+                        
+                        <table class="table table-responsive table-bordered">
+                            <apex:repeat value="{!$ObjectType.Document_Type__c.FieldSets.Document_Type}"
+                                         var="f">
+                                <tr>
+                                    <td class="title-col">
+                                        {!if($ObjectType.Document_Type__c.Fields[f].Label=='Owner ID','Owner',$ObjectType.Document_Type__c.Fields[f].Label)}
+                                    </td>
+                                    <td>
+                                        <!--<apex:outputField value="{!doctype[f]}"/>-->
+                                        <apex:outputField rendered="{!AND($ObjectType.Document_Type__c.Fields[f].type!='reference',$ObjectType.Document_Type__c.Fields[f].type!='textarea')}" value="{!doctype[f]}"/>
+                                        <apex:outputPanel rendered="{!$ObjectType.Document_Type__c.Fields[f].type=='reference'}">
+                                            {!JSENCODE(doctype[$ObjectType.Document_Type__c.Fields[f].relationshipName].Name)}
+                                        </apex:outputPanel>
+                                        <apex:outputPanel rendered="{!$ObjectType.Document_Type__c.Fields[f].type=='textarea'}">
+                                            <div class="alert alert-info">
+                                                <apex:outputField value="{!doctype[f]}"></apex:outputField>
+                                            </div>
+                                        </apex:outputPanel>
+                                        
+                                    </td>
+                                </tr>
+                            </apex:repeat>                    
+                        </table>
+                        
+                       <!-- <h1><apex:outputText value="Watermark Section"/></h1> 
+                        <table class="table table-responsive table-bordered">
+                            <apex:repeat value="{!$ObjectType.Document_Type__c.FieldSets.Watermark_Section}"
+                                         var="f">
+                                <tr>
+                                    <td class="title-col">
+                                        {!if($ObjectType.Document_Type__c.Fields[f].Label=='Owner ID','Owner',$ObjectType.Document_Type__c.Fields[f].Label)}
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!Document_Type__c[f]}"/>
+                                    </td>
+                                </tr>
+                            </apex:repeat>                    
+                        </table> -->
+                        
+                        <h1><apex:outputText value="Document Setup"/></h1> 
+                        <table class="table table-responsive table-bordered">
+                            <apex:repeat value="{!$ObjectType.Document_Type__c.FieldSets.Document_Setup}"
+                                         var="f">
+                                <tr>
+                                    <td class="title-col">
+                                        {!if($ObjectType.Document_Type__c.Fields[f].Label=='Owner ID','Owner',$ObjectType.Document_Type__c.Fields[f].Label)}
+                                    </td>
+                                    <td>
+                                        <apex:outputField rendered="{!AND($ObjectType.Document_Type__c.Fields[f].type!='reference',$ObjectType.Document_Type__c.Fields[f].type!='textarea')}" value="{!doctype[f]}"/>
+                                        <apex:outputPanel rendered="{!$ObjectType.Document_Type__c.Fields[f].type=='reference'}">
+                                            {!JSENCODE(doctype[$ObjectType.Document_Type__c.Fields[f].relationshipName].Name)}
+                                        </apex:outputPanel>
+                                        <apex:outputPanel rendered="{!$ObjectType.Document_Type__c.Fields[f].type=='textarea'}">
+                                            <div class="alert alert-info">
+                                                <apex:outputField value="{!doctype[f]}"></apex:outputField>
+                                            </div>
+                                        </apex:outputPanel>
+                                    </td>
+                                </tr>
+                            </apex:repeat>                    
+                        </table>
+                        
+                        <h1><apex:outputText value="Document Security"/></h1>
+                        <table class="table table-responsive table-bordered">
+                            <apex:repeat value="{!$ObjectType.Document_Type__c.FieldSets.Security_Fields}"
+                                         var="f">
+                                <tr>
+                                    <td class="title-col">
+                                        {!if($ObjectType.Document_Type__c.Fields[f].Label=='Owner ID','Owner',$ObjectType.Document_Type__c.Fields[f].Label)}
+                                    </td>
+                                    <td>
+                                        <apex:outputField rendered="{!AND($ObjectType.Document_Type__c.Fields[f].type!='reference',$ObjectType.Document_Type__c.Fields[f].type!='textarea')}" value="{!doctype[f]}"/>
+                                        <apex:outputPanel rendered="{!$ObjectType.Document_Type__c.Fields[f].type=='reference'}">
+                                            {!JSENCODE(doctype[$ObjectType.Document_Type__c.Fields[f].relationshipName].Name)}
+                                        </apex:outputPanel>
+                                        <apex:outputPanel rendered="{!$ObjectType.Document_Type__c.Fields[f].type=='textarea'}">
+                                            <div class="alert alert-info">
+                                                <apex:outputField value="{!doctype[f]}"></apex:outputField>
+                                            </div>
+                                        </apex:outputPanel>
+                                    </td>
+                                </tr>
+                            </apex:repeat>
+                        </table>
+                        
+                        
+                        
+                        
+                        
+                    </div>
+            </div>
+        </div>
+        
+        
+        
+        
+        
+        
+        
+        </body>   
+    </html>
+    </apex:outputPanel>
+    <c:wiz_alert alertId="alertforsecurity"/>
+</apex:page>

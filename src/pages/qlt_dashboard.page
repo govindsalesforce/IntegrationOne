@@ -1,0 +1,1230 @@
+<!--
+     v1.0    Qualityze_Inc(GP)                      Initial Version.
+     
+     v1.0.1  Qualityze_Inc(GP)    21-JUN-2016       To Change Updates label to Following
+     
+     v1.1    Qualityze_Inc(GP)    09-AUG-2016       To fix issue 00781 : Configurable Dashboard / Sidebar Menu.
+    
+                                                     Need to display on dashboard / sidebar based on the configuration set in custom settings(QC_Settings)
+
+                                                        1.Enable NC setting displays the data related to NC.
+                                                        2.Enable CAPA setting displays the data related to CAPA.    
+                                                        
+     v1.2   Qualityze_Inc(GP)     18-AUG-2016       To Add Document Owner Dashboard. 
+      
+ -->
+<apex:page sidebar="false" readonly="true" controller="Dashboard_Controller" showHeader="true" standardStylesheets="false" docType="html-5.0" >
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/app.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/font-awesome.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/bootstrap-datepicker.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/javascripts/select2-4.0.0/dist/css/select2.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.bt_static, '/static/stylesheets/dataTables.bootstrap.css')}" />
+    <script type="text/javascript">
+       var allNCTaks={},allCAPATasks={},allDOCProfiles={},allDOCTasks={},allCMTasks={},taskSize=0,capaTaskSize=0,docTaskSize=0,cmTaskSize=0,allAlerts=[];allCAPAAlerts=[],allDOCAlerts=[],allCMAlerts=[],ncUpdates=[],capaUpdates=[],docUpdates=[],cmUpdates=[],pendingApprovals=[],ncTaskList=[],capaTaskList=[],docProfileList=[],docTaskList=[],cmTaskList=[],module='',isNCDashboardVisible="<apex:outputText value="{!AND($Setup.QC_settings__c.Enable_NC__c,$ObjectType.Non_Conformance__c.updateable)}"/>",isCAPADashboardVisible="<apex:outputText value="{!AND($Setup.QC_settings__c.Enable_CAPA__c,$ObjectType.CAPA__c.updateable)}"/>",isDOCDashboardVisible="<apex:outputText value="{!$Setup.QC_settings__c.Enable_DOC__c}"/>";
+       
+       
+       $(document).ready(function(){
+          $('#capa_alert_list').hide();
+          $('#capaApprovals').css({"display": "none"});
+          $('#capaThings').hide();
+          $('#cmThings').hide();
+          $('#docThings').hide();
+          
+          var size=0;
+          $("#taskList").html('');
+          if(isNCDashboardVisible=='true'){  //v1.1 added check 
+              module='NC';
+              <apex:repeat value="{!ncTasks}" var="taskType">
+                  if(''!='{!taskType}'){     
+                    
+                    <apex:repeat value="{!ncTasks[taskType]}" var="taskDetails">
+                        //console.log('{!taskDetails.Non_Conformance__r.Name}')
+                        var taskList=allNCTaks['{!JSENCODE(taskType)}'];
+                        if(!taskList){
+                           taskList=[];
+                           allNCTaks['{!JSENCODE(taskType)}']=taskList;
+                        }
+                        
+                        taskList.push({ncId:"{!JSENCODE(taskDetails.Non_Conformance__c)}",nc:"{!JSENCODE(taskDetails.Non_Conformance__r.Name)}", task:"{!JSENCODE(taskType)}", taskId:"{!JSENCODE(taskDetails.Id)}", age:"{!JSENCODE(taskDetails.Age__c)}",ed:formatDate('{!JSENCODE(TEXT(taskDetails.Due_Date__c))}')})
+                        
+                        taskSize++;
+                     </apex:repeat>
+                   
+                  }
+              </apex:repeat>
+          
+             <apex:repeat value="{!allNCTasks}" var="taskDetails">
+                  ncTaskList.push({ncId:"{!JSENCODE(taskDetails.Non_Conformance__c)}",nc:"{!JSENCODE(taskDetails.Non_Conformance__r.Name)}", task:"{!JSENCODE(taskDetails.RecordType.Name)}", taskId:"{!JSENCODE(taskDetails.Id)}", age:"{!JSENCODE(taskDetails.Age__c)}",ed:formatDate('{!JSENCODE(TEXT(taskDetails.Due_Date__c))}')})       
+             </apex:repeat>
+             
+             var subtaskList=[];
+             
+             <apex:repeat value="{!dispSecs}" var="dispSec">
+                 subtaskList.push({ncId:"{!JSENCODE(dispSec.General_Task__r.Non_Conformance__c)}",nc:"{!JSENCODE(dispSec.General_Task__r.Non_Conformance__r.Name)}", task:"Disposition Section", taskId:"{!JSENCODE(dispSec.General_Task__c)}", age:"{!JSENCODE(dispSec.Age__c)}",ed:formatDate('{!JSENCODE(TEXT(dispSec.Due_Date__c))}')})
+                 ncTaskList.push({ncId:"{!JSENCODE(dispSec.General_Task__r.Non_Conformance__c)}",nc:"{!JSENCODE(dispSec.General_Task__r.Non_Conformance__r.Name)}", task:"Disposition Section", taskId:"{!JSENCODE(dispSec.General_Task__c)}", age:"{!JSENCODE(dispSec.Age__c)}",ed:formatDate('{!JSENCODE(TEXT(dispSec.Due_Date__c))}')})
+                 taskSize++;
+             </apex:repeat>
+             allNCTaks['Disposition Section']=subtaskList;
+             subtaskList=[];
+             <apex:repeat value="{!actionPlans}" var="actionPlan">
+                 subtaskList.push({ncId:"{!JSENCODE(actionPlan.General_Task__r.Non_Conformance__c)}",nc:"{!JSENCODE(actionPlan.General_Task__r.Non_Conformance__r.Name)}", task:"Action Plan", taskId:"{!JSENCODE(actionPlan.General_Task__c)}", age:"{!JSENCODE(actionPlan.Age__c)}", ed:formatDate('{!JSENCODE(TEXT(actionPlan.Due_Date__c))}')})
+                 ncTaskList.push({ncId:"{!JSENCODE(actionPlan.General_Task__r.Non_Conformance__c)}",nc:"{!JSENCODE(actionPlan.General_Task__r.Non_Conformance__r.Name)}", task:"Action Plan", taskId:"{!JSENCODE(actionPlan.General_Task__c)}", age:"{!JSENCODE(actionPlan.Age__c)}", ed:formatDate('{!JSENCODE(TEXT(actionPlan.Due_Date__c))}')});
+                 taskSize++;
+             </apex:repeat>
+             allNCTaks['Action Plan']=subtaskList;
+             //console.log(allNCTaks);
+             $("#taskSize").text(taskSize);
+             
+             ncTaskList.sort(function(firstTask,secondTask){
+            return new Date(firstTask.ed) - new Date(secondTask.ed);
+              
+             });
+             
+             $.each(ncTaskList, function( index, task ) {
+                    //console.log(task);
+                    $("#taskList").append('<tr><td><span class="fa fa-check-circle info-blue"></span> <a href="/'+escapeHtml(task.ncId)+'">'+escapeHtml(task.nc)+'</a> </td><td><a href="/'+escapeHtml(task.taskId)+'">'+escapeHtml(task.task)+'</a></td><td>'+escapeHtml(task.age)+'</td><td>'+escapeHtml(task.ed)+'</td></tr>');
+              });
+              $("#alert_list_ul").html('');
+             
+             <apex:repeat value="{!alerts}" var="alert">
+                var alertDetails='{!alert}'.split('@')
+                $("#alert_list_ul").append('<li class="list-group-item"><span class="'+alertDetails[0]+'"></span>&nbsp;&nbsp;&nbsp;'+alertDetails[1]+'</li>');
+                allAlerts.push('{!alert}');
+             </apex:repeat>
+             
+             $('#updateList').html('');
+             var updateSize=0;
+             <apex:repeat value="{!updates}" var="update">
+                $('#updateList').append('<tr><td><span class="fa fa-check-circle info-blue"></span> {!update}</td></tr>');
+                ncUpdates.push('{!update}')
+                updateSize++;
+             </apex:repeat>
+             $('#updateSize').text(updateSize)
+       }
+       
+       if(isCAPADashboardVisible=='true'){ //v1.1 added check
+          <apex:repeat value="{!capaTasks}" var="taskType">
+              if(''!='{!JSENCODE(taskType)}'){     
+                  <apex:repeat value="{!capaTasks[JSENCODE(taskType)]}" var="taskDetails">
+                    
+                    var taskList=allCAPATasks['{!taskType}'];
+                    if(!taskList){
+                       taskList=[];
+                       allCAPATasks['{!taskType}']=taskList;
+                    }
+                    
+                    taskList.push({capaId:"{!JSENCODE(taskDetails.CAPA__c)}",capa:"{!JSENCODE(taskDetails.CAPA__r.Name)}",task:"{!JSENCODE(taskType)}", taskId:"{!JSENCODE(taskDetails.Id)}", age:"{!JSENCODE(taskDetails.Age__c)}",ed:formatDate('{!JSENCODE(TEXT(taskDetails.Due_Date__c))}')})
+                    capaTaskSize++;
+                 </apex:repeat>
+               
+              }
+          </apex:repeat>
+          
+          <apex:repeat value="{!allCAPATasks}" var="taskDetails">
+               capaTaskList.push({capaId:"{!JSENCODE(taskDetails.CAPA__c)}",capa:"{!JSENCODE(taskDetails.CAPA__r.Name)}",task:"{!JSENCODE(taskDetails.RecordType.Name)}", taskId:"{!JSENCODE(taskDetails.Id)}", age:"{!JSENCODE(taskDetails.Age__c)}",ed:formatDate('{!JSENCODE(TEXT(taskDetails.Due_Date__c))}')})       
+          </apex:repeat>
+          
+          subtaskList=[];
+          <apex:repeat value="{!capaActionPlans}" var="actionPlan">
+              subtaskList.push({capaId:"{!JSENCODE(actionPlan.General_Task__r.CAPA__c)}",capa:"{!JSENCODE(actionPlan.General_Task__r.CAPA__r.Name)}", task:"Action Plan", taskId:"{!JSENCODE(actionPlan.General_Task__c)}", age:"{!JSENCODE(actionPlan.Age__c)}", ed:formatDate('{!JSENCODE(TEXT(actionPlan.Due_Date__c))}')})
+              capaTaskList.push({capaId:"{!JSENCODE(actionPlan.General_Task__r.CAPA__c)}",capa:"{!JSENCODE(actionPlan.General_Task__r.CAPA__r.Name)}", task:"Action Plan", taskId:"{!JSENCODE(actionPlan.General_Task__c)}", age:"{!JSENCODE(actionPlan.Age__c)}", ed:formatDate('{!JSENCODE(TEXT(actionPlan.Due_Date__c))}')})
+              capaTaskSize++;
+          </apex:repeat>
+          allCAPATasks['Action Plan']=subtaskList;
+          
+          capaTaskList.sort(function(firstTask,secondTask){
+            return new Date(firstTask.ed) - new Date(secondTask.ed);
+          });
+          
+          if(isNCDashboardVisible!='true'){
+              $.each(capaTaskList, function( index, task ) {
+                        //console.log(task);
+                        $("#taskList").append('<tr><td><span class="fa fa-check-circle info-blue"></span> <a href="/'+escapeHtml(task.capaId)+'">'+escapeHtml(task.capa)+'</a> </td><td><a href="/'+escapeHtml(task.taskId)+'">'+escapeHtml(task.task)+'</a></td><td>'+escapeHtml(task.age)+'</td><td>'+escapeHtml(task.ed)+'</td></tr>');
+              });
+          }
+          
+          <apex:repeat value="{!capaAlerts}" var="capaAlert">
+            if(isNCDashboardVisible!='true'){ //v1.1 added check
+              var alertDetails='{!capaAlert}'.split('@')
+              $("#alert_list_ul").append('<li class="list-group-item"><span class="'+alertDetails[0]+'"></span>&nbsp;&nbsp;&nbsp;'+alertDetails[1]+'</li>');
+            }
+            allCAPAAlerts.push('{!capaAlert}');
+          </apex:repeat>
+          
+          var updateSize=0;
+          <apex:repeat value="{!capaUpdates}" var="update">
+            if(isNCDashboardVisible!='true'){ //v1.1 added check
+              $('#updateList').append('<tr><td><span class="fa fa-check-circle info-blue"></span> {!update}</td></tr>');
+              updateSize++;
+            }
+            capaUpdates.push('{!update}')
+          </apex:repeat>
+          
+          //v1.1 added check start
+          if(isNCDashboardVisible!='true'){
+             module='CAPA';
+             
+             $('#capaApprovals').css({"display": "inline"});
+             $('#ncThings').hide();
+             $('#capaThings').show();
+             $('#updateSize').text(updateSize);
+             $("#taskSize").text(capaTaskSize);
+          }
+          //v1.1 added check end
+          
+        }
+        
+        //v1.2 start
+        
+        if(isDOCDashboardVisible=='true'){
+           $("#allDocChkBx,.docTaskChkBox").click(function(event){
+                                                                     var chkboxId=$(this).attr('id');
+                                                                     //console.log('chkboxId   '+chkboxId+'  checked   '+$(this).is(':checked'));
+                                                                     if(chkboxId=='allDocChkBx'){
+                                                                        $(".docTaskChkBox").prop('checked',$(this).is(':checked'));
+                                                                        //console.log('checked all check boxes..')
+                                                                     }
+                                                                     else{
+                                                                         var checkFlag;
+                                                                         if($(this).is(':checked')){
+                                                                             checkFlag=true;
+                                                                             $(".docTaskChkBox").each(function(){
+                                                                                                           if(!$(this).is(':checked')){
+                                                                                                              checkFlag=false;
+                                                                                                              return false;
+                                                                                                           }
+                                                                                                    
+                                                                                                                                  })
+                                                                            $('#allDocChkBx').prop('checked',checkFlag);
+                                                                                                                                   
+                                                                         }
+                                                                         else{
+                                                                            $('#allDocChkBx').prop('checked',false);
+                                                                         }
+                                                                     }
+                                                                     event.stopPropagation();
+                                                                     displayDOCSearch();
+                                                                             
+                                                                 });
+                                                                                    
+          
+          <apex:repeat value="{!docTasks}" var="taskType">
+              if(''!='{!JSENCODE(taskType)}'){     
+                  <apex:repeat value="{!docTasks[taskType]}" var="taskDetails">
+                    
+                    var taskList=allDOCTasks['{!taskType}'];
+                    if(!taskList){
+                       taskList=[];
+                       allDOCTasks['{!taskType}']=taskList;
+                    }
+                    
+                    taskList.push({docProfileId:"{!JSENCODE(taskDetails.Document_Profile__c)}",docProfile:"{!JSENCODE(taskDetails.Document_Profile__r.Name)}  [REV  {!JSENCODE(taskDetails.Document_Profile__r.Current_Rev__c)}]",taskId:"{!JSENCODE(taskDetails.Id)}",task:"{!JSENCODE(taskDetails.RecordType.Name)}", age:'<apex:outputText value="{!taskDetails.Age__c}"></apex:outputText>',ed:formatDate('{!JSENCODE(TEXT(taskDetails.Due_Date__c))}')})
+                    docTaskSize++;
+                 </apex:repeat>
+               
+              }
+          </apex:repeat>
+          
+          
+          <apex:repeat value="{!docProfiles}" var="taskType">
+              
+              if(''!='{!JSENCODE(taskType)}'){     
+                  <apex:repeat value="{!docProfiles[taskType]}" var="taskDetails">
+                    
+                    var taskList=allDOCProfiles['{!taskType}'];
+                    if(!taskList){
+                       taskList=[];
+                       allDOCProfiles['{!taskType}']=taskList;
+                    }
+                    
+                    taskList.push({docProfileId:"{!JSENCODE(taskDetails.Id)}",docProfile:"{!JSENCODE(taskDetails.Name)}",type:"{!JSENCODE(taskDetails.Status__c)}", age:"<apex:outputText value="{!taskDetails.Age__c}"></apex:outputText>",ed:formatDate('{!JSENCODE(TEXT(taskDetails.Expiration_Date__c))}')})
+                    //docProfileSize++;
+                 </apex:repeat>
+               
+              }
+          </apex:repeat>
+          
+      
+          
+          <apex:repeat value="{!allDOCTasks}" var="taskDetails">
+               docTaskList.push({docProfileId:"{!JSENCODE(taskDetails.Document_Profile__c)}",docProfile:"{!JSENCODE(taskDetails.Document_Profile__r.Name)}  [REV {!JSENCODE(taskDetails.Document_Profile__r.Current_Rev__c)}]",task:"{!JSENCODE(taskDetails.RecordType.Name)}",taskId:"{!JSENCODE(taskDetails.Id)}", age:"<apex:outputText value="{!taskDetails.Age__c}"></apex:outputText>",ed:formatDate('{!JSENCODE(TEXT(taskDetails.Due_Date__c))}')})       
+          </apex:repeat>
+          
+          
+          
+          <apex:repeat value="{!allDOCProfiles}" var="taskDetails">
+               docProfileList.push({docProfileId:"{!JSENCODE(taskDetails.Id)}",docProfile:"{!JSENCODE(taskDetails.Name)}",type:"{!JSENCODE(taskDetails.Status__c)}", age:"<apex:outputText value="{!taskDetails.Age__c}"></apex:outputText>",ed:formatDate('{!JSENCODE(TEXT(taskDetails.Expiration_Date__c))}')})       
+          </apex:repeat>
+          
+          
+       
+          
+          
+          <apex:repeat value="{!cmTasks}" var="taskType">
+              if(''!='{!JSENCODE(taskType)}'){     
+                  <apex:repeat value="{!cmTasks[taskType]}" var="taskDetails">
+                    
+                    var taskList=allCMTasks['{!taskType}'];
+                    if(!taskList){
+                       taskList=[];
+                       allCMTasks['{!taskType}']=taskList;
+                    }
+                    
+                    taskList.push({cmId:"{!JSENCODE(taskDetails.Change_Management__c)}",cm:"{!JSENCODE(taskDetails.Change_Management__r.Name)}",task:"{!JSENCODE(taskDetails.RecordType.Name)}", taskId:"{!JSENCODE(taskDetails.Id)}", age:"<apex:outputText value="{!taskDetails.Age__c}"></apex:outputText>",ed:formatDate('{!JSENCODE(TEXT(taskDetails.Due_Date__c))}')})
+                    
+                 </apex:repeat>
+               
+              }
+          </apex:repeat>
+           <apex:repeat value="{!cmActionItems}" var="cmActionItem">
+                    var taskList=allCMTasks['AI'];
+                    if(!taskList){
+                       taskList=[];
+                       allCMTasks['AI']=taskList;
+                    }
+                    taskList.push({cmId:"{!JSENCODE(cmActionItem.cmId)}",cm:"{!JSENCODE(cmActionItem.cmName)}",task:"{!JSENCODE(cmActionItem.taskType)}", taskId:"{!JSENCODE(cmActionItem.taskId)}", age:"<apex:outputText value="{!cmActionItem.age}"></apex:outputText>",ed:formatDate('{!JSENCODE(TEXT(cmActionItem.dueDate))}')})
+          </apex:repeat>
+          
+          <apex:repeat value="{!allCMTasks}" var="taskDetails">
+               cmTaskList.push({cmId:"{!JSENCODE(taskDetails.Change_Management__c)}",cm:"{!JSENCODE(taskDetails.Change_Management__r.Name)}",task:"{!JSENCODE(taskDetails.RecordType.Name)}", taskId:"{!JSENCODE(taskDetails.Id)}", age:"<apex:outputText value="{!taskDetails.Age__c}"></apex:outputText>",ed:formatDate('{!JSENCODE(TEXT(taskDetails.Due_Date__c))}')})       
+          </apex:repeat>
+          
+          <apex:repeat value="{!cmActionItems}" var="cmActionItem">
+               cmTaskList.push({cmId:"{!JSENCODE(cmActionItem.cmId)}",cm:"{!JSENCODE(cmActionItem.cmName)}",task:"{!JSENCODE(cmActionItem.taskType)}", taskId:"{!JSENCODE(cmActionItem.taskId)}", age:"{!JSENCODE(TEXT(cmActionItem.age))}",ed:formatDate('{!JSENCODE(TEXT(cmActionItem.dueDate))}')})       
+          </apex:repeat>
+          
+          
+          
+          docTaskList.sort(function(firstTask,secondTask){
+            return new Date(firstTask.ed) - new Date(secondTask.ed);
+          });
+          
+          cmTaskList.sort(function(firstTask,secondTask){
+            return new Date(firstTask.ed) - new Date(secondTask.ed);
+          });
+          
+          if(isNCDashboardVisible!='true' && isCAPADashboardVisible !='true'){
+              $.each(docTaskList, function( index, task ) {
+                      $("#taskList").append('<tr><td><span class="fa fa-check-circle info-blue"></span> <a href="/'+escapeHtml(task.docProfileId)+'">'+escapeHtml(task.docProfile)+'</a></td><td><a href="/'+escapeHtml(task.taskId)+'">'+escapeHtml(task.task)+'</a></td><td>'+escapeHtml(task.age)+'</td><td>'+escapeHtml(task.ed)+'</td></tr>');
+              });
+          }
+          
+          <apex:repeat value="{!docAlerts}" var="docAlert">
+            if(isNCDashboardVisible!='true' && isCAPADashboardVisible !='true'){ //v1.1 added check
+              var alertDetails='{!docAlert}'.split('@')
+              $("#alert_list_ul").append('<li class="list-group-item"><span class="'+alertDetails[0]+'"></span>&nbsp;&nbsp;&nbsp;'+alertDetails[1]+'</li>');
+            }
+            allDOCAlerts.push('{!docAlert}');
+          </apex:repeat>
+          
+          <apex:repeat value="{!cmAlerts}" var="cmAlert">
+             allCMAlerts.push('{!cmAlert}');
+          </apex:repeat>
+          
+          var updateSize=0;
+          <apex:repeat value="{!docUpdates}" var="update">
+            if(isNCDashboardVisible!='true' && isCAPADashboardVisible !='true'){ //v1.1 added check
+              $('#updateList').append('<tr><td><span class="fa fa-check-circle info-blue"></span> {!update}</td></tr>');
+              updateSize++;
+            }
+            docUpdates.push('{!update}')
+          </apex:repeat>
+          
+          <apex:repeat value="{!cmUpdates}" var="update">
+             cmUpdates.push('{!update}')
+          </apex:repeat>
+          
+          //v1.2 end
+          
+          //v1.1 added check start
+          if(isNCDashboardVisible!='true' && isCAPADashboardVisible !='true'){
+             module='DOC';
+             $('#ncThings').hide();
+             $('#capaThings').hide();
+             $('#cmThings').hide();
+             $('#docThings').show();
+             $('#updateSize').text(updateSize);
+             $("#taskSize").text(docTaskSize);
+          }
+          //v1.1 added check end                                                                          
+                                                                                    
+          
+            
+        }
+        
+        //v1.2 end
+        
+        //v1.1 added check start
+        if(isNCDashboardVisible=='true' || isCAPADashboardVisible=='true' || isDOCDashboardVisible=='true'){ //v1.2 added isDOCDashboardVisible check
+          $("#noteList").html('');
+          var noteSize=0;
+          <apex:repeat value="{!notes}" var="noteWrapper">
+            $("#noteList").append('<div class="note-container"><p>{!JSENCODE(noteWrapper.description)}</p><p style="align:right">Created On {!JSENCODE(noteWrapper.LastModifiedDate)}</p><div class="note-action-bar"><div class="btn-group btn-group-xs" role="group" aria-label="..."><button type="button" class="btn btn-primary" onclick=deleteNotes("{!JSENCODE(noteWrapper.id)}")><span class="fa fa-trash"></span></button></div></div></div>');
+            noteSize++;
+          </apex:repeat>
+          $("#noteSize").text(noteSize);
+       }
+       //v1.1 added check end
+       
+       
+       
+      });
+      function fillNotes(result){
+         $("#noteList").html('');
+         $.each(result, function( index,value) {
+                $("#noteList").append('<div class="note-container"><p>'+escapeHtml(value.description)+'</p><p style="align:right">Created On '+escapeHtml(value.LastModifiedDate)+'</p><div class="note-action-bar"><div class="btn-group btn-group-xs" role="group" aria-label="..."><button type="button" class="btn btn-primary" onclick=deleteNotes("'+escapeHtml(value.id)+'")><span class="fa fa-trash"></span></button></div></div></div>');
+          });
+         $("#noteSize").text(result.length);
+      }
+      
+      function saveNotes(){
+          Visualforce.remoting.Manager.invokeAction(
+                             // @RemoteAction
+                             '{!$RemoteAction.Dashboard_Controller.saveNotes}',$("#newNote").val(),
+                             // Callback
+                             function(result, event){
+                                if(result.length>0){
+                                     $("#newNote").val('');
+                                    //console.log('Dashboard saveNotes result   ');
+                                    //console.log(result);
+                                     fillNotes(result)
+                                 }
+                             },
+                             // Don't know, couldn't find docs
+                             {escape: true}
+                         );
+      } 
+      
+      function deleteNotes(noteId){
+          //console.log('deleteNotes   '+noteId)
+          Visualforce.remoting.Manager.invokeAction(
+                             // @RemoteAction
+                             '{!$RemoteAction.Dashboard_Controller.deleteNotes}',noteId,
+                             // Callback
+                             function(result, event){
+                                
+                                     $("#newNote").val('')
+                                     fillNotes(result)
+                                
+                             },
+                             // Don't know, couldn't find docs
+                             {escape: true}
+                         );
+      }
+      function displayNCTasks(type){
+        var ncTasks=[];
+        if(type=='All'){
+            //Object.keys(allNCTaks).map(function(v) { $.each(allNCTaks[v],function(index,value){ncTasks.push(value)});});
+            ncTasks=ncTaskList;
+        }
+        else{ncTasks=allNCTaks[type]};
+          //console.log('qlt_dashboard   ncTasks '+ncTasks+' type  '+ type);
+        ncTasks=ncTasks?ncTasks:[];
+          //console.log(ncTasks)
+        $("#taskList").html('');
+        $.each(ncTasks, function( index, task ) {
+                 //console.log(task);
+                 $("#taskList").append('<tr><td><span class="fa fa-check-circle info-blue"></span> <a href="/'+escapeHtml(task.ncId)+'">'+escapeHtml(task.nc)+'</a> </td><td><a href="/'+escapeHtml(task.taskId)+'">'+escapeHtml(task.task)+'</a></td><td>'+escapeHtml(task.age)+'</td><td>'+escapeHtml(task.ed)+'</td></tr>');
+        });
+        $("#taskSize").text(ncTasks.length);
+      }
+      function displayNC(){
+        displayNCTasks('All');
+        module='NC';
+        
+        loadAlerts('All');
+        loadUpdates();
+        $("#ncApprovals").show();
+        $('#capaThings').hide();
+        $('#cmThings').hide();
+        $('#docThings').hide();
+        $("#ncThings").show();
+        refreshRemoteChart();
+       
+      }
+      
+      function displayCAPA(){
+        displayCAPATasks('All');
+        module='CAPA';
+        loadAlerts('All');
+        loadUpdates();
+        $("#ncThings").hide();
+        $('#cmThings').hide();
+        $('#docThings').hide();
+        $('#capaThings').show();
+        $("#ncApprovals").show();
+        refreshRemoteChart();
+     }
+     //v1.2 start
+     function displayDOC(){
+        displayDOCTasks('All');
+        module='DOC';
+        loadAlerts('All');
+        loadUpdates();
+        $("#ncThings").hide();
+        $('#capaThings').hide();
+        $('#cmThings').hide();
+        $('#docThings').show();
+        $("#ncApprovals").show();
+        refreshRemoteChart(); 
+     }
+     
+     function displayCM(){
+        displayCMTasks('All');
+        module='CM';
+        loadAlerts('All');
+        loadUpdates();
+        $("#ncThings").hide();
+        $('#capaThings').hide();
+        $('#docThings').hide();
+        $('#cmThings').show();
+        $("#ncApprovals").show();
+        refreshRemoteChart(); 
+     }
+     
+     function displayDOCTasks(type){
+        var docTasks=[];
+        if(type=='All'){
+            docTasks=docTaskList;
+        }
+        else{
+           docTasks=allDOCTasks[type]?allDOCTasks[type]:[]; 
+        }
+        
+        //console.log('type   '+type);
+        //console.log(allDOCTasks);
+        //console.log(docTasks)
+        docTasks=docTasks?docTasks:[];
+        $("#taskList").html('');
+        $.each(docTasks, function( index, task ) {
+             //console.log(task);
+             $("#taskList").append('<tr><td><span class="fa fa-check-circle info-blue"></span> <a href="/'+escapeHtml(task.docProfileId)+'">'+escapeHtml(task.docProfile)+'</a></td><td><a href="/'+escapeHtml(task.taskId)+'">'+escapeHtml(task.task)+'</a></td><td>'+escapeHtml(task.age)+'</td><td>'+escapeHtml(task.ed)+'</td></tr>');
+             
+        });
+        $("#taskSize").text(docTasks.length);
+         
+        
+        
+     }
+     
+     function displayDOCSearch(){
+        $("#taskList").html('');
+        //console.log(' displayDOCTasks  ');
+        var docProfiles=[];
+        if($('#allDocChkBx').is(':checked') || $('#activeDocChkBx').is(':checked') ){
+            //console.log('checked all check box');
+            docProfiles=docProfileList;
+        }
+        else{
+            var isChecked,chkBoxValue,docsPerType;
+            $('.docTaskChkBox').each(function(index,chkBx){
+               isChecked=$(chkBx).is(':checked');
+               chkBoxValue=$(chkBx).attr('value')
+               //console.log('  qlt_dashboard docTaskChkBox  isChecked '+isChecked+'  id '+$(chkBx).attr('id')+' chkBoxValue    '+chkBoxValue);
+               if(isChecked){
+                 //console.log('checked check box  '+$(chkBx).attr('id')+' value    '+$(chkBx).attr('value'));
+                 docsPerType=allDOCProfiles[chkBoxValue];
+                 //console.log('  docsPerType    '+docsPerType);
+                 if(docsPerType)
+                    docProfiles=docProfiles.concat(docsPerType);
+               }
+           });
+        }
+        docProfiles=docProfiles?docProfiles:[];
+        //console.log('docProfiles   ');
+        //console.log(docProfiles);
+        
+        $.each(docProfiles, function( index, task ) {
+                 //console.log(task);
+                 $("#taskList").append('<tr><td><span class="fa fa-check-circle info-blue"></span> <a href="/'+escapeHtml(task.docProfileId)+'">'+escapeHtml(task.docProfile)+'</a> </td><td>'+escapeHtml(task.type)+'</a></td><td>'+escapeHtml(task.age)+'</td><td>'+escapeHtml(task.ed)+'</td></tr>');
+        });
+        $("#taskSize").text(docProfiles.length);
+        module='DOCSEARCH';
+        loadAlerts('All');
+        loadUpdates();
+        $("#ncThings").hide();
+        $('#capaThings').hide();
+        $("#ncApprovals").hide();
+     }
+     
+     function displayCMTasks(type){
+        var cmTasks=[];
+        if(type=='All'){
+            cmTasks=cmTaskList;
+        }
+        else{
+           cmTasks=allCMTasks[type]?allCMTasks[type]:[]; 
+        }
+        
+        //console.log('type   '+type);
+        //console.log(allCMTasks);
+        //console.log(cmTasks)
+        cmTasks=cmTasks?cmTasks:[];
+        $("#taskList").html('');
+        $.each(cmTasks, function( index, task ) {
+             //console.log(task);
+             $("#taskList").append('<tr><td><span class="fa fa-check-circle info-blue"></span> <a href="/'+task.cmId+'">'+task.cm+'</a> </td><td><a href="/'+task.taskId+'">'+task.task+'</a></td><td>'+task.age+'</td><td>'+task.ed+'</td></tr>');
+             
+        });
+        $("#taskSize").text(cmTasks.length);
+            
+      }
+      
+      //v1.2 end
+      
+      
+      function formatDate(inputDate){
+       if(inputDate){
+        var monthNames = ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul","Aug", "Sep", "Oct","Nov", "Dec"];
+        var date = new Date(inputDate);
+        var day = date.getDate();
+        var month = monthNames[date.getMonth()];
+        var year = date.getFullYear();
+        //console.log('formatDate inputDate  '+inputDate);
+        return day+' '+month+' '+year;
+       }
+       return '';
+      }
+      
+      function loadAlerts(noOfAlerts){
+          var finalAlerts=[]
+         if(module=='NC'){
+            finalAlerts=allAlerts;
+         }
+         else if(module=='CAPA'){
+            finalAlerts=allCAPAAlerts;
+         }
+         //v1.2 start
+         else if(module=='DOC'){
+            finalAlerts=allDOCAlerts;
+         }
+         
+         else if(module=='CM'){
+            finalAlerts=allCMAlerts;
+         }
+         //v1.2 end
+         noOfAlerts=(noOfAlerts=='All')?finalAlerts.length:noOfAlerts
+         //console.log('load number of Alerts    '+noOfAlerts);
+         //console.log(finalAlerts);
+         $("#alert_list_ul").html('');
+         for(var i=0;i<noOfAlerts;i++){
+           //console.log('finalAlerts[i]    '+finalAlerts[i]);
+           var alertDetails=finalAlerts[i].split('@')
+           $("#alert_list_ul").append('<li class="list-group-item"><span class="'+alertDetails[0]+'"></span>&nbsp;&nbsp;&nbsp;'+alertDetails[1]+'</li>');
+         }
+      }
+      function loadUpdates(){
+         var finalUpdates=[];
+         if(module=='NC'){
+            finalUpdates=ncUpdates;
+         }
+         else if(module=='CAPA'){
+           finalUpdates=capaUpdates;
+         }
+         //v1.2 start
+         else if(module=='DOC'){
+           finalUpdates=docUpdates;
+         }
+         else if(module=='CM'){
+           finalUpdates=cmUpdates;
+         }
+         ////v1.2 end
+         var noOfUpdates=finalUpdates.length;
+          //console.log('load number of updates   '+noOfUpdates);
+         //console.log(finalAlerts);
+         $("#updateList").html('');
+         for(var i=0;i<noOfUpdates;i++){
+           //console.log('finalUpdates[i]    '+finalUpdates[i]);
+           $('#updateList').append('<tr><td><span class="fa fa-check-circle info-blue"></span>'+finalUpdates[i]+'</td></tr>');
+         }
+         $('#updateSize').text(noOfUpdates)
+      }
+      function displayCAPATasks(type){
+        var capaTasks=[];
+        if(type=='All'){
+            capaTasks=capaTaskList;
+        }
+        else{
+           capaTasks=allCAPATasks[type]?allCAPATasks[type]:[]; 
+        }
+        
+        //console.log('type   '+type);
+        //console.log(allCAPATasks);
+        //console.log(capaTasks)
+        capaTasks=capaTasks?capaTasks:[];
+        $("#taskList").html('');
+        $.each(capaTasks, function( index, task ) {
+             //console.log(task);
+             $("#taskList").append('<tr><td><span class="fa fa-check-circle info-blue"></span> <a href="/'+task.capaId+'">'+task.capa+'</a> </td><td><a href="/'+task.taskId+'">'+task.task+'</a></td><td>'+task.age+'</td><td>'+task.ed+'</td></tr>');
+             
+        });
+        $("#taskSize").text(capaTasks.length);
+            
+      }
+      
+      function retrieveChartData(callback) {
+       $('#remoteResponseErrors').text('');
+       
+       Visualforce.remoting.Manager.invokeAction(
+           '{!$RemoteAction.Dashboard_Controller.generatePieData}',module,
+           function(result, event) {
+               if(event.status && result) {
+                   callback(result);
+                   pendingApprovals=result;
+                   if(result.length>0){
+                      var nameSpace="<apex:outputText value="{!$Setup.Dev_Only__c.Namespace_Prefix__c}"/>";
+                      var nameSpaceObj=eval(nameSpace);
+                      if(nameSpaceObj)
+                       nameSpaceObj.ApprovalChart.show();
+                      else
+                       ApprovalChart.show();
+                   }
+                   else{
+                      $('#remoteResponseErrors').text('No Pending Approvals');
+                   }
+               }
+               else if (event.type === 'exception') {
+                   $('#remoteResponseErrors').text('An Error Occured');
+               }
+               else {
+                   $('#remoteResponseErrors').text('An Error Occured');
+               }                   
+           },
+           { escape: true }
+       );
+    }
+    
+    function refreshRemoteChart() {
+        //console.log('refreshRemoteChart    ');
+        var statusElement = document.getElementById('statusDisplay');
+        statusElement.innerHTML = "loading...";
+        retrieveChartData(function(statusElement){
+                return function(data){
+                    var nameSpace="<apex:outputText value="{!$Setup.Dev_Only__c.Namespace_Prefix__c}"/>";
+                    var nameSpaceObj=eval(nameSpace);
+                    if(nameSpaceObj)
+                        nameSpaceObj.ApprovalChart.reload(data);
+                    else
+                        ApprovalChart.reload(data);
+                    statusElement.innerHTML = '';
+                };
+            }(statusElement)
+        );
+    }
+    
+    function loadApprovalList(){
+      if(pendingApprovals.length>0){
+           window.location.href='/apex/nc_approvalList?type='+module;
+       }
+    }
+   
+      
+    </script>
+    <title>Qualityze</title>
+
+  </head>
+  <body>
+   <!--  v1.1 start -->
+   <apex:variable var="isNCDashboardNeeded" value="{!AND($Setup.QC_settings__c.Enable_NC__c,$ObjectType.Non_Conformance__c.updateable)}"/>   
+   <apex:variable var="isCAPADashboardNeeded" value="{!AND($Setup.QC_settings__c.Enable_CAPA__c,$ObjectType.CAPA__c.updateable)}"/>
+   <apex:variable var="isDOCDashboardNeeded" value="{!$Setup.QC_settings__c.Enable_DOC__c}"/><!-- v1.2  -->
+   <apex:outputPanel rendered="{!$Profile.Name=='System Administrator'}">
+   <div title='Access Settings' style="float:right">
+     <a href="/setup/ui/listCustomSettingsData.apexp?id={!$Setup.QC_settings__c.Id}"><span  class="glyphicon glyphicon-cog" style="font-size:30px"></span></a>
+   </div>
+   </apex:outputPanel>
+  
+  <div style="{!IF(AND(NOT(isNCDashboardNeeded),NOT(isCAPADashboardNeeded)),'height:35px','')}"> </div>
+  
+  <apex:outputPanel rendered="{!AND($Profile.Name=='System Administrator',NOT(isNCDashboardNeeded),NOT(isCAPADashboardNeeded),NOT(isDOCDashboardNeeded))}">
+     
+     <div class="alert alert-danger">
+        You don't have access to any dashboard.To enable access please click Access Settings Icon at top right corner.
+     </div>
+ </apex:outputPanel>   
+   <!-- v1.1 end -->             
+  <apex:outputPanel rendered="{!OR(isNCDashboardNeeded,isCAPADashboardNeeded,isDOCDashboardNeeded)}">    <!-- v1.1 added Check -->    
+        <!--        Main container      -->
+    <div class="container-fluid page-margins" id="app_warpper">
+            
+      <!--Dashboard  Title Row  -->
+      <div class="row">
+        <div class="col-md-9 col-sm-9  col-xs-9 " style="padding-bottom: 15px;">
+          <h1 class="db-title">
+            <span class="db-img-loader fa fa-user fa-2x">
+              
+            </span>
+            Welcome {!JSENCODE($User.FirstName)} {!JSENCODE($User.LastName)}
+          </h1>
+        </div>
+        <div class="col-md-3 col-sm-3  col-xs-3 ">
+          <div class="dropdown navbar-btn pull-right">
+            <button class="btn btn-primary dropdown-toggle" type="button" id="create_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+              Create
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="create_dropdown">
+              <!-- v1.1 added Check Start -->
+              <li style="{!IF(isNCDashboardNeeded,'','display:none')}"><a href="/apex/NonConformance?pg=nc_init">Create NC</a></li>
+              <li style="{!IF(isCAPADashboardNeeded,'','display:none')}"><a href="/apex/CAPA?pg=capa_init">Create CAPA</a></li>
+              
+              <!-- v1.1 added Check End-->
+              
+              <!-- v1.2 start -->
+              <li style="{!IF(isDOCDashboardNeeded,'','display:none')}"><a href="/apex/DocumentType">Create Document Type</a></li>
+              <li style="{!IF(isDOCDashboardNeeded,'','display:none')}"><a href="/apex/DocumentProfile">Create Document</a></li>
+              <li style="{!IF(isDOCDashboardNeeded,'','display:none')}"><a href="/apex/ChangeManagement">Create Change Request</a></li>
+             <!-- v1.2 end --> 
+            </ul>
+          </div>
+        </div>
+      </div>
+      <!--Dashboard  Title Row  -->
+      
+      
+     
+      <!--Dashboard  Tabs  -->
+      <div class="row">
+        <div class="col-md-12">
+          <div class="db-tabholder">
+            
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs" role="tablist">
+              <!-- v1.1 added Check Start -->
+              <li role="presentation" style="{!IF(isNCDashboardNeeded,'','display:none')}" class="{!IF(isNCDashboardNeeded,'active','')}" onclick="displayNC()"><a href="#nc" aria-controls="nc" role="tab" data-toggle="tab">NC</a></li>
+             
+              <li role="presentation" style="{!IF(isCAPADashboardNeeded,'','display:none')}" class="{!IF(AND(isCAPADashboardNeeded,NOT(isNCDashboardNeeded)),'active','')}"  onclick="displayCAPA()"><a href="#capa" aria-controls="capa" role="tab" data-toggle="tab">CAPA</a></li>
+              
+              <!-- v1.1 added Check End -->
+              
+              <!-- v1.2 start -->
+              <li role="presentation" style="{!IF(isDOCDashboardNeeded,'','display:none')}" class="{!IF(AND(isDOCDashboardNeeded,NOT(isNCDashboardNeeded),NOT(isCAPADashboardNeeded)),'active','')}" onclick="displayDOC()"><a href="#documents" aria-controls="documents" role="tab" data-toggle="tab">Documents</a></li>
+              <!-- <li role="presentation" style="{!IF(isDOCDashboardNeeded,'','display:none')}" class="" onclick="displayDOCSearch()"><a href="#docSearch" aria-controls="docSearch" role="tab" data-toggle="tab">Document Search</a></li> -->
+              <li role="presentation" style="{!IF(isDOCDashboardNeeded,'','display:none')}" class="" onclick="displayCM()"><a href="#cms" aria-controls="cms" role="tab" data-toggle="tab">Change Management</a></li>
+              <!-- v1.2 start -->
+              <li role="presentation" style="float:right" onclick="location.reload()">
+                <a href="#nc" aria-controls="nc" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-refresh"></span></a>
+              </li>
+              
+           </ul>
+
+
+            <!-- Tab panes -->
+            <div class="tab-content">
+            
+              <div role="tabpanel" class="tab-pane {!IF(isNCDashboardNeeded,'active','')} panel panel-body" id="nc"> <!-- v1.1 added Check  -->
+                
+                <ul class="nav nav-pills ">
+                  <li role="presentation" onclick="displayNCTasks('All')"><a href="#">All</a></li>
+                  <li role="presentation" onclick="displayNCTasks('Containment')"><a href="#">Containment</a></li>
+                  <li role="presentation" onclick="displayNCTasks('Disposition')"><a href="#">Disposition</a></li>
+                  <li role="presentation" onclick="displayNCTasks('Disposition Section')"><a href="#">Disposition Section</a></li>
+                  <li role="presentation" onclick="displayNCTasks('Investigation')"><a href="#">Investigation</a></li>
+                  <li role="presentation" onclick="displayNCTasks('Implementation')"><a href="#">Implementation</a></li>
+                  <li role="presentation" onclick="displayNCTasks('Action Plan')"><a href="#">Action Plan</a></li>
+                  <li role="presentation" onclick="displayNCTasks('AdhocTask')"><a href="#">Adhoc Task</a></li>
+                  <li role="presentation" onclick="displayNCTasks('Closure')"><a href="#">Closure</a></li>
+                </ul>
+                
+              </div>
+             
+           
+             <div role="tabpanel" class="tab-pane {!IF(AND(isCAPADashboardNeeded,NOT(isNCDashboardNeeded)),'active','')} panel panel-body" id="capa"> <!-- v1.1 added Check  -->
+                  
+                  <ul class="nav nav-pills ">
+                    <li role="presentation" onclick="displayCAPATasks('All')"><a href="#">All</a></li>
+                    <li role="presentation" onclick="displayCAPATasks('Investigation')"><a href="#">Investigation</a></li>
+                    <li role="presentation" onclick="displayCAPATasks('Implementation')"><a href="#">Implementation</a></li>
+                    <li role="presentation" onclick="displayCAPATasks('Action Plan')"><a href="#">Action Plan</a></li>
+                    <li role="presentation" onclick="displayCAPATasks('EffectivenessReview')"><a href="#">Effectiveness Review</a></li>
+                    <li role="presentation" onclick="displayCAPATasks('AdhocTask')"><a href="#">Adhoc Task</a></li>
+                    <li role="presentation" onclick="displayCAPATasks('Closure')"><a href="#">Closure</a></li>
+                  </ul>
+              </div>
+              
+              <div role="tabpanel" class="tab-pane {!IF(AND(isDOCDashboardNeeded,NOT(isNCDashboardNeeded),NOT(isCAPADashboardNeeded)),'active','')} panel panel-body" id="documents"> <!-- v1.1 added Check  -->
+                  
+                  <ul class="nav nav-pills ">
+                   <li role="presentation" onclick="displayDOCTasks('All')"><a href="#">All</a></li>
+                   <li role="presentation" onclick="displayDOCTasks('CollaborationReview')"><a href="#">Collaboration Review</a></li>
+                   <li role="presentation" onclick="displayDOCTasks('EffectivenessReview')"><a href="#">Effectiveness Review</a></li>
+                  </ul>
+                </div>
+              
+               <div role="tabpanel" class="tab-pane panel panel-body" id="docSearch">
+                
+                
+                  <ul class="nav nav-pills db-subnav-check-pills">
+                   <li role="presentation">
+                          <div class="clearfix"></div>
+                          <div class="checkbox">
+                            <label>
+                              <input id="allDocChkBx" class='alldocTaskChkBox'  type="checkbox" checked='true'></input> All
+                            </label>
+                          </div>
+                          <div class="clearfix"></div>
+                   </li>
+                   <apex:repeat value="{!docProfileStatuses}" var="docProfileStatus">
+                        
+                        
+                        <li role="presentation">
+                          <div class="clearfix"></div>
+                          <div class="checkbox">
+                            <label>
+                              <input id="{!docProfileStatus.label}ChkBx" class='docTaskChkBox' value="{!docProfileStatus.value}" type="checkbox" checked='true'></input> {!docProfileStatus.label} 
+                            </label>
+                          </div>
+                          <div class="clearfix"></div>
+                        </li>
+                    </apex:repeat>
+                   
+                    
+                  </ul>
+                </div>
+                <!-- v1.2 start -->
+                <div role="tabpanel" class="tab-pane panel panel-body" id="cms"> 
+                  <ul class="nav nav-pills ">
+                    <li role="presentation" onclick="displayCMTasks('All')"><a href="#">All</a></li>
+                    <li role="presentation" onclick="displayCMTasks('DocumentChange')"><a href="#">Document Change</a></li>
+                    <li role="presentation" onclick="displayCMTasks('AdhocTask')"><a href="#">Adhoc</a></li>
+                    <li role="presentation" onclick="displayCMTasks('AI')"><a href="#">Action Items</a></li>
+                    <li role="presentation" onclick="displayCMTasks('Closure')"><a href="#">Closure</a></li>
+                  </ul>
+                </div>        
+              <!-- v1.2 end -->
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <!--Dashboard  Tabs  -->
+            <div class="db-page">
+        
+      <h2>My Tasks</h2> &nbsp;&nbsp;&nbsp; <div class="badge" id="taskSize"></div>
+        <!-- Left column -->
+      <div class="row">
+        <div class="col-md-9">
+            <div class="row">
+              <div class="col-md-8">
+                <!-- panel -->
+                  
+                    <div id="task_list" style="width:100%">
+                      <table class="table table-hover" id="taskListTable" style="width:100%">
+                        <thead>
+                          <tr>
+                            <th>Number</th>
+                            <th>Type</th>
+                            <th>Age(In Days)</th>
+                            <th>Due Date</th>
+                          </tr>
+                        </thead>
+                        
+                        <tbody id="taskList">
+                        </tbody>
+                      </table>
+                      </div>
+                    <small><!-- <a href="#more" class="btn btn-link"> </a> --> &nbsp;</small>
+                 <!-- </div> -->
+                <!-- panel -->
+              </div>
+              
+              <div class="col-md-4">
+                <!-- panel -->
+                  <div class="panel panel-default db-pane" >
+                    <div class="panel-heading">
+                      <h3 class="panel-title">Approvals</h3>
+                    </div>
+                    <div id="ncApprovals" onclick="loadApprovalList()" class="panel-body" style="height:250px">
+                        <span id="statusDisplay"></span>
+
+                       <span id="remoteResponseErrors"></span>
+                        
+                        <apex:chart height="250" name="ApprovalChart" width="250" data="retrieveChartData"  animate="false" hidden="true">
+                        <apex:pieSeries highlight="false" tips="true" showInLegend="true" dataField="data" labelField="name" donut="50"/>
+                          
+                        </apex:chart>
+                                              
+                        
+                    </div>
+                    <small> &nbsp;</small>
+                  </div>
+                <!-- panel -->
+              </div>
+                              
+
+              <div class="col-md-12"><h1>Things I Own</h1></div>
+
+              <div class="col-md-4">
+                <!-- panel -->
+                  <div class="panel panel-default db-pane">
+                    <div class="panel-heading">
+                      <div class="pull-right">
+                        
+                      </div>
+                      <h3 class="panel-title">My Records</h3>
+                    </div>
+                    <div id="ncThings" class="panel-body" style="height:250px">
+                      <analytics:reportChart rendered="{!isNCDashboardNeeded}" reportId="{!$Setup.QC_settings__c.NCReportId__c}" size="tiny" showRefreshButton="true" ></analytics:reportChart> <!-- v1.1 added Check Start -->
+                    </div>
+                    <div id="capaThings" class="panel-body" style="height:250px">
+                      <analytics:reportChart rendered="{!isCAPADashboardNeeded}" reportId="{!$Setup.QC_settings__c.CAPA_Report_Id__c}" size="tiny" showRefreshButton="true" ></analytics:reportChart> <!-- v1.1 added Check Start -->
+                    </div>
+                    <div id="docThings" class="panel-body" style="height:250px">
+                      <analytics:reportChart rendered="{!isDOCDashboardNeeded}" reportId="{!$Setup.QC_settings__c.DOC_Report_Id__c}" size="tiny" showRefreshButton="true" ></analytics:reportChart> <!-- v1.1 added Check Start -->
+                    </div>
+                    <div id="cmThings" class="panel-body" style="height:250px">
+                      <analytics:reportChart rendered="{!isDOCDashboardNeeded}" reportId="{!$Setup.QC_settings__c.CR_Report_Id__c}" size="tiny" showRefreshButton="true" ></analytics:reportChart> <!-- v1.1 added Check Start -->
+                    </div>
+                     <small><!--<a href="#more" class="btn btn-link"> More...</a> -->&nbsp;</small>
+                  </div>
+                <!-- panel -->
+              </div>
+
+              <div class="col-md-4">
+                <!-- panel -->
+                  <div class="panel panel-default db-pane">
+                    <div class="panel-heading">
+                      <div class="badge pull-right" id="updateSize">0</div>
+                      <h3 class="panel-title">Following</h3>  <!-- v1.0.1 -->
+                    </div>
+                    <div id="update_list">
+                      <table class="table list-table table-condensed table-hover table-striped">
+                       <tbody id="updateList">
+                          
+                        </tbody>
+                      </table>
+                     </div>
+                    <small><!-- <a href="#more" class="btn btn-link"> More...</a> --> &nbsp; </small>
+                  </div>
+                <!-- panel -->
+              </div>
+
+              <div class="col-md-4">
+                <!-- panel -->
+                  <div class="panel panel-default notes-pane ">
+                    <div class="panel-heading">
+                      <div class="pull-right">
+                          <div class="badge" id="noteSize"></div>
+                          <div class="btn btn-default btn-xs"  role="button" data-toggle="collapse" data-target="#noteform" aria-expanded="false" aria-controls="noteform"><label id="add_btn" class="fa fa-plus"></label></div>
+                      </div>
+                      <h3 class="panel-title">My Notes</h3>
+                    </div>
+                    
+                    <div class="panel-body" style="height:100%">
+                      <div class="collapse" id="noteform">
+                        <div class="">
+                         <textarea name="new_note" id="newNote" class="form-control"></textarea>
+                          <!-- <c:wiz_richtext rendered="true"
+                            Required=""
+                            FieldId="new_note"
+                            initvalue="" /> -->
+                          <div class="row form-inline">
+                            <div class="col-md-8 note-control">
+                              <div class="checkbox">
+                                <label>
+                                  Enter Note to Save
+                                </label>
+                              </div>
+                            </div>
+                            <div class="col-md-4 note-control text-right">
+                              <button class="btn btn-default btn-xs" id="note-save" onclick="saveNotes()">Save</button>
+                              
+                            </div>
+                          </div>
+                         
+                        </div>
+                      </div>
+
+                      <div class="note-list" id="noteList">
+                        
+                         
+                      </div>
+                     <small><!-- <a href="#more" class="btn btn-link">&nbsp;</a> --> &nbsp;</small> 
+                    </div>
+                  </div>
+                  <!-- panel -->
+                </div>
+            </div>
+        </div>
+        <!-- Left column -->
+
+        <!-- Right column -->
+        <div id="alert_list" class="col-md-3 col-sm-12  col-xs-12 ">
+          <!-- panel -->
+                  <div class="panel alert-pane">
+                    <div class="panel-heading">
+                      <div class="pull-right">
+                        <div class="btn-group">
+                          <button id="ldAlrt" type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Load Recent <span class="caret"></span>
+                          </button>
+                          <ul  class="dropdown-menu dropdown-menu-right">
+                            <li onclick="loadAlerts(10)"><a href="#">Recent 10</a></li>
+                            <li onclick="loadAlerts(20)"><a href="#">Recent 20</a></li>
+                            <li onclick="loadAlerts(50)"><a href="#">Recent 50</a></li>
+                            <li onclick="loadAlerts(100)"><a href="#">Recent 100</a></li>
+                            <li onclick="loadAlerts(200)"><a href="#">Recent 200</a></li>
+                            <li onclick="loadAlerts('All')"><a href="#">All</a></li>
+                          </ul>
+                          
+                        </div>
+                      </div>
+                      <h3 class="panel-title" id="alertHdr">Alerts</h3>
+                      <div class="clearfix"></div>
+                    </div>
+                    
+                    <div >
+                      <ul class="list-group alert-list" id="alert_list_ul">
+                        
+                      </ul>
+                      </div>
+                   
+                   
+                  </div>
+                <!-- panel -->
+        </div>
+        
+        
+        <!-- Right column -->
+
+        </div>
+        </div>
+      </div>
+      </apex:outputPanel>
+
+        
+                    
+                    
+                
+                    
+    <!-- </div> -->
+      
+    <!--  Footer  -->
+    <div class="footer">
+      &copy; Copyright 2015 | Qualityze | All rights reserved
+    </div>
+            
+            
+            
+
+   <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.min.js')}" />
+   <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/bootstrap.min.js')}" />
+   <!-- <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/bootstrap-datepicker.min.js')}" /> -->
+   
+   <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/moment.js')}" />
+   <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/bootstrap-datetimepicker.js')}" />
+   
+   <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.slimscroll.min.js')}" />
+   <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/select2-4.0.0/dist/js/select2.min.js')}" />
+   <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.form.min.js')}" />
+   <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.validate.min.js')}" />
+   <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/tiny_mce/tiny_mce.js')}" />
+   <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/typeahead.bundle.js')}" />
+   <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/app.js')}" />
+   
+     <!-- Below 2 files are for Datatable Pagination -->
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/jquery.dataTables.min.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bt_static, '/static/javascripts/dataTables.bootstrap.js')}" />
+        
+
+    
+    <script type="text/javascript">
+    $(function(){
+
+      // Slim scroll functions
+      $('#task_list, #update_list').slimScroll({
+          height: '250px',
+          color: '#ccc',
+          railOpacity: 0.1,
+          wheelStep: 3
+      });
+
+      $('#alert_list').slimScroll({
+          height: '625px',
+          color: '#CCC',
+          railOpacity: 0.1,
+          wheelStep: 3
+      });
+      
+      $('.note-list').slimScroll({
+          height: '220px',
+          color: '#CCC',
+          railOpacity: 0.1,
+          wheelStep: 3
+      });
+
+      
+      // Mark task as completed 
+      $(".task-completed").click(function(){
+        $(this).parents('.note-container').wrapInner("<s> </s>");
+        
+      });
+
+
+      // Add task button action 
+      $("#add_btn").click(function(){
+        if ($("#noteform").is(":visible")){
+          $(this).addClass("fa-plus");
+          $(this).removeClass("fa-remove");
+          //$('.note-list').css('height', '250px');
+          $('.note-list').animate({
+                  height: "220px"
+                  }, 400 );
+          $('.note-list').parent().animate({
+                  height: "220px"
+                  }, 400 );
+          //$('.note-list').parent().css('height', '250px');
+        } else {
+          //alert("inside else");
+          $(this).toggleClass("fa-plus");
+          $(this).toggleClass("fa-remove");
+          $('.note-list').css('height', '150px');
+          $('.note-list').parent().css('height', '150px');
+        }
+      });
+
+      // Autosave checkbox checked action 
+      $("#auto-save").click(function(){
+        if(this.checked){
+          $("#note-save").addClass("hidden");
+        } else {
+          $("#note-save").removeClass("hidden");
+        }
+      });
+
+    });
+    
+    // BEGIN Obtained from https://github.com/janl/mustache.js/blob/master/mustache.js#L82 on 23FEB2016  
+  var entityMap = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+    "(": '&#40;',
+    ")": '&#41;',
+    '.': '&#46;',
+    '/': '&#x2F;',
+    '`': '&#x60;',
+    ';': '&#59;',
+    '.': '&#46;',
+    '=': '&#x3D;'
+  };
+  function escapeHtml(string) {
+    return String(string).replace(/[&<>"'`=\/]/g, function fromEntityMap (s) {
+      //console.log("Function escapeHtml() saved your butt again!!!: Escaped " + s);
+      return entityMap[s];
+    });
+  }
+
+    </script>
+    
+  </body>
+</html>
+</apex:page>

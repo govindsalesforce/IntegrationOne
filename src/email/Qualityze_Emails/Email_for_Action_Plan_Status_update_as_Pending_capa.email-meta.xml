@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <encodingKey>ISO-8859-1</encodingKey>
+    <letterhead>Qualityze_Inc</letterhead>
+    <name>Email for Action Plan Status update as Pending_capa</name>
+    <style>freeForm</style>
+    <subject>Complete Pending ActionPlan Assigned to you</subject>
+    <textOnly>Hello,
+
+ActionPlan Status  for {!01I61000000v12Z.RecordType}  of CAPA record {!01I61000000udkO.Name} is in Pending state.
+
+
+Click here for details{!01I61000000udkO.RecordType}</textOnly>
+    <type>html</type>
+</EmailTemplate>

@@ -1,0 +1,1085 @@
+<apex:component controller="Component_Handler" extensions="QC_custom_settings">
+    <apex:attribute name="GTRecord" type="General_Task__c" Description="General Task Record" required="true" assignTo="{!implementation}"/>
+    <apex:attribute name="divId"  description="Holds the id value for div" type="String" required="true" />
+    <apex:attribute name="capaid" type="CAPA__c" required="true" description="capa"/>
+    <apex:attribute name="assignedTo"  description="Holds the id value for assigned user" type="String" required="true" />
+    <apex:attribute name="apdueDate"  description="Holds the id value for due date" type="String" required="true" />
+    <apex:attribute name="actplanCompBy"  description="Holds the id value of user who completed the actionplan of certain type" type="String" required="true" />
+    <apex:attribute name="actplanCompDate"  description="Holds the id value for actionplan completed date" type="String" required="true" />
+    <apex:attribute name="actplanCompComm"  description="Holds the id value for actionplan completion comment" type="String" required="true" />
+    <apex:attribute name="completed"  description="Holds the id value for completed" type="String" />
+    <apex:attribute name="Type"  description="Holds the id value for Type" type="String"/>
+    <apex:attribute name="isLock" description="weatenr the record is lock" type="boolean" required="true"/>
+    
+    
+    <input type="hidden" value="{!actionPlanData}"/>
+     <script>
+    var assocRc={};
+    $(document).ready(function(){
+        $("#{!divId}showCompletionDetails").hide();
+        $("#actionPlan0ShowCompletionDetails").hide();
+        $('#RecallButtonNcImplementation').hide();
+        $("#{!divId}").hide();
+        getRemoteData();
+        displayAssocRootCauses('actplan0associatedrootcause',true);
+        makeAssociateRCAsSelectable();
+        var length = $("#actionPlanSection>div").length;
+        if(length>=1){
+            $("#actionPlan0").hide();
+            assignedDynamicIds();
+            disableDiv();
+            //actPlanUsers();
+        }else{
+            //$("#actionPlan0").appendTo( "#actionPlanSection" ).show();
+            $("#actionPlan0").prependTo( "#actionPlanSection" ).show();
+            $("#actionPlan0").find('a').eq(2).hide();
+            apautoPopulateDate('actionPlan0');
+            var gtChangefieldapprovalstatus = "{!JSENCODE(GTRecord.ChangeFieldApprovalStatus__c)}";
+            var gtstatus = "{!JSENCODE(GTRecord.Status__c)}";
+            if(gtChangefieldapprovalstatus =='Pending' || gtstatus == "Void"){
+                disableDiv();
+            }
+            
+        }
+        
+    });
+    
+    function makeAssociateRCAsSelectable(){/* Select2 plugin as tagpicker */
+          $(".assocRC").select2({
+            closeOnSelect:false
+          });
+    }
+    // completed? yes/ no script
+    function showCompletedDetails(id){
+        $("#"+id+"ShowCompletionDetails").show();
+    }
+    
+    function hideCompletedDetails(id){
+        $("#"+id+"ShowCompletionDetails").hide();
+    }
+    
+    function addActionplan(){
+        if(actPlanValidation()){
+        //disableDiv();
+            //$("#{!divId}").clone().appendTo("#actionPlanSection").show();
+            assignCancelActionPlan();
+            $("#{!divId}").clone().prependTo("#actionPlanSection").show();
+            assignedDynamicIds();
+            makeAssociateRCAsSelectable();
+        }
+    }
+    
+    function assignCancelActionPlan(){
+        var id_start = 0,divId;
+        $("#actionPlanSection > div").each(function(){
+            divId = '{!divId}'+ (id_start++);
+            $("#"+divId).find('a').eq(2).show();
+        });    
+    }
+    function displayAssocRootCauses(Id){
+        
+        capaid = '{!JSENCODE($CurrentPage.parameters.id)}';
+        Visualforce.remoting.Manager.invokeAction(
+                    // @RemoteAction
+                    '{!$RemoteAction.Component_Handler.displayAssocRootCauses}',capaid,'CAPA',
+                    // Callback
+                    function(result, event){
+                        console.log("cause "+result);
+                        if(result!=null){
+                            $("#"+Id).find('option').remove();
+                            $.each(result, function(rs) {
+                                
+                                var cause = result[rs].split('@');
+                                console.log(" displayAssocRootCauses cause "+cause[1]);
+                                assocRc[cause[0]]=cause[1];
+                                //$("#"+Id).append("<option value="+cause[0]+">"+cause[1]+"</option>");
+                            });
+                            
+                            console.log(assocRc); 
+                        }else{
+                            console.log("fail to fetch data!");
+                        } 
+                        actPlanUsers();
+                    }); 
+      
+    }
+    var users;
+    function getRemoteData(){
+        Visualforce.remoting.Manager.invokeAction(
+            // @RemoteAction
+            '{!$RemoteAction.Component_Handler.getActionPlanUserData}','CAPA_Task_Owner',
+            // Callback
+            function(result, event){
+                users=result['usrs'];
+                $("#{!assignedTo}").append($("<option />").val('').text(''));
+                $("#actplan0assignedTo").append($("<option />").val('').text(''));
+                $.each(users, function(usr) {
+                    var userPrts = users[usr].split('@');
+                    $("#{!assignedTo}").append($("<option />").val(escapeHtml(userPrts[0])).text(escapeHtml(userPrts[1])));
+                    $("#actplan0assignedTo").append($("<option />").val(escapeHtml(userPrts[0])).text(escapeHtml(userPrts[1])));
+                });
+                
+                $("#{!actplancompBy}").append($("<option />").val('').text(''));
+                $("#actplan0CompBy").append($("<option />").val('').text(''));
+                $.each(users, function(usr) {
+                    var userPrts = users[usr].split('@');
+                    $("#{!actplanCompBy}").append($("<option />").val(escapeHtml(userPrts[0])).text(escapeHtml(userPrts[1])));
+                    $("#actplan0CompBy").append($("<option />").val(escapeHtml(userPrts[0])).text(escapeHtml(userPrts[1])));
+                });
+                
+            }
+        );//ending of outer most remote invocation
+      }
+        
+     function dateHandler(date,dateInput,divId){
+        var tempId='';
+        $(date).each(function(){
+            if($(this).hasClass('datepicker')){
+                $(this).attr('id',divId+'{!apdueDate}'); 
+                tempId=$(this).attr('id');
+            }
+            else if(this.id.indexOf('hidden_error')>0){
+                $(this).attr('id',tempId+'_hidden_error');
+                }
+                else if(this.id.indexOf('error')>0){
+                    $(this).attr('id',tempId+'_error');
+                }
+        }
+                    )
+        
+        $(dateInput).each(function(){
+            if(this.type=='hidden'){
+                $(this).attr('name',tempId);
+                $(this).attr('id',tempId+'_hidden');
+            }
+            else if(this.type=='text'){
+                $(this).attr('data-api',tempId) 
+                $(this).attr('data-hiddenId',tempId+'_hidden'); 
+                $(this).attr('id',tempId+'_GRDATE'); 
+            } 
+        });
+        apautoPopulateDate(divId);
+    }
+    
+    function dateFormat1(date){//added on 2 dec 2015
+        var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun","Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        var day = date.getDate();
+        if(day<10){
+            day = '0'+day;
+        }
+        var month = monthNames[date.getMonth()];
+        var year = date.getFullYear().toString();
+        return day + ' ' + month + ' ' + year;
+     }
+    
+    function assignedDynamicIds(){
+        var selectId,length,dueDateVal,compDateVal;
+        var splitSelectedOptions = new Array();
+        var id_start = 0;
+        $("#actionPlanSection>div").each(function() {
+            var divId= '{!divId}' + (id_start++);
+            $(this).attr('id',divId);
+            $('.usetwentyfour').remove(); //added
+            var findDiv = $("#"+divId+">div").find('div').eq(1).find('div'); 
+            if(findDiv.eq(10).find('select option:selected').val() != ''){
+                dueDateVal = findDiv.eq(12).find('input[type=text]').val(); 
+                findDiv.eq(12).find('input[type=text]').attr('value',dateFormat1(new Date(dueDateVal),'dd/mmm/yyyy'));
+                compDateVal = findDiv.eq(22).find('input[type=text]').val();
+                findDiv.eq(22).find('input[type=text]').attr('value',dateFormat1(new Date(compDateVal),'dd/mmm/yyyy'));
+            }
+            $("#"+divId+">div>div>h4 ").find('a').eq(0).attr('href','#'+divId+'href');
+            //$("#"+divId+">div>div>h4 ").find('a').eq(1).attr('href','#'+divId+'href');
+            $("#"+divId+">div>div>h4 ").find('a').eq(2).attr('href','#'+divId+'href');
+            $("#"+divId+">div>div>h4 ").find('a').eq(3).attr('href','#'+divId+'href');
+            $("#"+divId+">div").find('div').eq(1).attr('id',divId+'href');
+            findDiv.eq(0).attr('id',divId+'panel');
+            findDiv.eq(0).attr('id',divId+'actplanType'+(id_start));
+            findDiv.eq(0).find('input').eq(0).attr('id',divId+'correction'+(id_start));
+            findDiv.eq(0).find('input').eq(0).attr('name',divId);
+            findDiv.eq(0).find('input').eq(1).attr('id',divId+'corrective'+(id_start));
+            findDiv.eq(0).find('input').eq(1).attr('name',divId);
+            findDiv.eq(0).find('input').eq(2).attr('id',divId+'preventive'+(id_start));
+            findDiv.eq(0).find('input').eq(2).attr('name',divId);
+            findDiv.eq(3).attr('id',divId+'actplanType'+(id_start)+'_error');
+            findDiv.eq(4).attr('id',divId+'title');
+            findDiv.eq(4).find('input').attr('id',divId+'input'+(id_start));
+            findDiv.eq(4).find('div').attr('id',divId+'input'+(id_start)+'_error');
+            findDiv.eq(6).attr('id',divId+'description'+(id_start));
+            findDiv.eq(6).find('textarea').attr('id',divId+'textarea'+(id_start));
+            findDiv.eq(6).find('div').eq(0).attr('id',divId+'textarea'+(id_start)+'_error');
+            findDiv.eq(8).attr('id',divId+'associatedRC'+(id_start));
+            findDiv.eq(8).find('select').attr('id',divId+'selectAssociatedRC'+(id_start));
+            var rcId;
+            var rcValue = findDiv.eq(8).find('select option:selected').val();
+            var rcText = findDiv.eq(8).find('select option:selected').text();
+            console.log(assocRc); 
+            $.each(assocRc,function(key,value){
+                rcId=findDiv.eq(8).find('select').attr('id');
+                if(rcValue == undefined){
+                    $("#"+rcId).append($("<option/>").val(key).text(value));
+                }
+            });
+            $("#"+findDiv.eq(8).find('select').attr('id')).select2({
+                        closeOnSelect:false
+            });
+            findDiv.eq(8).find('span').eq(5).hide();
+            findDiv.eq(9).attr('id',divId+'associatedRC'+(id_start)+'_error');
+            findDiv.eq(10).attr('id',divId+'actPlanAssigned'+(id_start));
+            findDiv.eq(10).find('select').attr('id',divId+'assignedTo'+(id_start));
+            findDiv.eq(11).attr('id',divId+'assignedTo'+(id_start)+'_error');
+            findDiv.eq(12).attr('id',divId+'{!apdueDate}'+(id_start));
+            var dueDate = findDiv.eq(12).find('div');
+            var dueDateinput=findDiv.eq(12).find('input');
+            dateHandler(dueDate,dueDateinput,divId);
+            findDiv.eq(16).attr('id',divId+'apcompleted'+(id_start));
+            findDiv.eq(16).find('input').eq(0).attr('id',divId+'apCompleted_yes'+(id_start));
+            findDiv.eq(16).find('input').eq(0).attr('name',divId+'_Completed');
+            findDiv.eq(16).find('input').eq(1).attr('id',divId+'apCompleted_no'+(id_start));//check for divs -1
+            findDiv.eq(16).find('input').eq(1).attr('name',divId+'_Completed');
+            findDiv.eq(18).attr('id',divId+'apcompleted'+(id_start)+'_error');
+            findDiv.eq(19).attr('id',divId+'ShowCompletionDetails');
+            //$("#"+divId+'ShowCompletionDetails').hide();
+            var activeRadio = findDiv.eq(16).find('.active').find('input').attr('Value');
+            if(activeRadio == 'Yes'){
+                $("#"+divId+'ShowCompletionDetails').show();
+            }else{
+                $("#"+divId+'ShowCompletionDetails').hide();    
+            }
+            findDiv.eq(20).find('select').attr('id',divId+'{!actplanCompBy}'+(id_start));
+            findDiv.eq(21).attr('id',divId+'{!actplanCompBy}'+(id_start)+'_error');
+            findDiv.eq(22).attr('id',divId+'{!actplanCompDate}');
+            var completionDate = findDiv.eq(22).find('div');
+            var completionDateInput = findDiv.eq(22).find('input');
+            dateHandler(completionDate,completionDateInput,divId);
+            findDiv.eq(26).find('textarea').attr('id',divId+'{!actplanCompComm}');
+            findDiv.eq(26).find('div').attr('id',divId+'{!actplanCompComm}_error');
+            findDiv.eq(27).find('div').eq(2).attr('id',divId+'{!actplanCompComm}');
+            console.log('des..'+findDiv.eq(11).attr('id'));
+            console.log('desasd..'+findDiv.eq(12).attr('id'));
+            
+            var apchid = $(this).find('.hiddenapid input').attr('id',divId+'_apchid');
+       });
+      }
+      
+      function cancelDiv(id){
+        $("#"+id).remove();
+        assignedDynamicIds();
+      }
+    
+    function dateFormat(date){//added on 2 dec 2015
+        var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun","Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        var day = date.getDate();
+        if(day<10){
+            day = '0'+day;
+        }
+        var month = monthNames[date.getMonth()];
+        var year = date.getFullYear().toString();
+        return day + '/' + month + '/' + year;
+        
+        
+        
+    }    
+    // only for the "assigned users" and "owner" of NC when "completed" radio is set to "no" (pending ActionPlan)---
+    function setCompletedDateLimits(divId){
+        var mDate = dateFormat(new Date("{!implementation.CreatedDate}"),'dd/mmm/yyyy');//for completed date
+        console.log("createdDate in setCompletedDateLimits "+mDate);
+        var findDiv;
+        findDiv = $("#"+divId+">div").find('div').eq(1).find('div');
+        //if(mDate< today()){
+            findDiv.eq(22).find('input').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY", maxDate: new Date(),minDate: mDate});
+            findDiv.eq(22).find('.datepicker').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY", maxDate: new Date(), minDate: mDate}).on('dp.change', function(e){
+                $('input[name=' + $(this).attr('Id') + ']').val(e.date.format());
+            });
+            //}    
+    }
+    
+    function apautoPopulateDate(divId){
+        
+        var maximumDate = dateFormat(new Date("{!IF(NOT(ISBLANK(implementation.New_Due_Date__c)),implementation.New_Due_Date__c,implementation.Due_Date__c)}"),'DD MMM YYYY');//for due date
+        var minimumDate = dateFormat(new Date("{!capaid.CreatedDate}"),'DD MMM YYYY');//for completed date
+        console.log('{!capaid.CreatedDate}'+'capa');
+        console.log('{!capaid.id}'+'capa');
+        var today = dateFormat(new Date(),'DD MMM YYYY');
+        console.log("maxDate "+maximumDate);
+        console.log("minDate "+minimumDate);
+        var maximumDateYear = new Date("{!IF(NOT(ISBLANK(implementation.New_Due_Date__c)),implementation.New_Due_Date__c,implementation.Due_Date__c)}");
+        var todayYear = new Date();
+        var findDiv,initDueDate,initCompDate;
+        findDiv = $("#"+divId+">div").find('div').eq(1).find('div');
+        initDueDate = findDiv.eq(12).find('input').attr('value');
+        initCompDate = findDiv.eq(22).find('input').attr('value');
+        //$('.usetwentyfour').remove();// added
+        if(new Date("{!IF(NOT(ISBLANK(implementation.New_Due_Date__c)),implementation.New_Due_Date__c,implementation.Due_Date__c)}").getTime() <= new Date().getTime() || maximumDate == today){
+            findDiv.eq(12).find('input').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY", maxDate: maximumDate, minDate:maximumDate});
+        }else{    
+            findDiv.eq(12).find('input').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY", maxDate: maximumDate, minDate: new Date()});
+        }    
+            findDiv.eq(22).find('input').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY", maxDate: new Date(),minDate: minimumDate});
+        
+        if(new Date("{!IF(NOT(ISBLANK(implementation.New_Due_Date__c)),implementation.New_Due_Date__c,implementation.Due_Date__c)}").getTime() <= new Date().getTime() || maximumDate == today){
+            findDiv.eq(12).find('.datepicker').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY", maxDate: maximumDate, minDate: maximumDate}).on('dp.change', function(e){
+                $('input[name=' + $(this).attr('Id') + ']').val(e.date.format());
+            });
+        }else{
+            findDiv.eq(12).find('.datepicker').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY", maxDate: maximumDate, minDate: new Date()}).on('dp.change', function(e){
+                $('input[name=' + $(this).attr('Id') + ']').val(e.date.format());
+            });
+        }    
+        findDiv.eq(22).find('.datepicker').datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY", maxDate: new Date(), minDate: minimumDate}).on('dp.change', function(e){
+            $('input[name=' + $(this).attr('Id') + ']').val(e.date.format());
+        });
+        //}    
+        
+        findDiv.eq(12).find('input').val(initDueDate); 
+        findDiv.eq(22).find('input').val(initCompDate);
+    }
+    
+    function disableDiv(){
+        var loggedInUser = "{!JSENCODE($User.id)}";
+        var profilename = "{!JSENCODE($Profile.Name)}";
+        var gtOwner= "{!JSENCODE(GTRecord.Ownerid)}";
+        var capaOwner = "{!capaid.Owner}";
+        var gtStatus = "{!JSENCODE(GTRecord.Status__c)}";
+        var gtChangefieldapprovalstatus = "{!JSENCODE(GTRecord.ChangeFieldApprovalStatus__c)}";
+        var id_start = 0,cancel;
+        if(gtStatus == 'Closed' || gtStatus == 'Void' || gtStatus == 'Pending Approval' || gtChangefieldapprovalstatus =='Pending' || gtStatus == 'Pending ActionPlan'){
+           $("#actionPlanid").attr('disabled',true);
+           $("#actionPlanSection > div").each(function(){
+                var divId = '{!divId}'+ (id_start++);
+                $("#"+divId+" *").attr("disabled","true");
+                $("#"+divId+" a").eq(0).removeAttr("disabled");
+                var assignUser = $("#"+divId+">div").find('div').eq(1).find('div').eq(10).find('select option:selected').val();
+                var compBy = $("#"+divId+">div").find('div').eq(1).find('div').eq(16).attr('id');
+                var showCompDetails = $("#"+divId+">div").find('div').eq(1).find('div').eq(19).attr('id');
+                if(loggedInUser == assignUser){
+                    $("#"+divId+">div>div>h4 ").find('a').eq(2).hide();
+                }
+                var CompletedDiv = $("#"+divId+">div>div>h4 ").find("a:contains('Complete')").attr('href');
+                if((loggedInUser != capaOwner && CompletedDiv != undefined && CompletedDiv != null) || (loggedInUser == assignUser&& CompletedDiv != undefined && CompletedDiv != null) || (loggedInUser != assignUser)){
+                    $("#"+divId+">div>div>h4 ").find('a').eq(2).hide();
+                    $("#"+divId+">div>div>h4 ").find('a').eq(3).hide();
+                    $("#"+compBy+" *").attr("disabled","true");
+                    
+                    
+                }
+                if(loggedInUser == assignUser && loggedInUser == capaOwner){
+                    $("#"+divId+">div>div>h4 ").find('a').eq(2).hide();
+                    $("#"+divId+">div>div>h4 ").find('a').eq(3).hide();
+                }
+                
+            });
+            //=============
+        }
+        /*$("#actionPlanSection > div").each(function(){
+                $("div[id$='_error']").empty();
+                var divId = '{!divId}'+ (id_start++);
+            $("#"+divId+" *").attr("disabled","true");
+            var aText = $("#"+divId).find('a').eq(3).text();
+            //if(aText == 'Cancel'){
+            //     $("#"+divId).find('a').eq(3).text('');
+            // }
+            	$("#"+divId).find('a').eq(0).removeAttr("disabled");
+            	$("#"+divId).find('a').eq(2).removeAttr("disabled");
+                $("#"+divId).find('a').eq(3).removeAttr("disabled");
+         
+        });*/
+        if(loggedInUser != capaOwner){
+             $('#RecallButtonNcImplementation').hide();
+        }
+        if((loggedInUser == capaOwner || gtOwner == loggedInUser || profilename == "System Administrator") && gtStatus == "Pending ActionPlan"){
+            $('#RecallButtonNcImplementation').show();
+        }
+            
+        
+    }
+    
+    
+    
+    function actPlanValidation(){
+        var isValid = true;
+        var start = 0;
+        var divId,findDiv,actPlanCompletionComment,corrective,correction,preventive,actPlanAssignTo,actPlanCompletedBy,actPlanCompleted,actPlanCompletedDate,actPlanTitle,actPlanType,actPlanDescription,showCompletionDetails,actPlanDueDate,checkYes,checkNo,activeId;
+        $("#actionPlanSection>div").each(function(){
+            divId = 'actionPlan'+ (start++);
+            findDiv = $("#"+divId+">div").find('div').eq(1).find('div');
+            $("div[id$='_error']").empty();
+            
+            correction = findDiv.eq(0).find('input').eq(0).attr('id');
+            corrective = findDiv.eq(0).find('input').eq(1).attr('id');
+            preventive = findDiv.eq(0).find('input').eq(2).attr('id');
+            if(!($("#"+correction).parent().hasClass('active') || $("#"+corrective).parent().hasClass('active')  || $("#"+preventive).parent().hasClass('active'))){
+                isValid = false;
+                findDiv.eq(3).append('This Field is Required').css('color','red');
+            }
+            
+            actPlanTitle = findDiv.eq(4).find('input').attr('id',divId+'input'+(start)).val();
+            if(actPlanTitle==null || actPlanTitle==''){
+                isValid = false;
+                findDiv.eq(4).find('div').append('This Field is Required').css('color','red');
+            }
+            
+            actPlanDescription = findDiv.eq(6).find('textarea').val();
+            if(actPlanDescription==null || actPlanDescription==''){
+                isValid = false;
+                findDiv.eq(6).find('div').eq(0).append('This Field is Required').css('color','red');
+            }
+            
+            actPlanAssignTo = findDiv.eq(10).find('select option:selected').val();
+            if(actPlanAssignTo==null || actPlanAssignTo==''){
+                isValid = false;
+                findDiv.eq(10).find('div').eq(0).append('This Field is Required').css('color','red');
+            }
+            
+            actPlanDueDate = findDiv.eq(12).find('input').val();
+            if(actPlanDueDate==null || actPlanDueDate==''){
+                isValid = false;
+                findDiv.eq(12).append('This Field is Required').css('color','red');
+            }
+            
+            checkYes = findDiv.eq(16).find('input').eq(0).attr('id');
+            checkNo = findDiv.eq(16).find('input').eq(1).attr('id');
+            if(!($("#"+checkYes).parent().hasClass('active') || $("#"+checkNo).parent().hasClass('active'))){
+                isValid = false;                               
+                findDiv.eq(18).append('This Field is Required').css('color','red');
+                
+            }
+            actPlanCompletedBy = findDiv.eq(20).find('select option:selected').val();
+            actPlanCompletedDate = findDiv.eq(22).find('input').val();
+            actPlanCompletionComment = findDiv.eq(26).find('textarea').val();
+            showCompletionDetails = findDiv.eq(19).is(":visible");   
+            if(showCompletionDetails){
+                if(actPlanCompletedBy ==null || actPlanCompletedBy =='' || actPlanCompletedBy =='Select User....'){
+                    findDiv.eq(20).find('div').eq(0).append('This Field is Required').css('color','red'); 
+                    isValid = false;
+                }
+                if(actPlanCompletionComment == '' || actPlanCompletionComment == null){
+                    findDiv.eq(26).find('div').append('This Field is Required').css('color','red');
+                    isValid = false;
+                }
+                if(actPlanCompletedDate == '' || actPlanCompletedDate == null){
+                    findDiv.eq(22).append('This Field is Required').css('color','red');
+                    isValid = false;
+                }
+            }
+            return isValid;
+        });
+        return isValid;
+    }
+    
+    function deleteActionPlan(id){
+        //alert('ActionPlan');
+        var loggedInUser = "{!JSENCODE($User.id)}";
+        var capaOwner = "{!capaid.Owner}";
+        var gtStatus = "{!JSENCODE(GTRecord.Status__c)}";
+        var gtChangefieldapprovalstatus = "{!JSENCODE(GTRecord.ChangeFieldApprovalStatus__c)}";
+        //alert('status...'+status); 
+        if( loggedInUser != capaOwner || gtStatus == "Pending ActionPlan" || gtStatus == "Closed" || gtStatus == "Void" || gtStatus == "Pending Approval" || gtChangefieldapprovalstatus == "Pending"){
+            return false;
+        }
+        
+        Visualforce.remoting.Manager.invokeAction(
+            // @RemoteAction
+            '{!$RemoteAction.Component_Handler.deleteActionPlan}',id,
+            // Callback
+            function(result, event){
+                    if(result){
+                        console.log('Sucessfully..Deleted');
+                        //location.reload();
+                        window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!GTRecord.Id}&type=implementation';
+                    } 
+                    else{
+                        console.log('fails to delete');
+                    }
+                });
+    }
+    
+    var status = "{!JSENCODE(implementation.Status__c)}";
+    var changeFieldStatus = "{!JSENCODE(implementation.ChangeFieldApprovalStatus__c)}";
+    var loggedInUser = "{!JSENCODE($User.id)}";
+    var capaOwner = "{!capaid.Owner}";
+    var saveSubTaskFlag = true;
+    var gtStatus = "{!JSENCODE(GTRecord.Status__c)}";
+    var gtChangefieldapprovalstatus = "{!JSENCODE(GTRecord.ChangeFieldApprovalStatus__c)}"
+    
+    function actPlanUsers(){
+        var start = 0;
+        var divId,findDiv,actPlanCompletionComment,corrective,correction,preventive,actPlanAssignTo,actPlanCompletedBy,actPlanCompleted,actPlanCompletedDate,actPlanTitle,actPlanType,actPlanDescription,showCompletionDetails,actPlanDueDate,checkYes,checkNo,activeId;
+        $("#actionPlanSection>div").each(function(){
+            divId = 'actionPlan'+ (start++);
+            findDiv = $("#"+divId+">div").find('div').eq(1).find('div');
+            var assignedUser = findDiv.eq(10).find('select option:selected').val();
+            var assignedUserId = findDiv.eq(10).find('select').attr('id');
+            var length = findDiv.eq(10).find('select > option').length;
+            var compByUser = findDiv.eq(20).find('select option:selected').val();
+            var compBySelectLength = findDiv.eq(20).find('select > option').length;
+            var selectId = findDiv.eq(20).find('select').attr('id');
+            
+            var assortc = findDiv.eq(8).find('select').attr('id');
+            var rcId;
+            //displayAssocRootCauses('divId');
+            console.log('assignedDynamicIds    '+assortc);
+            console.log(assocRc);
+            rcId=findDiv.eq(8).find('select').attr('id');
+            var rcValue = findDiv.eq(8).find('select option:selected').val();
+            var rcText = findDiv.eq(8).find('select option:selected').text();
+            //$("#"+rcId).html('');
+            $.each(assocRc,function(key,value){
+                if(key!=rcValue){
+                    $("#"+rcId).append($("<option/>").val(key).text(value));
+                }
+            });
+            
+            if(length == 1){
+                $("#"+assignedUserId).empty();  
+                Visualforce.remoting.Manager.invokeAction(
+                    // @RemoteAction
+                    '{!$RemoteAction.Component_Handler.getAuthorizedUsers}','CAPA_Task_Owner',
+                    // Callback
+                    function(result, event){
+                        users = result;
+                        //$("#{!assignedTo}").append($("<option />").val('select').text('--select--'));
+                        $.each(users,function(usr) {
+                            var userPrts = users[usr].split('@');
+                            if(userPrts[0] == assignedUser){
+                                $("#"+assignedUserId).append($("<option />").val(escapeHtml(userPrts[0])).text(escapeHtml(userPrts[1])).attr('selected',true));
+                            }else{
+                                $("#"+assignedUserId).append($("<option />").val(escapeHtml(userPrts[0])).text(escapeHtml(userPrts[1])));
+                            }   
+                        });
+                    }    
+                );
+            }
+            if(compBySelectLength == 1){
+                $("#"+selectId).empty();
+                Visualforce.remoting.Manager.invokeAction(
+                    // @RemoteAction
+                    '{!$RemoteAction.Component_Handler.getAuthorizedUsers}','CAPA_Task_Owner',
+                    // Callback
+                    function(result, event){
+                        users=result;
+                        $.each(users,function(usr) {
+                            var userPrts = users[usr].split('@');
+                            if(userPrts[0] == assignedUser){
+                                $("#"+selectId).append($("<option />").val(escapeHtml(userPrts[0])).text(escapeHtml(userPrts[1])).attr('selected',true));
+                            }else{
+                                $("#"+selectId).append($("<option />").val(escapeHtml(userPrts[0])).text(escapeHtml(userPrts[1])));
+                            }
+                        });
+                    }    
+                );
+            }
+            /*if(loggedInUser == capaOwner){
+                //$("#"+divId+" *").removeAttr("disabled");
+                 yes = findDiv.eq(16).find('input').eq(0).attr('id');
+                 console.log("yes "+yes);
+                 no = findDiv.eq(16).find('input').eq(1).attr('id');
+                 console.log("no "+no);
+                 setCompletedDateLimits(divId);
+                 if($("#"+yes).parent().hasClass('active')){
+                     $("#"+yes).trigger('change');
+                 }
+                 else if($("#"+no).parent().hasClass('active')){
+                     $("#"+no).trigger('change');
+                 }
+            }*/
+            
+            if((loggedInUser == assignedUser) && (status == 'Pending ActionPlan')){
+                var compBy = findDiv.eq(16).attr('id');
+                $("#"+compBy+" *").removeAttr("disabled");
+                yes = findDiv.eq(16).find('input').eq(0).attr('id');
+                no = findDiv.eq(16).find('input').eq(1).attr('id');
+                var showCompDetails = findDiv.eq(19).attr('id');
+                setCompletedDateLimits(divId);
+                $("#"+showCompDetails+" *").removeAttr("disabled");
+                if($("#"+yes).parent().hasClass('active')){
+                    $("#"+yes).trigger('change');
+                }
+                else if($("#"+no).parent().hasClass('active')){
+                    $("#"+no).trigger('change');
+                }
+                
+                findDiv.eq(26).append("<button id='completedSubTask' type='button' style='float: right;margin: 2px;' class='btn btn-success dont-allow-multiple-clicks' onclick='completeActPlan("+divId+")'><span class='fa fa-check-circle'></span> Completed</button>");
+                findDiv.eq(26).append("<button id='saveSubTask' type='button' style='float: right;margin: 2px;' class='btn btn-primary dont-allow-multiple-clicks' onclick=if(pendActplanValid("+divId+")){savePendingActionPlan("+divId+")};><span class='fa fa-floppy-o'></span> Save</button>");
+                findDiv.eq(26).append("<button id='cancelTask' type='button' style='float: right;margin: 2px;' class='btn btn-default dont-allow-multiple-clicks' onclick='cancelPopup();'><span class='fa fa-close'></span> Cancel</button>");
+                
+                var CompletedDiv = $("#"+divId+">div>div>h4 ").find("a:contains('Complete')").attr('href');
+                if((loggedInUser != capaOwner && CompletedDiv != undefined && CompletedDiv != null) || (loggedInUser == assignedUser && CompletedDiv != undefined && CompletedDiv != null) || (loggedInUser != assignedUser)){
+                    $("#"+compBy+" *").attr("disabled","true");
+                    $("#"+showCompDetails+" *").attr("disabled","true");
+                    findDiv.eq(26).find('button').remove();
+                }
+            }
+           
+        });
+    }
+    
+    function completeActPlan(id){
+        isCompletedActionplan=true;completeActplanID=id;
+        if(pendActplanValid(id)&&{!$Setup.QC_settings__c.Is_Digital_Signature_Needed__c}){
+            $('#signature').modal('show');
+        }
+        else if(pendActplanValid(id)){
+            completePendingActionPlan(id);
+        }
+    }
+    
+    function pendActplanValid(divId){
+        var isValid = true;
+        $("div[id$='_error']").empty();
+        var apSecId = $(divId).attr('class');
+        var completionComment = $(divId).find('div>div').eq(1).find('div').eq(26).find('textarea').val();
+        
+        if(completionComment == null || completionComment == ''){
+            isValid = false
+            $(divId).find('div>div').eq(1).find('div').eq(26).find('div').append('This Field is Required').css('color','red');
+        }
+        return isValid;
+    } 
+    
+    function savePendingActionPlan(divId){
+        $("div[id$='_error']").empty();
+        var apSecId = $(divId).attr('class');
+        var completed = $(divId).find('div>div').eq(1).find('div').eq(16).find('input').val();
+        var completedBy = $(divId).find('div>div').eq(1).find('div').eq(20).find('select option:selected').val();
+        var completionDate = $(divId).find('div>div').eq(1).find('div').eq(22).find('input').val();
+        var completionComment = $(divId).find('div>div').eq(1).find('div').eq(26).find('textarea').val();
+        
+        Visualforce.remoting.Manager.invokeAction(
+            // @RemoteAction
+            '{!$RemoteAction.Component_Handler.savePendingActionPlan}',apSecId,completed,completedBy,completionDate,completionComment,
+            // Callback
+            function(result,event){
+                if(result==0){
+                    console.log("Record Saved Successfully");
+                    showDialog('0',"Record Saved Successfully");
+                }else{
+                    console.log("Failed to save the record");
+                }
+            }
+        );
+    } 
+    
+    function completePendingActionPlan(divId){
+        $("div[id$='_error']").empty();
+        var apSecId = $(divId).attr('class');
+        var completed = $(divId).find('div>div').eq(1).find('div').eq(16).find('input').val();
+        var completedBy = $(divId).find('div>div').eq(1).find('div').eq(20).find('select option:selected').val();
+        var completionDate = $(divId).find('div>div').eq(1).find('div').eq(22).find('input').val();
+        var completionComment = $(divId).find('div>div').eq(1).find('div').eq(26).find('textarea').val();
+        
+        Visualforce.remoting.Manager.invokeAction(
+            // @RemoteAction
+            '{!$RemoteAction.Component_Handler.completePendingActionPlan}',apSecId,completed,completedBy,completionDate,completionComment,
+            // Callback
+            function(result,event){
+                if(result==0){
+                    console.log("Record Saved Successfully");
+                    //location.reload();
+                    window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!GTRecord.Id}&type=implementation';
+                }else{
+                    console.log("Failed to save the record");
+                }
+            }
+        );
+    } 
+    
+    var entityMap = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+        "(": '&#40;',
+        ")": '&#41;',
+        '.': '&#46;',
+        '/': '&#x2F;',
+        '`': '&#x60;',
+        ';': '&#59;',
+        '.': '&#46;',
+        '=': '&#x3D;'
+    }; 
+    
+    function escapeHtml (string) {
+        return String(string).replace(/[&<>"'`=\/]/g, function fromEntityMap (s) {
+            //console.log("Function escapeHtml() saved your butt again!!!: Escaped " + s);
+            return entityMap[s];
+        });
+    }
+     
+    </script>
+    <apex:outputpanel layout="none">                               
+        <div class="top-buttons text-right">
+            <h4 class="pull-left ap-task-title"> Action Plans(s):</h4>
+			<button id="actionPlanid" class="btn btn-primary" onclick="addActionplan();"><span class="fa fa-plus-square-o"></span> Add ActionPlan </button>
+        </div>
+        <div class="clearfix"></div>
+    </apex:outputpanel>
+    
+    <div id="actionPlanSection" class="col-md-12">
+       <apex:repeat value="{!actionPlans}" var="apsm">
+            <div class="{!apsm.Id}" id="{!apsm.Id}" role="tablist" aria-multiselectable="true">
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="headingOne">
+                        <h4 class="panel-title">
+                            <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" data-parent="#accordion" href="#{!apsm.Id}href" aria-expanded="true" aria-controls="collapse0">
+                                <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"> </span>
+                            </a>
+                            
+                            <a data-toggle="" href="#{!JSENCODE(apsm.Id)}href"> <apex:outputLabel ><b> Action Plan :</b> ({!JSENCODE(LEFT(apsm.Title__c,25))}....)</apex:outputLabel> &nbsp; <apex:outputLabel rendered="{!NOT(OR(GTRecord.Status__c =='Created',GTRecord.Status__c =='Open'))}"> <b> Status : </b>({!IF(JSENCODE(apsm.Action_Plan_Status__c)=='Complete','Completed',JSENCODE(apsm.Action_Plan_Status__c))})</apex:outputLabel></a>
+                            <apex:outputPanel >
+                                <apex:outputPanel >
+                                    <a href="#{!JSENCODE(apsm.Id)}href" class="btn-link pull-right" onclick="deleteActionPlan('{!JSENCODE(apsm.Id)}');"> Delete</a>
+                                    <a href="#{!JSENCODE(apsm.Id)}href" class="btn-link pull-right" onclick="editActionPlan(this,this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute('id'))"> </a>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </h4>
+                    </div>
+                    <div id="{!JSENCODE(apsm.Id)}href" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne" aria-expanded="true">
+                        <div class="panel-body">
+                            
+                             <div id="actplanType" class="wiz-fields-wide col-md-12">
+                                <label><span class="mandatory">*</span> Type :</label><br/>
+                                <div class="btn-group" data-toggle="buttons">
+                                    <label class="{!IF(apsm.Type__c == 'Correction','btn btn-primary active','btn btn-primary')}" id="{!apsm.Id}lblCorrection">
+                                        <input name="actionPlan0" value="Correction" autocomplete="off" type="radio" id="{!Type}_Correction"/>Correction
+                                    </label>
+                                    <label class="{!IF(apsm.Type__c == 'Corrective','btn btn-primary active','btn btn-primary')}" id="{!apsm.Id}lblCorrective">
+                                        <input name="actionPlan0" value="Corrective" autocomplete="off" type="radio" id="{!Type}_Corrective"/>Corrective
+                                    </label>
+                                    <label class="{!IF(apsm.Type__c == 'Preventive','btn btn-primary active','btn btn-primary')}" id="{!apsm.Id}lblPreventive">
+                                        <input name="actionPlan0" value="Preventive" autocomplete="off" type="radio" id="{!Type}_Preventive"/>Preventive
+                                    </label>
+                                </div>
+                                <div id="{!apsm.Type__c}_error" class="help-block with-errors">
+                                    
+                                </div>
+                            </div>
+                            
+                            <c:wiz_field FieldLabel="{!$ObjectType.General_Sub_Task__c.Fields.Title__c.Label}" JSId="title" Required="true" Wide="true" rendered="{!$ObjectType.General_Sub_Task__c.Fields.Title__c.Accessible}">
+                                <c:wiz_input fieldname="" initvalue="{!apsm.Title__c}" required="true" disabled="{!NOT($ObjectType.General_Sub_Task__c.Fields.Title__c.updateable)}"/>
+                            </c:wiz_field>
+                            
+                            <div class="wiz-fields-wide col-md-12">
+                                <label for="Description"><span class="mandatory">*</span> Description:</label>
+                                <textarea id="ActionPlanInst{!apsm.Id}" style="overflow: auto; height: 100px;" type="text" class="form-control" required="true" maxlength="255"  oninput="maxlengthvalidation(this)"></textarea>
+                                <div id="{!apsm.Description__c}_error" class="help-block with-errors"></div>
+                                <script type="text/javascript">
+                                     $('#ActionPlanInst{!apsm.Id}').html('{!JSENCODE(apsm.Description__c)}');
+                                </script>
+                                
+                            </div>
+                          
+                            <div class="col-md-12" id="associatedrootcause1">
+                                <label> Associated Root Cause(s):</label>
+                                <select id="{!apsm.Id}_assocRC" class="form-control assocRC" multiple="multiple" style="width:100%;">
+                                    
+                                </select>
+                                <script type="text/javascript">
+                                
+                                    var assRootCauses='{!JSENCODE(apsm.Associated_Root_Cause_Name__c)}';
+                                    var assRootIds = '{!JSENCODE(apsm.Associated_Root_Cause_Name__c)}'+'{!JSENCODE(apsm.Associated_Root_Causes__c)}';
+                                    //alert('assRootCauses   '+assRootCauses);
+                                    //console.log(assocRc);
+                                    assRootCauses=assRootCauses.split(',');
+                                    assRootIds = assRootIds.split(',');
+                                    $("#{!JSENCODE(apsm.Id)}_assocRC").html('');
+                                    if(assRootCauses.length == 2){
+                                        //alert('assRootCauses 1   '+assRootCauses); 
+                                        $("#{!JSENCODE(apsm.Id)}_assocRC").append('<option value='+escapeHtml(assRootIds[1])+' selected='+escapeHtml(assRootCauses[0])+'>'+escapeHtml(assRootCauses[0])+'</option>');
+                                    }else{
+                                    for(var i=0;i<assRootCauses.length-1;i++){
+                                        //alert('assRootCauses 2   '+assRootCauses+'...assRootIds'+assRootIds);
+                                        //alert('assocRc...assRootCauses   '+assRootCauses[i].length+'....assRootCauses.length'+assRootCauses.length); 
+                                        $("#{!JSENCODE(apsm.Id)}_assocRC").append('<option value='+escapeHtml(assRootIds[i+2])+' selected='+escapeHtml(assRootCauses[i])+'>'+escapeHtml(assRootCauses[i])+'</option>');
+                                    } 
+                                    }
+                                </script>
+                                <div id="actplan0associatedrootcause1_error" class="help-block with-errors"></div>
+                            </div>
+                            
+                            <div class="wiz-fields">
+                                <label><span class="mandatory">*</span> Assigned To:</label>
+                                <select id="{!apsm.Assigned_User__r.Name}" class="form-control" >
+                                    <option value='{!JSENCODE(apsm.Assigned_User__c)}' selected='{!JSENCODE(apsm.Assigned_User__r.Name)}'>{!JSENCODE(apsm.Assigned_User__r.Name)}</option>
+                                </select>
+                                <div id="{!apsm.Assigned_User__c}_error" class="help-block with-errors"></div>
+                            </div>
+							                        
+                            <c:wiz_field FieldLabel="Due Date" JSId="due_date" Required="true" Wide="false">
+                                <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"  FieldId="Due_Date"  initdate="{!apsm.Due_Date__c}" updateable="true"/>
+                            </c:wiz_field>
+                            
+                            <div id="actplancompleted" class="wiz-fields-wide col-md-12">
+                                <label><span class="mandatory">*</span> Completed ?</label><br/>
+                                <div class="btn-group" data-toggle="buttons">
+                                    <label class="{!IF(apsm.Complete__c == 'Yes','btn btn-primary active','btn btn-primary')}" id="{!apsm.Id}lblYes">
+                                        <input name="actplan_completed" value="Yes" autocomplete="off" type="radio" id="{!Completed}_yes" onchange="showCompletedDetails(this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));"/>Yes
+                                    </label >
+                                    <label class="{!IF(apsm.Complete__c == 'No','btn btn-primary active','btn btn-primary')}" id="{!apsm.Id}lblNo">
+                                        <input name="actplan_completed" value="No" autocomplete="off" type="radio" id="{!Completed}_no" onchange="hideCompletedDetails(this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));"/>No
+                                    </label>
+                                </div>
+                                <div id="{!apsm.Complete__c}_error" class="help-block with-errors">
+                                    
+                                </div>
+                            </div>
+                            
+                           <div id="showCompletionDetails" class="">
+                                <div class="wiz-fields ">
+                                    <label for="exampleInputEmail1"><span class="mandatory">*</span> Completed By:</label>
+                                    <select id="apsm.Completed_By__r.Name" class="form-control" >
+                                        <option value='{!apsm.Completed_By__c}' selected='{!apsm.Completed_By__r.Name}'>{!JSENCODE(apsm.Completed_By__r.Name)}</option>
+                                    </select>
+                                    <div id="{!apsm.Completed_By__c}_error" class="help-block with-errors"></div>
+                                </div>
+                                
+                                <c:wiz_field FieldLabel="Completed Date" JSId="actplanCompletedDate" Required="true" Wide="false">
+                                    <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"  FieldId="Completed_Date"  initdate="{!IF(NOT(ISBLANK(apsm.Completed_Date__c)),apsm.Completed_Date__c,today())}" updateable="true"/>
+                                </c:wiz_field>
+                                
+                                <div class="wiz-fields-wide col-md-12">
+                                    <label for="exampleInputEmail1"><span class="mandatory">*</span> Completion Comments:</label>
+                                    <textarea id="ActionPlancmts{!apsm.Id}" style="overflow: auto; height: 100px;" type="text" class="form-control" required="true" maxlength="255"  oninput="maxlengthvalidation(this)">{!JSENCODE(apsm.Completion_Comments__c)}</textarea>
+                                    
+                                    <div id="{!apsm.Completion_Comments__c}_error" class="help-block with-errors"></div>
+                                    <!--<c:wiz_richtext FieldId="dispo0DispoCompComm" initvalue=""></c:wiz_richtext>-->
+                                </div>
+                            </div>
+                            
+                            <div class="hiddenapid">
+                                <input  id="apid" name="apid" type="hidden" value="{!apsm.Id}" />
+                            </div>
+                            
+                         </div>
+                    </div>
+                </div>
+            </div> 
+        </apex:repeat> 
+    </div>
+    
+    <div class="" id="{!divId}" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingOne">
+                <h4 class="panel-title">
+                    <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" data-parent="#accordion" href="#{!divId}href" aria-expanded="true" aria-controls="collapse0">
+                        <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"> </span>
+                    </a>
+                    
+                    <a data-toggle="" href=""> <b> Action Plan </b> </a>
+                    <a href="#{!divId}href" class="btn-link pull-right" onclick=""></a>
+                    <a href="#{!divId}href" class="btn-link pull-right" onclick="cancelDiv(this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));">Cancel</a>
+                    
+                </h4>
+            </div>
+            <div id="{!divId}href" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne" aria-expanded="true">
+                <div class="panel-body" id="{!divId}panel">
+                    
+                    <div id="actplanType" class="wiz-fields-wide col-md-12">
+                        <label><span class="mandatory">*</span> Type :</label><br/>
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-primary ">
+                                <input name="actplan_Type" value="Correction" autocomplete="off" type="radio" id="actplanCorrection"/>Correction
+                            </label>
+                            <label class="btn  btn-primary">
+                                <input name="actplan_Type" value="Corrective" autocomplete="off" type="radio" id="actplanCorrective"/>Corrective
+                            </label>
+                            <label class="btn  btn-primary">
+                                <input name="actplan_Type" value="Preventive" autocomplete="off" type="radio" id="actplanPreventive"/>Preventive
+                            </label>
+                        </div>
+                        <div id="actplanType_error" class="help-block with-errors">
+                            
+                        </div>
+                    </div>
+                    
+                    <c:wiz_field FieldLabel="{!$ObjectType.General_Sub_Task__c.Fields.Title__c.Label}" JSId="title" Required="true" Wide="true" rendered="{!$ObjectType.General_Sub_Task__c.Fields.Title__c.Accessible}">
+                        <c:wiz_input fieldname=""  initvalue="" required="true" disabled="{!NOT($ObjectType.General_Sub_Task__c.Fields.Title__c.updateable)}"/>
+                    </c:wiz_field>
+                    
+                    <div class="wiz-fields-wide col-md-12" id="description">
+                        <label><span class="mandatory">*</span> Description:</label>
+                        <textarea id="descriptionTextArea" type="text" class="form-control" required="true" maxlength="255"  oninput="maxlengthvalidation(this)"></textarea>
+                        <div id="DescriptionTextArea_errors" class="help-block with-errors"></div>
+                    </div>
+                    
+                    
+                    <div class="col-md-12" id="associatedrootcause1">
+                        <label> Associated Root Cause(s):</label>
+                        <select id="actplan0associatedrootcause1" class="form-control assocRC" multiple="multiple" style="width:100%;">
+                        </select>
+                        <div id="actplan0associatedrootcause1_error" class="help-block with-errors"></div>
+                    </div>
+                    
+                    <div class="wiz-fields" id="actPlanAssigned">
+                        <label><span class="mandatory">*</span> Assigned To:</label>
+                        <select id="{!assignedTo}" class="form-control" >
+                            
+                        </select>
+                        <div id="{!assignedTo}_error" class="help-block with-errors"></div>
+                    </div>
+                    
+                    <c:wiz_field FieldLabel="Due Date" JSId="due_date" Required="true" Wide="false">
+                        <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"  FieldId="Due_Date"  initdate="{!IF(NOT(ISBLANK(implementation.New_Due_Date__c)),implementation.New_Due_Date__c,implementation.Due_Date__c)}" updateable="true"/>
+                    </c:wiz_field>
+                    
+                    <!--<c:wiz_field FieldLabel="Associated Root Cause(s)" JSId="associatedrootcause2" Required="false" Wide="true">
+                        <c:wiz_multi FieldId="Associated_Root_Causes" initValues="" FieldName="Associated_Root_Causes" multiple="true" queryFields="Cause_Code_Name__c"  querytable="Root_Cause__c" type="rc" dataid="{!ncid.id}" required="false" >
+                        </c:wiz_multi>
+                    </c:wiz_field>-->
+                    <div id="apcompleted" class="wiz-fields-wide col-md-12">
+                        <label><span class="mandatory">*</span> Completed ?</label><br/>
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-primary ">
+                                <input name="actplan_completed" value="Yes" autocomplete="off" type="radio" id="apCompleted_yes" onchange="showCompletedDetails(this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));"/>Yes
+                            </label>
+                            <label class="btn  btn-primary">
+                                <input name="actplan_completed" value="No" autocomplete="off" type="radio" id="apCompleted_no" onchange="hideCompletedDetails(this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));"/>No
+                            </label>
+                        </div>
+                        <div id="apcompleted_error" class="help-block with-errors">
+                            
+                        </div>
+                    </div>
+                    <div id="{!divId}showCompletionDetails" class="">
+                        <div class="wiz-fields ">
+                            <label for="exampleInputEmail1"><span class="mandatory">*</span> Completed By:</label>
+                            <select id="{!actplanCompBy}" class="form-control" >
+                                                                    
+                            </select>
+                            <div id="{!actplanCompBy}_error" class="help-block with-errors"></div>
+                        </div>
+                        
+                        <c:wiz_field FieldLabel="Completed Date" JSId="apCompleted_Date" Required="true" Wide="false">
+                            <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"  FieldId="{!actplanCompDate}"  initdate="{!today()}" updateable="true"/>
+                        </c:wiz_field>
+                        
+                        <div class="wiz-fields-wide col-md-12">
+                            <label for="exampleInputEmail1"><span class="mandatory">*</span> Completion Comments:</label>
+                            <textarea id="{!actplanCompComm}" type="text" class="form-control" required="true" maxlength="255"  oninput="maxlengthvalidation(this)"></textarea>
+                            <div id="{!actplanCompComm}_error" class="help-block with-errors"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="hiddenapid">
+                        <input  id="hiddenapid" name="hiddenapid" type="hidden" value='null' />
+                    </div> 
+                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="" id="actionPlan0" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingOne">
+                <h4 class="panel-title">
+                    <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" data-parent="#accordion" href="#actionPlan0collapse" aria-expanded="true" aria-controls="collapse">
+                        <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                    </a>
+                    <a data-toggle="" href=""> <b> Action Plan </b> </a>
+                    <a href="#actionPlan0collapse" class="btn-link pull-right" onclick="cancelDiv(this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));"> Cancel </a>
+                    <a href="#actionPlan0collapse" class="btn-link pull-right" onclick=""> </a>
+                </h4>
+            </div>
+            <div id="actionPlan0collapse" class="panel-collapse out collapse in" role="tabpanel" aria-labelledby="headingOne" aria-expanded="true">
+                <div class="panel-body">
+                    
+                    <div id="actplantype" class="wiz-fields-wide col-md-12">
+                        <label><span class="mandatory">*</span> Type :</label><br/>
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-primary ">
+                                <input name="actionPlan0" value="Correction" autocomplete="off" type="radio" id="actplanCorrection"/>Correction
+                            </label>
+                            <label class="btn  btn-primary">
+                                <input name="actionPlan0" value="Corrective" autocomplete="off" type="radio" id="actplanCorrective"/>Corrective
+                            </label>
+                            <label class="btn  btn-primary">
+                                <input name="actionPlan0" value="Preventive" autocomplete="off" type="radio" id="actplanPreventive"/>Preventive
+                            </label>
+                        </div>
+                        <div id="actplan0type_error" class="help-block with_errors">
+                            
+                        </div>
+                    </div>
+                    
+                    <c:wiz_field FieldLabel="{!$ObjectType.General_Sub_Task__c.Fields.Title__c.Label}" JSId="title" Required="true" Wide="true" rendered="{!$ObjectType.General_Sub_Task__c.Fields.Title__c.Accessible}">
+                        <c:wiz_input fieldname="" initvalue="" required="true" disabled="{!NOT($ObjectType.General_Sub_Task__c.Fields.Title__c.updateable)}" fieldId="actionPlan0title"/>
+                    </c:wiz_field>
+                    
+                    <div class="wiz-fields-wide col-md-12" id="actplandesc">
+                        <label><span class="mandatory">*</span> Description:</label>
+                        <textarea id="actionPlan0descr" type="text" class="form-control" required="true" maxlength="255"  oninput="maxlengthvalidation(this)"></textarea>
+                        <div id="actionPlan0descr_error" class="help-block with_errors"></div>
+                    </div>
+                    
+                    <div class="col-md-12" id="associatedrootcause">
+                        <label> Associated Root Cause(s):</label>
+                        <select id="actplan0associatedrootcause" class="form-control assocRC" multiple="multiple" style="width:100%;">
+                              
+                        </select>
+                        <div id="actplan0associatedrootcause_error" class="help-block with-errors"></div>
+                    </div>
+                    
+                    <div class="wiz-fields" id="actplanAssignto">
+                        <label><span class="mandatory">*</span> Assigned To:</label>
+                        <select id="actplan0assignedTo" class="form-control" >
+                            
+                        </select>
+                        <div id="actPlan0assignedTo_error" class="help-block with-errors"></div>
+                    </div>
+                                                          
+                    <c:wiz_field FieldLabel="Due Date" JSId="actplan0DueDate" Required="true" Wide="false">
+                        <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"  FieldId="actplan0DueDate"  initdate="{!IF(NOT(ISBLANK(implementation.New_Due_Date__c)),implementation.New_Due_Date__c,implementation.Due_Date__c)}" updateable="true"/>
+                    </c:wiz_field>
+                    
+                    <!--<c:wiz_field FieldLabel="Associated Root Cause(s)" JSId="associatedrootcause1" Required="false" Wide="true">
+                        <c:wiz_multi FieldId="Associated_Root_Causes__c" initValues="" FieldName="Associated_Root_Causes__c" multiple="true" queryFields="Cause_Code_Name__c"  querytable="Root_Cause__c" type="rc" dataid="{!ncid.id}" required="false">
+                        </c:wiz_multi>
+                    </c:wiz_field>-->
+                                                          
+                    <div id="actplan0completed" class="wiz-fields-wide col-md-12">
+                        <label><span class="mandatory">*</span> Completed ?</label><br/>
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-primary ">
+                                <input name="actionPlan0_Completed" value="Yes" autocomplete="off" type="radio" id="actionplanCompleted_yes" onchange="showCompletedDetails(this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));"/>Yes
+                            </label>
+                            <label class="btn  btn-primary">
+                                <input name="actionPlan0_Completed" value="No" autocomplete="off" type="radio" id="actionplanCompleted_no" onchange="hideCompletedDetails(this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));"/>No
+                            </label>
+                        </div>
+                        <div id="actplan0Completed_error" class="help-block with-errors">
+                            
+                        </div>
+                    </div>
+                    <div id="actionPlan0ShowCompletionDetails" class=""> 
+                        <div class="wiz-fields ">
+                            <label for="exampleInputEmail1"><span class="mandatory">*</span> Completed By:</label>
+                            <select id="actplan0CompBy" class="form-control" >
+                                
+                            </select>
+                            <div id="actplan0CompBy_error" class="help-block with-errors"></div>
+                        </div>
+                        
+                        <c:wiz_field FieldLabel="Completed Date" JSId="actplan0apCompDate" Required="true" Wide="false">
+                            <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())}"  FieldId="actplan0apCompDate"  initdate="{!today()}" updateable="true"/>
+                        </c:wiz_field>
+                        
+                        <div class="wiz-fields-wide col-md-12">
+                            <label for="exampleInputEmail1"><span class="mandatory">*</span> Completion Comments:</label>
+                            <textarea id="actplan0CompComm" type="text" class="form-control" required="true" maxlength="255"  oninput="maxlengthvalidation(this)"></textarea>
+                            <div id="actplan0CompComm_error" class="help-block with_errors"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="hiddenapid">
+                        <input  id="actionPlan0_apchid" name="hiddenapid" type="hidden" value='null' />
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+    
+
+</apex:component>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <encodingKey>ISO-8859-1</encodingKey>
+    <letterhead>Qualityze_Inc</letterhead>
+    <name>ChangetaskOwnerApproval_capa</name>
+    <style>freeForm</style>
+    <subject>Approval Request for Owner Change of {!01I61000000v12Z.RecordType}</subject>
+    <textOnly>Hello,
+
+You have been assigned as an approver for changing the task owner of the {!01I61000000v12Z.RecordType} of CAPA record {!01I61000000udkO.Name}.
+
+
+The new owner of the task is {!01I61000000v12Z.00N6100000DVGbg}.
+
+Please log in to the Qualityze application and complete the approval process.
+
+Please contact {!01I61000000udkO.OwnerFullName} if you have any questions about this assignment and/or non-conformance record.
+
+
+Thank you.
+
+
+Click here for details{!01I61000000udkO.RecordType}</textOnly>
+    <type>html</type>
+</EmailTemplate>

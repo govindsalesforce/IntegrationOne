@@ -1,0 +1,98 @@
+<apex:page sidebar="false" showHeader="true" standardStylesheets="false" docType="html-5.0">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>QC Landing page</title>
+
+    <!-- Bootstrap -->
+    <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/app.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.bt_static,  '/static/stylesheets/landing-page.css')}" />
+    <style>
+
+
+        </style>
+  </head>
+  <body>
+    <div class="container-fluid" id="landing-page-layout">
+      <div class="row">
+        <div class="landing-banner">
+            <div class="app-name">
+            <h1>Quality Central</h1>
+          </div>
+                <div class="app-meta-bar">
+            <span></span> 
+          </div>
+        </div>
+      </div>
+            
+      <div class="sf-page-content">
+            <h2>Manage Entities</h2>
+        <p>
+                Quality Central enables customers to streamline business processes for Quality Management System. As a centralized administration panel, customers can manage meta data for Qualityze Suite. This allows customers to configure, monitor, and optimize each aspect of their processes to improve the overall quality systems experience. 
+            </p>
+
+        <div class="row link-list">
+          <div class="col-md-4 col-sm-4 col-xs-6">
+            <ul class="nav nav-pills nav-stacked">
+              <li><a href="/{!$ObjectType.Defect__c}" target="_blank">Defect</a></li>
+              <li><a href="/{!$ObjectType.Business_Entity__c}" target="_blank">Business Entity</a></li>
+              <li><a href="/{!$ObjectType.Manufacturing_Site__c}" target="_blank">Manufacturing Site</a></li>
+             <!-- <li><a href="/{!$ObjectType.Organization__c}" target="_blank">Organization</a></li>-->
+              <li><a href="/{!$ObjectType.Process__c}" target="_blank"> Process</a></li>       
+              <li><a href="/{!$ObjectType.Process_Relationship__c}" target="_blank">Process Relationship</a></li>
+              <li><a href="/{!$ObjectType.Process_Defect__c}" target="_blank">Process Defect</a></li>
+              <li><a href="/{!$ObjectType.Product__c}" target="_blank">Product Family</a></li>                    
+              <li><a href="/{!$ObjectType.Product_Relationship__c}" target="_blank">Product Relationship</a></li>
+              <li><a href="/{!$ObjectType.Product_Defect__c}" target="_blank">Product Defect</a></li>
+               <li><a href="/{!$ObjectType.Risk_Lookup__c}" target="_blank">Risk Lookup</a></li>
+              <li><a href="/{!$ObjectType.Risk_Occurrence__c}" target="_blank">Risk Occurrence</a></li>
+            </ul>
+          </div>
+
+
+          <div class="col-md-4 col-sm-4 col-xs-6">
+            <ul class="nav nav-pills nav-stacked">
+              <li><a href="/{!$ObjectType.Risk_Priority__c}" target="_blank">Risk Priority</a></li>
+              <li><a href="/{!$ObjectType.Risk_Severity__c}" target="_blank">Risk Severity</a></li>
+              <li><a href="/{!$ObjectType.Account}" target="_blank">Manufacturer/Supplier</a></li>
+              <li><a href="/{!$ObjectType.Account}" target="_blank">Customer</a></li>
+              <li><a href="/{!$ObjectType.Cause__c}" target="_blank">Causes</a></li>
+              <li><a href="/{!$ObjectType.Defect_Cause__c}" target="_blank">Defect Causes</a></li>
+              <li><a href="/{!$ObjectType.Number_Scheme__c}" target="_blank">Number Scheme</a></li>  
+              <li><a href="/p/own/OrgPublicGroupsPage" target="_blank">Public Groups</a></li>  
+              <li><a href="/{!$ObjectType.Document_type__c}" target="_blank">Document Type</a></li>
+            </ul>
+          </div>
+            
+            
+
+          <!--
+          <div class="col-md-4 col-sm-4 col-xs-6">
+            <ul class="nav nav-pills nav-stacked">
+              <li><a href="#">Manufacturer\Supplier\customers</a></li>
+              <li><a href="#">Additional Information</a></li>
+              <li><a href="#">Defect</a></li>
+              <li><a href="#">Department</a></li>
+              <li><a href="#">Division</a></li>
+              <li><a href="#">Manufacturing Site</a></li>
+              <li><a href="#">Non-Conformance</a></li>
+              <li><a href="#">NC Product</a></li>                    
+              <li><a href="#">NC Product Defect</a></li>
+            </ul>
+          </div>
+            -->
+        </div>
+
+
+      </div>
+            
+            
+    </div>
+
+    </body>
+
+
+ 
+</apex:page>

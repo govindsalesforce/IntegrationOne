@@ -1,0 +1,344 @@
+<apex:component controller="Component_Handler" extensions="QC_custom_settings">
+    <apex:attribute name="divId"  description="Holds the id value for div" type="String" required="true"/>
+    <apex:attribute name="GTRecord" type="General_Task__c" Description="General Task Record" required="true" assignTo="{!investigation}"/>
+    <input type="hidden" value="{!rootCauseData}"/>
+    <script>
+    $(document).ready(function() {
+        
+        //$("#add_root_cause_holder").hide(); 
+        $("#{!divId}").hide();
+        var length = $("#add_root_cause_holder>div").length;
+        if(length>=1){
+            $("#rcause0").hide();
+            assignedRcDynamicIds();
+            disableDiv();
+        }else{
+            $("#rcause0").prependTo( "#add_root_cause_holder" ).show();
+            $("#rcause0").find('a').eq(2).hide();
+            var gtChangefieldapprovalstatus = "{!JSENCODE(GTRecord.ChangeFieldApprovalStatus__c)}";
+            var gtstatus = "{!JSENCODE(GTRecord.Status__c)}";
+            if(gtChangefieldapprovalstatus =='Pending' || gtstatus == "Void"){
+                disableDiv();
+            }
+            //disableEfvpDiv();
+        }
+        var existingCauseData = getAllCauseCodeIs();
+        console.log('existingCauseData');
+        console.log(existingCauseData);
+        console.log(Object.keys(existingCauseData).length);
+        var existingcauseslength = Object.keys(existingCauseData).length;
+        /* $.each(existingCauseData,function(key,val){
+             console.log(key)
+             console.log('option value='+existingCauseData[key][0]+' : option text ='+existingCauseData[key][1]);
+             });*/
+          Visualforce.remoting.Manager.invokeAction(
+              '{!$RemoteAction.Component_Handler.getCauseCodes}',
+              function(result, event){
+                  if(result){
+                      console.log(result);
+                      causelist = result['causes'];
+                      if(existingcauseslength>1){
+                          
+                          console.log('asigign causecode value and append remaining cause codes');
+                          console.log('iterating causcode ids');
+                          
+                          var startid = 0;
+                          $.each(existingCauseData,function(key,val){
+                              
+                              var codeid = 'rcause'+(startid++)+'_causecode';
+                              console.log(key+' '+codeid);
+                              if(key==codeid){
+                                  $('#'+codeid).html('');
+                                  console.log('option value='+escapeHtml(existingCauseData[key][0])+' : option text ='+escapeHtml(existingCauseData[key][1]));
+                                  $('#'+codeid).append("<option value="+escapeHtml(existingCauseData[key][0])+">"+escapeHtml(existingCauseData[key][1])+"</option>");
+                                  $.each(causelist,function(cs) {
+                                      var causePrts = causelist[cs].split('@');
+                                      
+                                      if(escapeHtml(causePrts[0])!=escapeHtml(existingCauseData[key][0])){
+                                          //alert('value '+existingCauseData[key][1]+'='+causePrts[0]+' '+existingCauseData[key][0]);
+                                          $('#'+codeid).append("<option value="+escapeHtml(causePrts[0])+">"+escapeHtml(causePrts[1])+"</option>");
+                                          
+                                      }
+                                      
+                                  });
+                              }
+                              
+                              
+                          });
+                          
+                          
+                          
+                      }
+                      console.log('assign default cause select and and append all cause codes ');
+                      $(".causecode").append($("<option />").val('').text('Select..').attr({disabled:'disabled', selected:'selected'}));
+                      $.each(causelist,function(cs) {
+                          var causePrts = causelist[cs].split('@');
+                          // $(".causecode").append($("<option />").val(causePrts[0]).text(causePrts[1]));
+                          $(".causecode").append("<option value="+escapeHtml(causePrts[0])+">"+escapeHtml(causePrts[1])+"</option>");
+                          
+                      });
+                      
+                      
+                      
+                  }else{
+                      console.log("error");
+                  }
+              }
+          );
+          
+          
+          
+      });
+    
+    function disableDiv(){
+        
+        var gtStatus = "{!JSENCODE(GTRecord.Status__c)}";
+        var gtChangefieldapprovalstatus = "{!JSENCODE(GTRecord.ChangeFieldApprovalStatus__c)}";
+        var id_start = 0,cancel;
+        if(gtStatus == 'Closed' || gtStatus == 'Void' || gtStatus == 'Pending Approval' || gtChangefieldapprovalstatus =='Pending'){
+           $("#create-investigation-button").attr('disabled',true);
+           $("#add_root_cause_holder > div").each(function(){
+                var divId = '{!divId}'+ (id_start++);
+                $("#"+divId+" *").attr("disabled","true");
+                $("#"+divId+">div>div>h4 ").find('a').eq(2).hide();
+               
+                
+                
+            });
+            
+        }
+     }
+    
+    function getAllCauseCodeIs(){
+        var start = 0;
+        existingcauselist = {};
+        $("#add_root_cause_holder>div").each(function() {
+            var divId = 'rcause'+ (start++);
+            findDiv = $("#"+divId+">div").find('div').eq(1).find('div');
+            var assignedcodeId = findDiv.find('select').attr('id');
+            var selectedval =$('#'+assignedcodeId).val();
+            var selectedtext =$('#'+assignedcodeId).text();
+            console.log(assignedcodeId+' : '+selectedval+' : '+selectedtext);
+            existingcauselist[assignedcodeId] =[selectedval,selectedtext];
+            
+        });
+        console.log(existingcauselist);
+        return existingcauselist;
+    }
+    
+    
+    function addRootCause(){
+        // alert("from add root cause");
+        
+        $("#{!divId}").clone().prependTo("#add_root_cause_holder").show();
+        assignedRcDynamicIds();
+    }
+    
+    function assignedRcDynamicIds(){
+        var selectId,length;
+        var id_start = 0;
+        $("#add_root_cause_holder>div").each(function() {
+            var divId= '{!divId}' + (id_start++);
+            $(this).attr('id',divId);
+            var findDiv = $("#"+divId+">div").find('div').eq(1).find('div');
+            $("#"+divId+">div>div>h4 ").find('a').eq(0).attr('href','#'+divId+'href');
+            //$("#"+divId+">div>div>h4 ").find('a').eq(1).attr('href','#'+divId+'href');
+            $("#"+divId+">div>div>h4 ").find('a').eq(2).attr('href','#'+divId+'href');
+            $("#"+divId+">div>div>h4 ").find('a').eq(3).attr('href','#'+divId+'href');
+            $("#"+divId+">div").find('div').eq(1).attr('id',divId+'href');
+            findDiv.eq(0).attr('id',divId+'panel');
+            $('#'+divId).find('select').attr('id',divId+'_causecode');
+            $('#'+divId).find('select').next().attr('id',divId+'_causecode_error');
+            
+            var rcdec = $(this).find('textarea');
+            rcdec.attr('id',divId+'_dec');
+            rcdec.next().attr('id',divId+'_dec_error');
+            var rcausedecid = rcdec.attr('id');
+            var rcauseerrorid=  rcdec.next().attr('id');
+            console.log(rcausedecid+' '+rcauseerrorid);
+            //input maxlength error code
+            $( "#"+rcausedecid).on('input', function() {
+            $('#'+rcauseerrorid).empty();
+            if ($(this).val().length>="255") {
+                $('#'+rcauseerrorid).html('<p style="color: red;">Reached 255 character limit.</p>');       
+              }
+           });
+            
+            var rchid = $(this).find('.hidddenrcid input').attr('id',divId+'_rchid');
+        });
+    }
+    function removeRcSection(rid){
+        console.log('remove RC');
+        console.log(rid);
+        $('#'+rid).remove();
+         assignedRcDynamicIds();
+        }
+    function deleteRcCause(rcid){
+        console.log(rcid);
+        
+         Visualforce.remoting.Manager.invokeAction(
+            // @RemoteAction
+            '{!$RemoteAction.Component_Handler.deleteRootCause}',rcid,
+            // Callback
+            function(result, event){
+                    if(result){
+                        console.log('Sucessfully..Deleted');
+                        //location.reload();
+                        window.location.href = '/apex/capa_task?id={!JSENCODE($CurrentPage.parameters.id)}&gtid={!GTRecord.Id}&type=investigation';
+                    } 
+                    else{
+                        console.log('fails to delete');
+                    }
+                });
+        }
+    
+    /*function maxlengthvalidation(inputval){
+        //rcause0_dec_error
+        console.log(inputval);
+		var inputid = $(inputval).attr('id');
+        var maxlen = $(inputval).attr('maxlength');
+        var inputerrorid= $(inputval).next().attr('id');
+        console.log(inputid+' '+maxlen+' ' +inputerrorid);
+        $( "#"+inputid).on('input', function() {
+            $('#'+inputerrorid).empty();
+            if ($( "#"+inputid).val().length>=maxlen) {
+               $('#'+inputerrorid).html('<p style="color: red;">Reached 255 character limit.</p>');       
+              }
+           });
+        }*/
+    </script>
+    
+    
+    <div class="" id="add_root_cause_holder" >
+        <apex:repeat value="{!rootCauses}" var="rc">
+            <div class="{!rc.Id}" id="{!rc.Id}" role="tablist" aria-multiselectable="true">
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="headingOne">
+                        <h4 class="panel-title">
+                            <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" data-parent="#accordion" href="#{!rc.Id}href" aria-expanded="true" aria-controls="collapse0">
+                                <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"> </span>
+                            </a>
+                            
+                            <a data-toggle="" href="#{!JSENCODE(rc.Id)}href"> <b> Root Cause :</b><apex:outputLabel > </apex:outputLabel> </a>
+                            <apex:outputPanel >
+                                <apex:outputPanel >
+                                    <a href="#{!JSENCODE(rc.Id)}href" class="btn-link pull-right" onclick="deleteRcCause('{!JSENCODE(rc.Id)}');">Delete</a>
+                                    <a href="#{!JSENCODE(rc.Id)}href" class="btn-link pull-right" onclick="editEfvPlan(this,this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute('id'))"></a>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </h4>
+                    </div>
+                    <div id="{!rc}href" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne" aria-expanded="true">
+                        <div class="panel-body">
+                            <div class="row"><!-- row start -->
+                                <div class="col-md-12">
+                                    
+                                    <div class="wiz-fields ">
+                                        <label ><span class="mandatory">*</span> Cause Code:</label>
+                                        <select id="{!rc.Cause_Code__c}" class="form-control">
+                                            <option value='{!rc.Cause_Code__r.Id}'>{!JSENCODE(rc.Cause_Code__r.Name)}</option>
+                                        </select>
+                                        <div id="{!rc.Cause_Code__c}_error" class="help-block with-errors"></div>
+                                    </div>
+                                    
+                                    <div class="clearfix"></div>
+                                    
+                                    <div class="wiz-fields-wide col-md-12">
+                                        <label for="exampleInputEmail1"><span class="mandatory">*</span> Cause Code Description:</label>
+                                        <textarea id="{!rc.Cause_Code_Description__c}" style="overflow: auto; height: 100px;" type="text"  class="form-control" required="true"  maxlength="255"  oninput="maxlengthvalidation(this)">{!JSENCODE(rc.Cause_Code_Description__c)}</textarea>
+                                        <div id="{!rc.Cause_Code_Description__c}_error" class="help-block with-errors"></div>
+                                    </div>
+                                    <div class="hidddenrcid">
+                                        <input  id="rcid" name="rcid" type="hidden" value='{!rc.Id}' />
+                                    </div>
+                      
+                                </div>
+                            </div> <!-- Row Ends -->   
+                            
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </apex:repeat>
+        
+        
+    </div>    
+    <div class="" id="{!divId}" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingOne">
+                <h4 class="panel-title">
+                    <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" data-parent="#accordion" href="#{!divId}href" aria-expanded="true" aria-controls="collapse">
+                        <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                    </a>
+                    <a data-toggle="" href="">  Root Cause  </a>
+                    <a href="#{!divId}href" class="btn-link pull-right" onclick="removeRcSection(this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'))"> Cancel </a>
+                    <a href="#{!divId}href" class="btn-link pull-right" onclick=""> </a>
+                </h4>
+            </div>
+            <div id="#{!divId}href" class="panel-collapse out collapse in" role="tabpanel" aria-labelledby="headingOne" aria-expanded="true"> 
+                <div class="panel-body">
+                    <div class="row"><!-- row start -->
+                        <div class="col-md-12">
+                            
+                            <div class="wiz-fields ">
+                                <label ><span class="mandatory">*</span> Cause Code:</label>
+                                <select id="{!divId}_causecode" name="{!divId}_causecode" class="form-control causecode" required=" ">
+                                    
+                                </select>
+                                <div id="{!divId}_causecode_error" class="help-block with-errors"></div>
+                            </div>
+                            <div class="clearfix"></div>
+                            <div class="wiz-fields-wide col-md-12" id="planDetails">
+                                <label><span class="mandatory">*</span> Cause Code Description: </label>
+                                <textarea id="planDetailsTextArea" type="text" class="form-control" maxlength="255" oninput="maxlengthvalidation(this)" required="true"></textarea>
+                                <div id="planDetailsTextArea_errors" class="help-block with-errors"></div>
+                            </div>
+                            <div class="hidddenrcid">
+                                <input  id="hidddenrcid" name="hidddenrcid" type="hidden" value='null' />
+                            </div> 
+                        </div>
+                    </div> <!-- Row Ends -->   
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    
+    
+    
+    <div class="" id="rcause0" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingOne">
+                <h4 class="panel-title">
+                    <a class="btn btn-link btn-xs pull-right" data-toggle="collapse" data-parent="#accordion" href="#rcause0collapse" aria-expanded="true" aria-controls="collapse">
+                        <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                    </a>
+                    <a data-toggle="" href=""> Root Cause  </a>
+                     <a href="#{!divId}href" class="btn-link pull-right" onclick="removeRcSection(this.parentNode.parentNode.parentNode.parentNode.getAttribute('id'))"> Cancel </a>
+                    <a href="#rcause0collapse" class="btn-link pull-right" onclick=""> </a>
+                </h4>
+            </div>
+            <div id="rcause0collapse" class="panel-collapse out collapse in" role="tabpanel" aria-labelledby="headingOne" aria-expanded="true"> 
+                <div class="panel-body">
+                    <div class="wiz-fields ">
+                        <label ><span class="mandatory">*</span> Cause Code:</label>
+                        <select id="rcause0_causecode" name="rcause0_causecode" class="form-control causecode" required=" ">
+                            
+                        </select>
+                        <div id="rcause0_causecode_error" class="help-block with-errors"></div>
+                    </div>
+                    
+                    <div class="wiz-fields-wide col-md-12" id="causedecription">
+                        <label><span class="mandatory">*</span> Cause Code Description:</label>
+                        <textarea id="rcause0_dec" type="text" class="form-control"  required="true" maxlength="255"  oninput="maxlengthvalidation(this)"></textarea>
+                        <div id="rcause0_dec_error" class="help-block with_errors"></div>
+                    </div>
+                    <div class="hidddenrcid">
+                        <input  id="rcause0_rchid" name="hidddenrcid" type="hidden" value='null' />
+                     </div>  
+                </div>
+            </div>
+        </div>
+    </div>
+</apex:component>

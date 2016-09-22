@@ -1,0 +1,531 @@
+<!--
+      v1.0     Qualityze_Inc(GP)                       Initial Version
+
+      v1.0.1   Qualityze_Inc(SB)    26-JUL-2016        To prevent user from entering invalid data to allowdays field.
+      V1.0.2   Qualityze_Inc(SG)    25-Aug-2016        Added max date.
+      V1.0.3   Qualityze_Inc(SG)    02-Sep-2016        Reviewer functionality.
+ -->
+
+<apex:component controller="Component_Handler" extensions="QC_custom_settings" >
+  <apex:attribute name="tableId"  description="Holds the id value for approval table" type="String" required="true"  />
+  <apex:attribute name="seqFieldId"  description="Holds Id value for the sequences" type="String" required="true"  />
+  <apex:attribute name="userFieldId" description="Holds Id value for the users"  type="String" required="true"/>
+  <apex:attribute name="allowDaysFieldId" description="Holds Id value for the allow days"  type="String" required="true"/>
+  <apex:attribute name="dueDateFieldId" description="Holds Id value for the duedate" type="String" required="true"/>
+  <apex:attribute name="crDate" description="Holds the create date to change allowed days if due date selected" required="true"  type="String"/>
+  <apex:attribute name="taskId" description="Holds the task id"  type="String"></apex:attribute>
+  <apex:attribute name="isApproverNoteNeeded" type="boolean" default="false" description="flag to display approver note"></apex:attribute>
+  <apex:attribute name="noteToApprover" type="String" default="" description="Holds Note To Approver"></apex:attribute>
+  <apex:attribute name="disabled" type="boolean" default="false" description="flag for disabling the controls"></apex:attribute>
+  <apex:attribute name="isSubmitForApproval" type="boolean" default="false" description="flag for need isSubmitForApproval"></apex:attribute>  
+  <apex:attribute name="initjs" type="string" default="false" description=" java script to be run onload"></apex:attribute>  
+  <apex:attribute name="isLocked" default="false" description="buttonid which should be reused for recall"  type="boolean"  />
+  <apex:attribute name="isReloadNeeded" default="true" description="flag to reload the page" type="Boolean"></apex:attribute>
+  <apex:attribute name="typeofapprover" type="string" description="type of approver from the group"/>
+  <apex:attribute name="submitForm" type="string" default="" description="formToBesubmitted"/>
+    
+  <apex:attribute name="Maxdate" type="string" default="08/21/2116" description="formToBesubmitted"/>
+  <apex:attribute name="duedate_err_msg" type="string" default="Field value is not Valid" description=""/>
+  <apex:attribute name="recordtype" type="string" default="Approver" description=""/>
+  <apex:attribute name="approvaRequired" type="boolean" default="true" description=""/>
+   <!-- V1.0.2 Maxdate,duedate_err_msg,recordtype,approvaRequired-->
+   
+    
+  <script type="text/javascript">
+    var months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    $( document ).ready(function() {
+        //alert('wiz approval ready');
+        $('#{!dueDateFieldId}_hidden').val(new Date());
+        if({!OR(disabled,isLocked)})
+           $(".apprRemove").hide();
+        else
+           $(".apprRemove").show();
+        autoPopulateApproverAllowDays();
+           if('{!isLocked}'!='true'){
+        {!initjs}
+            }
+    });
+     function dateConversion(d)
+            {
+                var d = new Date(d);
+                var day = d.getDate();
+                var month = d.getMonth() + 1;
+                var year = d.getFullYear();
+                if (day < 10) 
+                {
+                    day = "0" + day;
+                }
+                 if (month < 10)
+                {
+                  month = "0" + month;
+                 
+                 }
+                 var date = month + "/" +day  + "/" + year;
+                 return date;
+              }
+    
+    
+    
+    function autoPopulateApproverAllowDays(){
+         $("#{!tableId}_table").find('.datepicker').each(function(i, r) {
+          console.log('autoPopulateApproverAllowDays  ');
+             if(dateConversion('{!Maxdate}')<=dateConversion(new Date()))
+                 { 
+                     
+                     $(r).datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY",maxDate:new Date(), minDate:new Date()}).on('dp.change', function(selected){
+                     var difMS=selected.date-new Date();
+                     var difDays=Math.ceil(difMS/(1000*60*60*24));
+                     $("#"+this.id+"_hidden").val(selected.date);
+                     $("#"+this.id.replace('Due_Date__c','Allowed_Days__c')).val(difDays);
+                }); }
+            else{ 
+                console.log('(((((((((((((');
+                console.log('{!Maxdate}'+'******'+new Date()+dateConversion(new Date()));
+                
+                      $(r).datetimepicker({dayViewHeaderFormat: 'DD MMM YYYY', format: "DD MMM YYYY",maxDate:dateConversion('{!Maxdate}'), minDate:new Date()}).on('dp.change', function(selected){
+                     var difMS=selected.date-new Date();
+                     var difDays=Math.ceil(difMS/(1000*60*60*24));
+                     $("#"+this.id+"_hidden").val(selected.date);
+                     $("#"+this.id.replace('Due_Date__c','Allowed_Days__c')).val(difDays);
+                                                                                                                                              
+                                                                                                                                              
+                  }); }
+
+           
+          $(r).find('input[type="text"]').click(function() {
+            $(r).find('.glyphicon')[0].click();
+          });
+          
+       });
+     }
+     function autoCalculateApproverDueDate(allowDays){
+         var isTaskValid=true;
+          //v1.0.1 start
+         var allwDys=$(allowDays).val();
+         var allowDaysErrorId=allowDays.id+'_error';
+         //console.log('allowDays.id prop   '+allowDays.id);
+         if(!allwDys){
+           $('#'+allowDaysErrorId).html("<p><font color='red'>This field is required</font></p>");
+           return false
+         }
+         if(allwDys<0){
+             
+           $('#'+allowDaysErrorId).html("<p><font color='red'>Invalid value for this field</font></p>");
+           return false;
+         }
+         if(allwDys>9999999){
+           $('#'+allowDaysErrorId).html("<p><font color='red'>Invalid value for this field</font></p>");
+           isTaskValid= false;
+            //v1.0.1 end
+             
+           
+         $('#'+allowDaysErrorId).html("");
+         }
+         
+               var future =new  Date(dateConversion('{!Maxdate}'));
+               var start = new Date(dateConversion(new Date())); 
+               var oneDay = 24*60*60*1000; // hours*minutes*seconds*milliseconds
+               var firstDate = new Date(start.getYear(),start.getMonth(),start.getDate());
+               var secondDate = new Date(future.getYear(),future.getMonth(),future.getDate());
+               var diffDays = Math.round(Math.abs((secondDate.getTime() - firstDate.getTime())/(oneDay)));
+         if( allwDys>diffDays)
+             {
+               $('#'+allowDaysErrorId).html("<p><font color='red'>{!duedate_err_msg}</font></p>");
+              isTaskValid= false;
+        
+            }
+       //v1.0.2 end
+         
+       var oldDate = new Date();
+       var newDate=(!$(allowDays).val())?new Date():new Date(oldDate.getTime()+(parseInt($(allowDays).val())*24*60*60*1000));
+       newDate=newDate.getDate()+' '+months[newDate.getMonth()]+' '+newDate.getFullYear();
+       dueDate=allowDays.id.replace('Allowed_Days__c','Due_Date__c');
+       $('#'+dueDate).data({date: newDate}).datetimepicker('update').children("input").val(newDate);
+       $('#'+dueDate+'_hidden').val(newDate);
+         return isTaskValid;
+     }
+    var MAX_ALLOWED_APPROVERS='{!MaxApprovers}';
+    
+    Visualforce.remoting.Manager.invokeAction(
+          // @RemoteAction
+          '{!$RemoteAction.Component_Handler.getApprovalData}','{!taskId}','{!typeofapprover}',
+          // Callback
+          function(result, event){
+              var seqDtls=result['seqs'],usrDtls=result['usrs'],apprDtls=result['apprs'],usrPrts,aprPrts;
+              // console.log(seqDtls);
+              // console.log(usrDtls)
+              // console.log(apprDtls);
+              $.each(seqDtls, function(seq) {
+                  //console.log('seqDtls   '+seqDtls[seq]);
+                  $("#{!seqFieldId}").append($("<option />").val(seqDtls[seq]).text(seqDtls[seq]));
+              });
+              $.each(usrDtls, function(usr) {
+                  //console.log('usrDtls  '+usrDtls);
+                  usrPrts=usrDtls[usr].split('@');
+                  $("#{!userFieldId}").append($("<option />").val(usrPrts[0]).text(usrPrts[1]));
+              });
+              apprDtls=apprDtls?apprDtls:[];
+              if('{!taskId}'!='' && apprDtls.length==0){
+                  /*$("#{!tableId}_table").hide();
+                  $("#{!tableId}_appr_note").hide();*/
+                  $("#{!tableId}_table").find("input,select").each(function(){
+                             $(this).attr('disabled', true);
+                   });
+                  $("#{!tableId}_chk").prop("checked",false);
+                  $("#{!tableId}_div").addClass("hidden");
+                  $("#{!tableId}_link").addClass("hidden");
+                  
+              }
+              for(var i=0;i<apprDtls.length-1;i++)
+                     cloneApproverTable('{!tableId}');
+              var rows = $("#{!tableId}_table").find("tr"),cols,seq,usr,allowDays,dueDt;
+              //console.log('   rows.length   '+rows.length);
+              $.each(apprDtls, function(appr) {
+                  //console.log('usrDtls  '+usrDtls);
+                  aprPrts=apprDtls[appr].split('@');
+                  cols=rows.eq(appr+1).find('td');
+                  seq=cols.eq(0).find('select');
+                  //console.log(seq);
+                  //console.log('aprPrts[1]   '+aprPrts[1]+'   '+seq.attr('id'));
+                  //$("#"+seq.attr('id')).val('"'+aprPrts[1]+'"');
+                  $("#"+cols.eq(0).find('select').attr('id')+" option[value='"+aprPrts[1]+"']").attr("selected",true);
+                  // $(seq).val('"'+aprPrts[1]+'"');//.attr("selected",true);
+                  $("#"+cols.eq(1).find('select').attr('id')+" option[value='"+aprPrts[4]+"']").attr("selected",true);
+                  $("#"+cols.eq(2).find('input').attr('id')).val(aprPrts[2]);
+                  console.log('aprPrts[2]  '+aprPrts[2]);
+                  dueDt=new Date(aprPrts[3]);
+                  //console.log('dueDt   '+dueDt);
+                  dueDt=dueDt.getDate()+' '+months[dueDt.getMonth()]+' '+dueDt.getFullYear();
+                  //console.log('dueDt   '+dueDt);
+                  $('#'+cols.eq(3).find('div').find('input[type="text"]').attr('id')).val(dueDt);
+                  $('#'+cols.eq(3).find('input[type="hidden"]').attr('id')).val(dueDt);
+             });
+             
+             // $("#{!tableId}_appr_note").val(aprPrts[7]);
+          },
+          
+          // Don't know, couldn't find docs
+          {escape: true}
+        );
+    
+    
+     function approvalRequire(appChk){
+          
+          var hiddenElements = $('#{!tableId}_link, #{!tableId}_div').removeClass('hidden');
+          
+        
+            if( appChk.checked){
+                $(hiddenElements).removeClass('hidden');
+                $("#{!tableId}_table").find("input,select").each(function(){
+                                      $(this).attr('disabled', false);
+                });
+            }
+            if( !appChk.checked){
+                $(hiddenElements).addClass('hidden');
+                $("#{!tableId}_table").find("input,select").each(function(){
+                                      $(this).attr('disabled', true);
+                });
+            };
+      };
+      function cloneApproverTable(tableId){
+           var aprCnt = $('#'+tableId+'_table>tbody>tr').length;
+          //console.log('addApprover  aprCnt '+aprCnt);
+           if(aprCnt>=MAX_ALLOWED_APPROVERS){
+              //alert('Can Not Add More Than '+MAX_ALLOWED_APPROVERS+' Approvers');
+              showDialog('1','Can Not Add More Than '+MAX_ALLOWED_APPROVERS+' Approvers');
+              return false;
+           }
+           $( "#"+tableId+"_table>tbody>tr:last" ).clone().appendTo( "#"+tableId+"_table>tbody" );
+           var id_start = 0;
+           $("#"+tableId+"_table > tbody  > tr").each(function() {
+                                                        var tempId='';
+                                                        var rowId= 'row_' + (id_start++);
+                                                        $(this).attr('id',rowId);
+                                                        var tds=$(this).find('td');
+                                                        var seq=tds.eq(0).find('select');
+                                                        seq.attr('id','{!seqFieldId}'+rowId);
+                                                        seq.attr('name','{!seqFieldId}'+rowId);
+                                                        var seqDiv=tds.eq(0).find('div');
+               //seqDiv.attr('id','{!seqFieldId}'+rowId+'_error');
+                                                        var usr=tds.eq(1).find('select');
+                                                        usr.attr('id','{!userFieldId}'+rowId);
+                                                        usr.attr('name','{!userFieldId}'+rowId);
+                                                        var userDiv=tds.eq(1).find('div');
+                                                        userDiv.attr('id','{!userFieldId}'+rowId+'_error');
+                                                        var allowDays=tds.eq(2).find('input');
+                                                        allowDays.attr('id','{!allowDaysFieldId}'+rowId);
+                                                        allowDays.attr('name','{!allowDaysFieldId}'+rowId);
+                                                        tempId=$(allowDays).attr('id');
+                                                        var allowDaysDiv=tds.eq(2).find('div');
+                                                        allowDaysDiv.attr('id',tempId+'_error');
+                                                        var duedateDiv=tds.eq(3).find('div');
+                                                        $(duedateDiv).each(function(){
+                                                                                if($(this).hasClass('datepicker')){
+                                                                                        $(this).attr('id','{!dueDateFieldId}'+rowId); 
+                                                                                        tempId=$(this).attr('id');
+                                                                                }
+                                                                                else if(this.id.indexOf('hidden_error')>0){
+                                                                                         $(this).attr('id',tempId+'_hidden_error');
+                                                                                }
+                                                                                else if(this.id.indexOf('error')>0){
+                                                                                         $(this).attr('id',tempId+'_error');
+                                                                                }
+                                                                            }
+                                                                          )
+                                                      var dueDateinput=tds.eq(3).find('input');
+                                                      $(dueDateinput).each(function(){
+                                                                     if(this.type=='hidden'){
+                                                                             $(this).attr('name',tempId);
+                                                                             $(this).attr('id',tempId+'_hidden');
+                                                                      }
+                                                                      else if(this.type=='text'){
+                                                                           $(this).attr('data-api',tempId) 
+                                                                           $(this).attr('data-hiddenId',tempId+'_hidden'); 
+                                                                           $(this).attr('id',tempId+'_GRDATE'); 
+                                                                     } 
+                                                                 })
+
+                                                      }
+                                                    );
+            autoPopulateApproverAllowDays();
+     }
+     function addApprover(){
+             cloneApproverTable('{!tableId}');
+     }
+     function removeApproverRow(current_row){
+        var aprCnt = $('#{!tableId}_table>tbody>tr').length;
+        if(aprCnt==1){
+            //alert('Atleast One Approver Is Required.');
+            showDialog('1','Atleast One'+'  {!recordtype}'+' Is Required.');
+            return false;
+        }
+        $("#"+current_row).remove();
+    };
+     function isApprovalDueDatesValid(){
+       var isApprovalDueDateValid=true;
+       var tds,dueDt,seq,newDueDate,seqDueDateMap={},seqs=[];
+       $('#{!tableId}_table > tbody  > tr').each(function() {
+                                tds=$(this).find('td');
+                                seq=$("#"+tds.eq(0).find('select').attr('id')).val();
+                                dueDt=seqDueDateMap[seq];
+                                newDueDate=new Date($("#"+tds.eq(3).find('div').find('input[type="text"]').attr('id')).val());
+                                //alert('isApprovalDueDatesValid   dueDt   '+dueDt+' seq    '+seq);
+                                if(dueDt){
+                                 dueDt=new Date(dueDt);
+                                 if(dueDt.getTime()<newDueDate.getTime()){
+                                   seqDueDateMap[seq]=newDueDate;
+                                 }
+                                }
+                                else{
+                                  seqDueDateMap[seq]=newDueDate;
+                                  seqs.push(seq);
+                                 }
+                                }
+                              );
+       seqs.sort(sortApprovalSeq);
+       var hsd,lsd
+       for(var i=0;i<seqs.length-1;i++){
+          for(var j=i+1;j<seqs.length;j++){
+              hsd=seqDueDateMap[seqs[j]];
+              lsd=seqDueDateMap[seqs[i]];
+              if(hsd.getTime()<lsd.getTime()){
+                 isApprovalDueDateValid=false;
+                 return false;
+              }
+          }
+       }
+       return isApprovalDueDateValid;
+    }
+    
+    function isApprovalsValid(){
+       var isApprovaValid=true;
+       var tds,seqId,apprId,allowDaysId,dueDateId
+       $('#{!tableId}_table > tbody  > tr').each(function() {
+                   tds=$(this).find('td');
+                   seqId=tds.eq(0).find('select').attr('id');
+                   apprId=tds.eq(1).find('select').attr('id');
+                   allowDaysId=tds.eq(2).find('input[type="number"]').attr('id');
+                   dueDateId=tds.eq(3).find('div').attr('id');
+                   console.log('isApprovalsValid seqId '+seqId+' apprId  '+apprId+' allowDaysId  '+allowDaysId+' dueDateId   '+dueDateId);
+                   if(!$('#'+seqId).val()){
+                      isApprovaValid=false;
+                      $('#'+seqId+'_error').html("<p><font color='red'>This field is required</font></p>");
+                   }
+          
+                   if(!$('#'+apprId).val()){
+                       // alert('approver');
+                      isApprovaValid=false;
+                      $('#'+apprId+'_error').html("<p><font color='red'>This field is required</font></p>");
+                   }
+                   if(!$('#'+allowDaysId).val()){
+                      isApprovaValid=false;
+                      $('#'+allowDaysId+'_error').html("<p><font color='red'>This field is required</font></p>");
+                   }
+                   if(!$('#'+dueDateId+'_GRDATE').val()){
+                      isApprovaValid=false;
+                      $('#'+dueDateId+'_error').html("<p><font color='red'>This field is required</font></p>");
+                      
+                      
+                      
+                      
+                      
+                   }
+                   
+                   
+            }
+      );
+      return isApprovaValid; 
+    }
+    function saveApprovalData(taskId,Submitflag){
+       // alert('from save approval data');
+       var redirectUrl='';
+       redirectUrl=arguments[2];
+       
+      if($("#{!tableId}_chk").is(':checked') || (arguments[3]=='CollaborationReview')){
+         taskId=(taskId)?taskId:'{!taskId}';
+         console.log('taskId   '+taskId);
+         var tasks={};
+         tasks['Approval']=[];
+         var approvalNote=$("#{!tableId}_appr_note").val();
+         //alert('approvalNote   '+approvalNote);
+         if(approvalNote)
+               tasks['Approval_Note']=[escapeHtml(approvalNote)];
+         var row,closDetail,closDueDate;
+         $('#{!tableId}_table > tbody  > tr').each(function() {
+                row='';
+                $(this).find("select,input").each(
+                    function(indx){
+                        if(indx<4){
+                            closDetail=$(this).val();
+                            if(indx==3){
+                                closDueDate=new Date($(this).val());
+                                closDetail=(closDueDate.getMonth()+1)+"/"+closDueDate.getDate()+"/"+closDueDate.getFullYear()
+                            }
+                            row+=closDetail+"@";
+                        }
+                    }
+            )
+            tasks['Approval'].push(row);
+       });
+          console.log(tasks);
+          console.log(taskId,Submitflag);
+          if(!Submitflag)
+              {
+              Submitflag=false;
+              }
+        Visualforce.remoting.Manager.invokeAction(
+            // @RemoteAction
+            '{!$RemoteAction.Component_Handler.saveApprovalData}',
+            
+            tasks,taskId,Submitflag,
+            
+            // Callback
+            function(result, event){
+                console.log('saveApprovalData   result  '+result);
+                
+             
+                if('{!submitForm}'){
+                    $("#{!submitForm}").submit();
+                }
+                
+                if({!isReloadNeeded})
+                    {
+                     location.reload();  
+                    }
+                else
+                if( redirectUrl!='')
+                 {
+                   //alert("Inside arguments"+arguments[2]+redirectUrl);
+                    location.href=redirectUrl;
+                 }
+                
+            },
+            
+            // Don't know, couldn't find docs
+            {escape: true}
+        );
+     }
+    }
+    
+    function sortApprovalSeq(seq1,seq2){
+        return seq1-seq2;
+    }
+
+  </script>
+  <div class="col-md-12" id="{!tableId}_cont">
+      <div class="">
+          <div class="col-md-6">
+              <div class="form-group">
+                  <div class="checkbox">
+                      <label>
+                          <!-- <input type="checkbox" onchange="closureApprovalRequire(this.checked);"/> Approval Required? -->
+                          
+                      <apex:outputPanel rendered="{!approvaRequired}">
+                          <c:wiz_checkbox FieldId="{!tableId}_chk" disabled="{!OR(disabled,isLocked)}" FieldName="{!tableId}_chk" initvalue="Yes"  onChangeFunction="approvalRequire"></c:wiz_checkbox> Approval Required?
+                      </apex:outputPanel> 
+                      </label>
+                  </div>
+              </div>
+          </div>
+          <apex:outputPanel rendered="{!NOT(isLocked)}">
+          <div class="col-md-6" id="{!tableId}_link">
+              <div class="form-group text-right">
+                  <a onclick="addApprover();" class="text-right">
+                      + Add {!recordtype}
+
+                  </a>
+              </div>
+          </div>
+          </apex:outputPanel>
+      </div>
+  </div>
+  <div class="add-approver-row col-md-12" id="{!tableId}_div">
+      <table class="table" id="{!tableId}_table">
+          <thead>
+              <tr>
+                  <td><span class="mandatory"><apex:outputtext value="*"/></span>&nbsp;&nbsp;{!$ObjectType.General_Task__c.Fields.Sequence__c.Label}</td>
+                  <td width="40%"><span class="mandatory"><apex:outputtext value="*"/></span>&nbsp;&nbsp;{!recordtype}</td>
+                  <td width="20%"><span class="mandatory"><apex:outputtext value="*"/></span>&nbsp;&nbsp;{!$ObjectType.General_Task__c.Fields.Allowed_Days__c.Label}</td>
+                  <td><span class="mandatory"><apex:outputtext value="*"/></span>&nbsp;&nbsp;{!$ObjectType.General_Task__c.Fields.Due_Date__c.Label}</td>
+              </tr>
+          </thead>
+          
+          <tbody>
+              <tr class="" id="row_1">
+                  <td>
+                     <select id="{!seqFieldId}" disabled="{!OR(disabled,isLocked)}"    name="{!seqFieldId}" class="form-control" requied="required">
+                                                                                                
+                     </select>
+                     <div id="{!seqFieldId}_error" class="help-block with-errors"></div>
+                  </td>
+                  <td>
+                     <select id="{!userFieldId}" disabled="{!OR(disabled,isLocked)}"   name="{!userFieldId}" class="form-control" required="required">
+                        <option></option>                                                                           
+                     </select>
+                     <div id="{!userFieldId}_error" class="help-block with-errors"></div>
+                  </td>
+                  <td>
+                      <c:wiz_input required="true" disabled="{!OR(disabled,isLocked)}" initvalue="0" type="number" min="0" fieldname="{!allowDaysFieldId}"  onblur="autoCalculateApproverDueDate(this)" ></c:wiz_input>
+                  </td>
+                  <td>
+                      <c:wiz_date maxdateallowed="{!month(today())}/{!day(today())}/{!year(today())+100}"  FieldId="{!dueDateFieldId}"  initdate="" updateable="{!NOT(OR(disabled,isLocked))}"/>
+                  </td>
+                  <td style="vertical-align:middle">
+                      <span class="glyphicon glyphicon-remove apprRemove" onclick="removeApproverRow(this.parentNode.parentNode.getAttribute('id'));" ></span>
+                  </td>
+              </tr>
+        </tbody>
+    </table>
+
+    <c:wiz_field FieldLabel="Note to {!recordtype}" required="false" jsid="{!tableId}_approver_note" wide="true" rendered="{!NOT(OR(NOT(isApproverNoteNeeded),isLocked))}">
+         <c:wiz_textarea rendered="{!AND(isApproverNoteNeeded,NOT(disabled))}" objectName="" required="false" initvalue="{!noteToApprover}" FieldId="{!tableId}_appr_note" FieldName="{!tableId}_appr_note" />
+             <apex:outputpanel rendered="{!AND(isApproverNoteNeeded,disabled)}">
+                 <div class="alert alert-info" id="apprStaticNote" > {!noteToApprover}</div>
+             </apex:outputpanel>
+    </c:wiz_field>    
+
+ </div>
+ <input type="hidden" id="{!tableId}_appr_cnt"/>
+ <!-- row -->
+                    
+</apex:component>

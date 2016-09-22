@@ -1,0 +1,45 @@
+<apex:component >
+    <apex:attribute name="alertId" required="true" type="String" description="Modal Id"/>
+     <script>
+        function showDialog(status,message){
+          $('#{!alertId}ModalContent').removeClass('red').removeClass('green').removeClass('blue');
+          $('#{!alertId}ModalContent').addClass(status=='1'?'blue':status==0?'green':'red');
+            //$('#{!alertId}ModalContent').addClass('green');
+          $('#{!alertId}AlertIcon i').removeClass('fa-exclamation').removeClass('fa-times').removeClass('fa-check');
+          $('#{!alertId}AlertTitle').html("&nbsp;");
+          if (status == '0') {
+            $('#{!alertId}AlertIcon i').addClass('fa-check');
+          } 
+          else if (status == '1') {
+            $('#{!alertId}AlertIcon i').addClass('fa-exclamation');
+          } 
+          else if (status == '-1') {
+            $('#{!alertId}AlertIcon i').addClass('fa-exclamation');
+          }
+          $('#{!alertId}ModalBody').html(message);
+          $('#{!alertId}').modal('show');
+       }
+      </script>
+  
+  
+  <div class="modal fade" id="{!alertId}" role="dialog">
+              <div class="modal-dialog modal-md message-dialog" role="document">
+                  <div class="modal-content green" id="{!alertId}ModalContent">
+                      <div class="modal-header">
+                          <div class="alert-icon" id="{!alertId}AlertIcon"><i class="fa fa-exclamation fa-2x"></i></div>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                          <h4 class="modal-title" id="{!alertId}AlertTitle"></h4>
+                      </div>
+                      <div class="modal-body" id='{!alertId}ModalBody'>
+                          
+                         
+                      
+                      </div>
+                    
+                      <div class="modal-footer hidden">
+                          <button type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+                      </div>
+                  </div>
+              </div>
+    </div>
+</apex:component>

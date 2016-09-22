@@ -1,0 +1,249 @@
+<apex:component controller="Component_Handler">
+    <apex:attribute name="jsid" type="string" description="javascript id to differenciate with others" />    
+    <apex:attribute name="RecordId" description="RecordId which should be submitted for approval"  type="id"  /> 
+    <apex:attribute name="approvalbuttonid" description="buttonid which should be reused for approval"  type="string"  />
+    <apex:attribute name="className" description="fields class"  type="string" default="col-md-6 col-sm-6 col-xs-12"  />
+    <apex:attribute name="Wide" description="wide fields  class"  type="string" default="col-md-12"  />
+    <apex:attribute name="ApproveHide" description="wide fields  class"  type="boolean" default="true"  />
+   
+
+    <script>
+    var recall=false;
+    $( document ).ready(function() {
+        if({!jsid}_approved=='Approve'){
+        $('#{!jsid}_Comment_Required').hide();
+        $('#{!jsid}__ApprovalRescomment').removeClass('{!jsid}_required');
+        }        
+    });
+    
+    
+    
+    function {!jsid}_doVerifyUserName(){
+
+      if(!$('.dont-allow-multiple-clicks').attr('disabled')){
+             $('.dont-allow-multiple-clicks').attr('disabled', true);
+             }
+      var valid=true;
+      $('.{!jsid}_required').each(
+          function(){
+              var validateid=this.id;
+              $( "#"+validateid+'__error' ).html('');
+              console.log(this.value.length);
+               console.log(this);
+              if(this.value.length==0||this.value==''){
+              console.log($('#'+validateid+'__error' ));
+                  $( '#'+validateid+'__error' ).html( "<p><font color='red'>This field is required</font></p>");
+              valid=false;
+              }
+              
+              }
+      );
+      if(valid==false){
+           $('.dont-allow-multiple-clicks').attr('disabled', false);
+      return;
+      }
+      
+		var IsDigitalSignatureNeeded='<apex:outputText value="{!($Setup.QC_settings__c.Is_Digital_Signature_Needed__c)}" />';
+      if(IsDigitalSignatureNeeded=='true'){
+      if('{!$User.UserName}'==$('#{!jsid}_user_name').val()&&valid==true)
+          {
+           Visualforce.remoting.Manager.invokeAction(
+                            // @RemoteAction
+                            '{!$RemoteAction.Component_Handler.doVerify}',$('#{!jsid}_password').val(),function(result, event){
+                                                                                            if(event.status){
+                                                                                                if(result){
+                                                                                                    if(recall==false){
+                                                                                                    {!jsid}_ApproveRecord();
+                                                                                                        }
+                                                                                                    else{
+                                                                                                    {!jsid}_RecallRecord();
+                                                                                                        }
+                                                                                                    
+                                                                                                }
+                                                                                                    else{
+                                                                                                        alert('Unable to verify password!');
+                                                                                                         if($('.dont-allow-multiple-clicks').attr('disabled')){
+                                                                                                         $('.dont-allow-multiple-clicks').attr('disabled', false);
+                                                                                                         }
+                                                                                                    }
+                                                                                                }
+                                                                                                else{ 
+                                                                                                    alert('Unable to verify password!');
+                                                                                                     if($('.dont-allow-multiple-clicks').attr('disabled')){
+                                                                                                     $('.dont-allow-multiple-clicks').attr('disabled', false);
+                                                                                                     }
+                                                                                                }
+                                                                                                
+                                                                                           });
+        }
+      else
+          {
+              alert('invalid username');
+          console.log('invalid username');
+              if($('.dont-allow-multiple-clicks').attr('disabled')){
+             $('.dont-allow-multiple-clicks').attr('disabled', false);
+             }
+          }
+          
+       }
+       else{
+              if(recall==false){
+              {!jsid}_ApproveRecord();
+                  }
+              else{
+              {!jsid}_RecallRecord();
+                  }
+       }
+  
+  }
+    
+   
+        function {!jsid}_ApproveRecord(){
+             if(!$('.dont-allow-multiple-clicks').attr('disabled')){
+             $('.dont-allow-multiple-clicks').attr('disabled', true);
+             }
+             ApprovalResponse('{!RecordId}',escapeHtml($('#{!jsid}__ApprovalRescomment').val()),{!jsid}_approved,'{!jsid}');
+        }
+            function {!jsid}_RecallRecord(){
+                    {!jsid}_approved='Removed';
+                    {!jsid}_ApproveRecord();                        
+                }
+    var {!jsid}_approved='Approve';
+    
+    function {!jsid}_showApproveField(ele,value){
+    {!jsid}_approved=value;
+        if({!jsid}_approved=='Approve'){
+        $('#{!jsid}_Comment_Required').hide();
+        $('#{!jsid}__ApprovalRescomment').removeClass('{!jsid}_required');
+            }
+        
+        else{
+        $('#{!jsid}_Comment_Required').show(); 
+        $('#{!jsid}__ApprovalRescomment').addClass('{!jsid}_required');    
+        }
+    }
+    </script>
+<!--    <style>
+        .btn {
+        display: inline-block;
+        padding: 6px 12px;
+        margin-bottom: 0;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 1.42857143;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: middle;
+        -ms-touch-action: manipulation;
+        touch-action: manipulation;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        background-image: none;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        }
+        .btn-primary {
+        color: #fff;
+        background-color: #337ab7 !important;
+        border-color: #2e6da4;
+        }
+    </style>-->
+      <div class="modal fade" id="{!jsid}" tabindex="-1" role="dialog" aria-labelledby="{!jsid}">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <apex:outputText rendered="{!ApproveHide}">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="{!jsid}_header">Approve </h4>
+                    </div>
+                        </apex:outputText>
+                    <div class="modal-body">
+                        
+                  <div>
+
+                      <!-- Nav tabs -->
+                      <ul class="nav nav-tabs" role="tablist">
+                        <li id='{!jsid}_LI_decision' role="presentation" class="active"><a href="#{!jsid}decision" id="ahref{!jsid}_LI_decision" aria-controls="decision" role="tab" data-toggle="tab">Decision</a></li>
+                        
+                      </ul>
+                        <div class="tab-content push-down" />
+                        <div role="tabpanel" class="tab-pane" id="{!jsid}decision">
+                            <form id="decision_form">
+                                <div class="row"><!-- row start -->
+                                    <div class="wiz-form-holder ">
+                                        
+                                     <apex:outputText rendered="{!ApproveHide}">
+                                        <div class="wiz-fields-wide " id="{!jsid}_decision_wiz-fields-wide">
+                                            <label for="exampleInputEmail1"><span class="mandatory">*</span> Decision:</label><br/>
+                                          <div class="btn-group" data-toggle="buttons">
+                                            <label  class="btn btn-primary active"><span class='fa fa-thumbs-o-up'/>
+                                                <input onchange="{!jsid}_showApproveField(this.checked, 'Approve')" name="owner_decision" value="APPROVE" autocomplete="off" checked="" type="radio" />Approve
+                                            </label>
+                                            <label  class="btn btn-primary"><span class='fa fa-thumbs-o-down'/>
+                                                <input onchange="{!jsid}_showApproveField(this.checked, 'Reject')" name="owner_decision" value="REJECT" autocomplete="off" type="radio" />Reject
+                                            </label>
+                                          </div>
+                                        </div>
+                                         </apex:outputText>
+                                   
+                                        <div class="wiz-fields-wide push-down" />        
+                                        <div class="wiz-fields-wide" id="comment">
+                                            <div class="form-group">
+                                                <label for="exampleInputEmail1"><span id="{!jsid}_Comment_Required" class="mandatory">*</span> Comment:</label>
+                                                <textarea id='{!jsid}__ApprovalRescomment' type="text" class="form-control {!jsid}_required" value='' maxlength="255"  oninput="maxlengthvalidation(this)" />
+                                                <div class="help-block with-errors " id="{!jsid}__ApprovalRescomment__error"></div>
+                                            </div>
+                                        </div>
+                                    <apex:outputpanel rendered="{!($Setup.QC_settings__c.Is_Digital_Signature_Needed__c)}"> 
+                                        <div class="{!ClassName}" id="user_name" disabled='disabled'>
+                                            <div class="form-group disabled" disabled="disabled">
+                                              <label for="exampleInputEmail1"><span class="mandatory">*</span> User Name:</label>
+                                                <input id='{!jsid}_user_name' class="form-control {!jsid}_required" type="text" value='' />
+                                                <div class="help-block with-errors" id="{!jsid}_user_name__error"></div>
+                                            </div>
+                                        </div>
+                                
+                                        <div class="{!ClassName}" id="password">
+                                            <div class="form-group">
+                                                <label for="exampleInputEmail1"><span class="mandatory">*</span> Password:</label>
+                                                <input id='{!jsid}_password' class="form-control {!jsid}_required" type="password" value='' />
+                                                <div class="help-block with-errors" id="{!jsid}_password__error"></div>
+                                            </div>
+                                        </div>
+                                    </apex:outputpanel>
+                                    </div>
+                                </div> <!-- Row Ends -->
+                        </form>
+
+
+                        </div>
+                       
+                      </div>
+
+                    </div>
+                                <div class="clearfix"></div>
+        <div class="modal-footer">
+            <a href="#"  class="btn btn-default "  onclick="{!jsid}cancle();" >Cancel</a>          
+            <a href="#"  onclick="{!jsid}_doVerifyUserName();" style="color: #fff;
+    background-color: #337ab7;
+    border-color: #2e6da4;" class="btn btn-primary   dont-allow-multiple-clicks doVerifyUserNameButtonchangeField">OK</a>
+        </div>
+                    
+                     <script>
+                        function {!jsid}cancle(){
+                        var r = confirm("All the data will be lost");
+                            if (r == true) {
+                                $('#'+'{!jsid}').modal('hide');
+                            } else {
+                                console.log("You pressed Cancel!");
+                            }
+                            }
+                        </script>
+                    
+    </div>
+    </div>
+    </div>
+</apex:component>

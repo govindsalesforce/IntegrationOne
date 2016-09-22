@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customSettingsType>Hierarchy</customSettingsType>
+    <customSettingsVisibility>Public</customSettingsVisibility>
+    <description>Qualityze Settings</description>
+    <enableFeeds>false</enableFeeds>
+    <fields>
+        <fullName>API_Version__c</fullName>
+        <defaultValue>&quot;33.0&quot;</defaultValue>
+        <description>Current API Version</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Set to current API Version</inlineHelpText>
+        <label>API_Version</label>
+        <length>100</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Client_Id__c</fullName>
+        <description>Consumer Key</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Enter OAuth Consumer Key for Connected App.</inlineHelpText>
+        <label>Client_Id</label>
+        <length>100</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Client_Secret__c</fullName>
+        <description>Consumer Secret</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Enter OAuth Consumer Secret for Connected App.</inlineHelpText>
+        <label>Client_Secret</label>
+        <length>100</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Max_Approvers__c</fullName>
+        <externalId>false</externalId>
+        <label>Max Approvers</label>
+        <length>18</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Server__c</fullName>
+        <description>Server Instance Location Mnemonic and ID</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Server Instance (e.g. NA17, AP1, or EU4)</inlineHelpText>
+        <label>Server</label>
+        <length>100</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>namespace_setting__c</fullName>
+        <defaultValue>&quot;QPMS&quot;</defaultValue>
+        <description>Namespace</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Do not modify on managed package.</inlineHelpText>
+        <label>namespace_setting</label>
+        <length>10</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <label>Qualityze_Hierarchy_Settings</label>
+</CustomObject>
